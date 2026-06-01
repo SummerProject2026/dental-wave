@@ -1,0 +1,22 @@
+/* Main application container */
+.app {
+    /* Ensure the application fills the viewport */
+    min-height: 100vh;
+
+    /* Use Flexbox for layout */
+    display: flex;
+
+    /* Stack children vertically */
+    flex-direction: column;
+
+    /* Center content horizontally */
+    align-items: center;
+
+    /* Add spacing around content */
+    padding: 2rem;
+}
+
+/* Style for page title */
+.app h1 {
+    margin-bottom: 1rem;
+}

@@ -1,0 +1,15 @@
+spring.application.name=DentalWave
+spring.jpa.hibernate.ddl-auto=update
+spring.datasource.url=jdbc:postgresql://localhost:5432/assistantscheduler
+spring.datasource.username=your_mac_username
+spring.datasource.password=
+spring.datasource.driver-class-name=org.postgresql.Driver
+spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+spring.jpa.show-sql=true
+# SHA256 encryption - https://emn178.github.io/online-tools/sha256.html
+app.jwt-secret=
+# Expiration time in milliseconds - 7 days
+app.jwt-expiration-milliseconds=604800000
+# Plain text password for default admin user
+app.admin-user-password=

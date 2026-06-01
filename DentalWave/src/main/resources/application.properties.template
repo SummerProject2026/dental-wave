@@ -1,6 +1,6 @@
-spring.application.name=DentalWave
+spring.application.name=dentalwave
 spring.jpa.hibernate.ddl-auto=update
-spring.datasource.url=jdbc:postgresql://localhost:5432/DentalWave
+spring.datasource.url=jdbc:postgresql://localhost:5432/dentalwave
 spring.datasource.username=your_mac_username
 spring.datasource.password=
 spring.datasource.driver-class-name=org.postgresql.Driver

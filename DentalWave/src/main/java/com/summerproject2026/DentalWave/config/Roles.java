@@ -1,8 +1,11 @@
-package com.summerproject2026.assistant_scheduler.config;
+package com.summerproject2026.DentalWave.config;
 
 public final class Roles {
 
     public static final String ROLE_ADMIN = "ROLE_ADMIN";
+    public static final String ROLE_ASSISTANT = "ROLE_ASSISTANT";
+    public static final String ROLE_HR = "ROLE_HR";
+    public static final String ROLE_MANAGER = "ROLE_MANAGER";
 
     public enum UserRoles {
 

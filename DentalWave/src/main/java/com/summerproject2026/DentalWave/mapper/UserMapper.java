@@ -6,10 +6,14 @@ import java.util.stream.Collectors;
 import com.summerproject2026.DentalWave.dto.UserDto;
 import com.summerproject2026.DentalWave.entity.Role;
 import com.summerproject2026.DentalWave.entity.User;
+import org.springframework.stereotype.Component;
+
+
 
 /**
  * Mapper class for converting between User entities and UserDto objects.
  */
+@Component
 public class UserMapper {
 
     /**

@@ -2,6 +2,8 @@ package com.summerproject2026.DentalWave.service;
 
 import com.summerproject2026.DentalWave.dto.JwtAuthResponse;
 import com.summerproject2026.DentalWave.dto.UserDto;
+import com.summerproject2026.DentalWave.dto.LoginDto;
+import com.summerproject2026.DentalWave.dto.RegisterDto;
 
 
 /**

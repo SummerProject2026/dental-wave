@@ -19,33 +19,25 @@ public class AuthController {
     // Service that contains the authentication business logic
     private AuthService authService;
 
-    // POST / api/auth/login - acceptes credentials and retruns a JWT token
-    @PsotMapping("/login")
-    public ResponseEntity<JWTAuthResponse>login(@RequestBody LoginDTo loginDto){
+    // POST /api/auth/login - accepts credentials and returns a JWT token
+    @PostMapping("/login")
+    public ResponseEntity<JwtAuthResponse> login(@RequestBody LoginDto loginDto) {
 
-        //Delegate login logic to the auth service
-        JWTAuthResponse jwtAuthResponse = authService.login(loginDto);
+        // Delegate login logic to the auth service
+        JwtAuthResponse jwtAuthResponse = authService.login(loginDto);
 
-        //Return 200 OK with the JWT token  in the response body
+        // Return 200 OK with the JWT token in the response body
         return ResponseEntity.ok(jwtAuthResponse);
-
     }
-    //POST/ api/auth/ register -  accepts user info and  creates a new account
-    @PostMapping("/register")
-    public ResponseEntity<UserDto> register(@RequestBody RegisterDto registerDto){
 
-        //Delegate registeration logic to the auth service
+    // POST /api/auth/register - accepts user info and creates a new account
+    @PostMapping("/register")
+    public ResponseEntity<UserDto> register(@RequestBody RegisterDto registerDto) {
+
+        // Delegate registration logic to the auth service
         UserDto savedUser = authService.register(registerDto);
 
-        //Retrun 201 Created with the new user in the rsponse body
-        retrun new ResponseEn
+        // Return 201 Created with the new user in the response body
+        return new ResponseEntity<>(savedUser, HttpStatus.CREATED);
     }
-
-
-
-
-
-
-
-
 }

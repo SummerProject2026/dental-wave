@@ -31,4 +31,8 @@ public class JwtAuthResponse {
 
     /** Email address of the authenticated user. */
     private String email;
+
+    /** User Id which  will be used to identify who have  access to  what page*/
+    private  final Long Id;
+
 }

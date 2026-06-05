@@ -20,3 +20,73 @@
 .app h1 {
     margin-bottom: 1rem;
 }
+
+.login-page {
+    min-height: 100vh;
+    background-color: #c8cbff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.login-logo {
+    width: 440px;
+    margin-top: 60px;
+    margin-bottom: 20px;
+}
+
+.login-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 320px;
+}
+
+.login-label {
+    align-self: flex-start;
+    font-size: 42px;
+    font-weight: bold;
+    color: #2444d8;
+    font-family: Georgia, 'Times New Roman', serif;
+    margin-top: 20px;
+    margin-bottom: 5px;
+}
+
+.login-input {
+    width: 270px;
+    height: 42px;
+    border: none;
+    border-radius: 8px;
+    padding: 0 14px;
+    font-size: 18px;
+    background-color: white;
+    color: #6f6f1f;
+    outline: none;
+}
+
+.forgot-link {
+    font-size: 14px;
+    color: #007e96;
+    margin-top: 10px;
+    margin-bottom: 5px;
+    align-self: flex-end;
+}
+
+.login-button {
+    margin-top: 30px;
+    background-color: #443066;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    width: 115px;
+    height: 52px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.login-footer {
+    margin-top: 55px;
+    font-size: 24px;
+    color: #777;
+}

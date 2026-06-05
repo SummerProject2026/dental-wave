@@ -13,6 +13,11 @@ function App() {
         <BrowserRouter>
             <Routes>
                 <Route path='/' element={<LoginPage />} />
+                <Route path="/employee/calendar" element={<h2>Employee Calendar</h2>} />
+                <Route path="/hr/calendar" element={<h2>HR Calendar</h2>} />
+                <Route path="/manager/calendar" element={<h2>Manager Calendar</h2>} />
+                <Route path="/admin" element={<h2>Admin Dashboard</h2>} />
+                <Route path="/calendar" element={<h2>Calendar</h2>} />
             </Routes>
         </BrowserRouter>
     )

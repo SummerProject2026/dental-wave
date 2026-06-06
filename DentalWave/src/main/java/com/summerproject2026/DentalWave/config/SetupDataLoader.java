@@ -31,6 +31,24 @@ public class SetupDataLoader implements ApplicationListener<ContextRefreshedEven
     @Value("${app.admin-user-password}")
     private String adminUserPassword;
 
+    @Value("${app.manager-user-username}")
+    private String managerUsername;
+
+    @Value("${app.manager-user-password}")
+    private String managerPassword;
+
+    @Value("${app.hr-user-username}")
+    private String hrUsername;
+
+    @Value("${app.hr-user-password}")
+    private String hrPassword;
+
+    @Value("${app.assistant-user-username}")
+    private String assistantUsername;
+
+    @Value("${app.assistant-user-password}")
+    private String assistantPassword;
+
     @Override
     @Transactional
     public void onApplicationEvent(ContextRefreshedEvent event) {

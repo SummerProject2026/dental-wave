@@ -4,10 +4,10 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class AssistantSchedulerApplication {
+public class DentalWaveApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(AssistantSchedulerApplication.class, args);
+		SpringApplication.run(DentalWaveApplication.class, args);
 	}
 
 }

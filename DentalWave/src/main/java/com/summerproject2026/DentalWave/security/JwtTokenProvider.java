@@ -43,7 +43,7 @@ public class JwtTokenProvider {
 
     // Extracts the username from a JWT token
     public String getUsername(String token) {
-        return Jwts.parserBuilder()
+        return Jwts.parser()
                 .setSigningKey(key())
                 .build()
                 .parseClaimsJws(token)
@@ -54,7 +54,7 @@ public class JwtTokenProvider {
     // Validates the JWT token and returns true if valid
     public boolean validateToken(String token) {
         try {
-            Jwts.parserBuilder()
+            Jwts.parser()
                     .setSigningKey(key())
                     .build()
                     .parseClaimsJws(token);

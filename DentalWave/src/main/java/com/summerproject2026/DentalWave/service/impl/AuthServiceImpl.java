@@ -69,7 +69,7 @@ public class AuthServiceImpl implements AuthService {
     public JwtAuthResponse login(LoginDto loginDto) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                        loginDto.getEmail(),
+                        loginDto.getUsername(),
                         loginDto.getPassword()
                 )
         );
@@ -78,9 +78,9 @@ public class AuthServiceImpl implements AuthService {
 
         String token = jwtTokenProvider.generateToken(authentication);
 
-        User user = userRepository.findByEmail(loginDto.getEmail())
+        User user = userRepository.findByUsername(loginDto.getUsername())
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "User not found with email: " + loginDto.getEmail()));
+                        "User not found with email: " + loginDto.getUsername()));
 
         String role = user.getRoles()
                 .stream()
@@ -126,12 +126,9 @@ public class AuthServiceImpl implements AuthService {
 
         Set<Role> roles = new HashSet<>();
 
-        Role defaultRole = roleRepository.findByName("ROLE_EMPLOYEE");
-
-        if (defaultRole == null) {
-            throw new ResourceNotFoundException(
-                    "Role not found with name: ROLE_EMPLOYEE");
-        }
+        Role defaultRole = roleRepository.findByName("ROLE_EMPLOYEE")
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Role not found with name: ROLE_EMPLOYEE"));
 
         roles.add(defaultRole);
         user.setRoles(roles);

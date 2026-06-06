@@ -56,14 +56,25 @@ public class SetupDataLoader implements ApplicationListener<ContextRefreshedEven
 
         // Create all roles defined in the Roles enum
         Role adminRole = createRoleIfNotFound(Roles.ROLE_ADMIN);
-        for (Roles.UserRoles role : Roles.UserRoles.values()) {
-            createRoleIfNotFound(role.toString());
-        }
+        Role managerRole = createRoleIfNotFound(Roles.ROLE_MANAGER);
+        Role hrRole = createRoleIfNotFound(Roles.ROLE_HR);
+        Role assistantRole = createRoleIfNotFound(Roles.ROLE_ASSISTANT);
 
-        // Create default admin user
         createUserIfNotFound("Admin", "admin",
-                "admin@dentalwave.com",
+                "admin@dentalwave.com", adminUserPassword,
                 new ArrayList<>(Arrays.asList(adminRole)));
+
+        createUserIfNotFound("Manager", managerUsername,
+                "manager@dentalwave.com", managerPassword,
+                new ArrayList<>(Arrays.asList(managerRole)));
+
+        createUserIfNotFound("HR", hrUsername,
+                "hr@dentalwave.com", hrPassword,
+                new ArrayList<>(Arrays.asList(hrRole)));
+
+        createUserIfNotFound("Assistant", assistantUsername,
+                "assistant@dentalwave.com", assistantPassword,
+                new ArrayList<>(Arrays.asList(assistantRole)));
 
         alreadySetup = true;
     }
@@ -82,7 +93,8 @@ public class SetupDataLoader implements ApplicationListener<ContextRefreshedEven
     // Creates a user if they don't already exist
     @Transactional
     public void createUserIfNotFound(String firstName, String username,
-                                     String email, java.util.Collection<Role> roles) {
+                                     String email, String password,
+                                     java.util.Collection<Role> roles) {
         boolean exists = userRepository.existsByUsername(username)
                 || userRepository.existsByEmail(email);
 
@@ -91,7 +103,7 @@ public class SetupDataLoader implements ApplicationListener<ContextRefreshedEven
             user.setFirstName(firstName);
             user.setUsername(username);
             user.setEmail(email);
-            user.setPassword(passwordEncoder.encode(adminUserPassword));
+            user.setPassword(passwordEncoder.encode(password));
             user.setEnabled(true);
             user.setRoles(roles);
             userRepository.save(user);

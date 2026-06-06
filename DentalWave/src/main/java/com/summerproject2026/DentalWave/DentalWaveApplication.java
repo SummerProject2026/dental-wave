@@ -1,4 +1,4 @@
-package com.summerproject2026.assistant_scheduler;
+package com.summerproject2026.DentalWave;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

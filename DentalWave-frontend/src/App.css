@@ -1,92 +1,218 @@
-/* Main application container */
-.app {
-    /* Ensure the application fills the viewport */
-    min-height: 100vh;
-
-    /* Use Flexbox for layout */
-    display: flex;
-
-    /* Stack children vertically */
-    flex-direction: column;
-
-    /* Center content horizontally */
-    align-items: center;
-
-    /* Add spacing around content */
-    padding: 2rem;
-}
-
-/* Style for page title */
-.app h1 {
-    margin-bottom: 1rem;
+body {
+  margin: 0;
 }
 
 .login-page {
-    min-height: 100vh;
-    background-color: #c8cbff;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+  min-height: 100vh;
+  background-color: #c8cbff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.login-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 35px;
 }
 
 .login-logo {
-    width: 440px;
-    margin-top: 60px;
-    margin-bottom: 20px;
+  width: 520px;
+  height: auto;
+  margin-bottom: 45px;
 }
 
 .login-form {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 320px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 360px;
 }
 
 .login-label {
-    align-self: flex-start;
-    font-size: 42px;
-    font-weight: bold;
-    color: #2444d8;
-    font-family: Georgia, 'Times New Roman', serif;
-    margin-top: 20px;
-    margin-bottom: 5px;
+  align-self: flex-start;
+  font-size: 42px;
+  font-weight: bold;
+  color: #2444d8;
+  font-family: Georgia, 'Times New Roman', serif;
+  margin-top: 12px;
+  margin-bottom: 5px;
 }
 
 .login-input {
-    width: 270px;
-    height: 42px;
-    border: none;
-    border-radius: 8px;
-    padding: 0 14px;
-    font-size: 18px;
-    background-color: white;
-    color: #6f6f1f;
-    outline: none;
+  width: 320px;
+  height: 48px;
+  border: none;
+  border-radius: 8px;
+  padding: 0 14px;
+  font-size: 18px;
+  background-color: white;
+  color: #6f6f1f;
+  outline: none;
+}
+
+.login-input::placeholder {
+  color: #7b7b22;
+  font-family: Georgia, 'Times New Roman', serif;
 }
 
 .forgot-link {
-    font-size: 14px;
-    color: #007e96;
-    margin-top: 10px;
-    margin-bottom: 5px;
-    align-self: flex-end;
+  font-size: 14px;
+  color: #007e96;
+  margin-top: 12px;
+  margin-bottom: 18px;
+  align-self: flex-end;
 }
 
 .login-button {
-    margin-top: 30px;
-    background-color: #443066;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    width: 115px;
-    height: 52px;
-    font-size: 18px;
-    font-weight: bold;
-    cursor: pointer;
+  margin-top: 25px;
+  background-color: #443066;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  width: 130px;
+  height: 58px;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.login-button:hover {
+  background-color: #33244d;
 }
 
 .login-footer {
-    margin-top: 55px;
-    font-size: 24px;
-    color: #777;
+  margin-top: 70px;
+  font-size: 24px;
+  color: #777;
+}
+
+.login-error {
+  color: red;
+  font-size: 14px;
+  margin-top: 15px;
+  margin-bottom: 0;
+  text-align: center;
+}
+
+.calendar-page {
+  min-height: 100vh;
+  background-color: #c8cbff;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-nav {
+  height: 58px;
+  background-color: white;
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  gap: 40px;
+}
+
+.main-nav h2 {
+  font-size: 20px;
+  margin: 0;
+}
+
+.nav-links {
+  display: flex;
+  gap: 40px;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.user-icon {
+  margin-left: auto;
+  font-size: 24px;
+}
+
+.calendar-layout {
+  display: flex;
+  flex: 1;
+  padding: 28px;
+}
+
+.calendar-sidebar {
+  width: 260px;
+}
+
+.sidebar-logo {
+  width: 250px;
+  height: auto;
+}
+
+.location-title {
+  color: #2444d8;
+  font-size: 32px;
+  font-weight: normal;
+  margin-left: 25px;
+}
+
+.location-list {
+  background-color: rgba(120, 120, 150, 0.35);
+  width: 140px;
+  padding: 12px 18px;
+  margin-left: 25px;
+  font-size: 20px;
+}
+
+.selected-location {
+  color: #2444d8;
+}
+
+.calendar-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.calendar-title {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 42px;
+  font-weight: normal;
+  margin-bottom: 20px;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  width: 760px;
+  height: 500px;
+  border: 3px solid black;
+  background-color: white;
+}
+
+.calendar-cell {
+  border: 2px solid black;
+  position: relative;
+  padding: 8px;
+  font-size: 14px;
+}
+
+.day-number {
+  position: absolute;
+  top: 5px;
+  right: 8px;
+  font-size: 24px;
+}
+
+.shift-text {
+  font-size: 10px;
+  color: red;
+  width: 120px;
+}
+
+.shift-text p {
+  margin: 2px 0;
+}
+
+.calendar-footer {
+  text-align: center;
+  font-size: 18px;
+  color: #777;
+  margin-bottom: 22px;
 }

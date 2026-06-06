@@ -1,13 +1,4 @@
-// ============================================================
-//  UserServiceImpl.java
-//  Service layer implementation for User management operations.
-//
-//  Implements the UserService interface and acts as the bridge
-//  between the controller layer and the persistence layer.
-//  All business logic, validation, and mapping lives here.
-// ============================================================
-
-package com.example.service.impl;
+package com.summerproject2026.DentalWave.service.impl;
 
 // --- Spring Framework ---
 import org.springframework.stereotype.Service;
@@ -181,7 +172,7 @@ public class UserServiceImpl implements UserService {
                 // A Stream is a pipeline that lets you process each element one at a time
                 .stream()
                 // Convert each User entity to a UserDto using the  user mapper
-                .map(userMapper::toDto)
+                .map(UserMapper::toDto)
                 // Collect the results into a list
                 .collect(Collectors.toList());
     }
@@ -202,7 +193,7 @@ public class UserServiceImpl implements UserService {
         //   List<User> findByRoles_NameIgnoreCase(String roleName);
         return userRepository.findByRoles_NameIgnoreCase(role)
                 .stream()
-                .map(userMapper::toDto)
+                .map(UserMapper::toDto)
                 .collect(Collectors.toList());
     }
 
@@ -226,7 +217,7 @@ public class UserServiceImpl implements UserService {
         // with a @Query that checks multiple columns.
         return userRepository.searchByKeyword(keyword)
                 .stream()
-                .map(userMapper::toDto)
+                .map(UserMapper::toDto)
                 .collect(Collectors.toList());
     }
 
@@ -376,13 +367,14 @@ public class UserServiceImpl implements UserService {
                     "A user with email '" + userDto.getEmail() + "' already exists.");
         }
 
+        // Also check username uniqueness
+        boolean usernameExists = userRepository.existsByUsername(userDto.getUsername());
 
-          // Also check username uniqueness
-          boolean usernameExists = userRepository.existsByUsername(userDto.getUsername());
-          if (usernameExists) {
-              throw new DuplicateResourceException(
-                      "Username '" + userDto.getUsername() + "' is already taken.");
-
+        if (usernameExists) {
+            log.warn("Duplicate username detected: {}", userDto.getUsername());
+            throw new DuplicateResourceException(
+                    "Username '" + userDto.getUsername() + "' is already taken.");
+        }
     }
 
     /**

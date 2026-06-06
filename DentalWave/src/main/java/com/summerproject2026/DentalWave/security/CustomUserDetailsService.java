@@ -20,11 +20,11 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     // Called by Spring Security during login to find the user
     @Override
-    public UserDetails loadUserByUsername(String usernameOrEmail) throws UsernameNotFoundException {
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 
         // Try to find user by username first, then fall back to email
-        User user = userRepository.findByUsername(usernameOrEmail)
-                .or(() -> userRepository.findByEmail(username))
+        User user = userRepository.findByUsername(username)
+                .or(() -> userRepository.findByUsername(username))
                 .orElseThrow(() -> new UsernameNotFoundException(
                         "User not found with username or email: " + username));
 

@@ -113,77 +113,81 @@ function LoginPage() {
     return (
         <div className="login-page">
 
-            {/* Practice logo */}
-            <img
-                className="login-logo"
-                src={logo}
-                alt="Wake Orthodontics and Pediatric Dentistry"
-            />
+            {/* Main content wrapper controls spacing between logo, form, and footer */}
+            <div className="login-content">
 
-            {/* Login form */}
-            <form
-                className="login-form"
-                onSubmit={handleLoginForm}
-            >
-
-                {/* Username label and input */}
-                <label className="login-label">
-                    Username:
-                </label>
-
-                <input
-                    className="login-input"
-                    type="text"
-                    placeholder="username"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
+                {/* Practice logo */}
+                <img
+                    className="login-logo"
+                    src={logo}
+                    alt="Wake Orthodontics and Pediatric Dentistry"
                 />
 
-                {/* Future enhancement link */}
-                <a className="forgot-link" href="#">
-                    Forgot Username?
-                </a>
-
-                {/* Password label and input */}
-                <label className="login-label">
-                    Password:
-                </label>
-
-                <input
-                    className="login-input"
-                    type="password"
-                    placeholder="••••••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                />
-
-                {/* Future enhancement link */}
-                <a className="forgot-link" href="#">
-                    Forgot Password?
-                </a>
-
-                {/* Error message displays only if login fails */}
-                {error && (
-                    <p className="login-error">
-                        {error}
-                    </p>
-                )}
-
-                {/* Submit button */}
-                <button
-                    className="login-button"
-                    type="submit"
+                {/* Login form */}
+                <form
+                    className="login-form"
+                    onSubmit={handleLoginForm}
                 >
-                    Login
-                </button>
 
-            </form>
+                    {/* Username label and input */}
+                    <label className="login-label">
+                        Username:
+                    </label>
 
-            {/* Footer text */}
-            <p className="login-footer">
-                © All Rights Reserved
-            </p>
+                    <input
+                        className="login-input"
+                        type="text"
+                        placeholder="username"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                    />
 
+                    {/* Future enhancement link */}
+                    <a className="forgot-link" href="#">
+                        Forgot Username?
+                    </a>
+
+                    {/* Password label and input */}
+                    <label className="login-label">
+                        Password:
+                    </label>
+
+                    <input
+                        className="login-input"
+                        type="password"
+                        placeholder="••••••••••••"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                    />
+
+                    {/* Future enhancement link */}
+                    <a className="forgot-link" href="#">
+                        Forgot Password?
+                    </a>
+
+                    {/* Error message displays only if login fails */}
+                    {error && (
+                        <p className="login-error">
+                            {error}
+                        </p>
+                    )}
+
+                    {/* Submit button */}
+                    <button
+                        className="login-button"
+                        type="submit"
+                    >
+                        Login
+                    </button>
+
+                </form>
+
+                {/* Footer text */}
+                <p className="login-footer">
+                    © All Rights Reserved
+                </p>
+
+            </div>
         </div>
     )
 }

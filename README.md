@@ -46,7 +46,7 @@ A user-friendly scheduling and employee management platform for dental offices t
 | **Database** | PostgreSQL 16 |
 | **Database UI** | TablePlus |
 | **Build Tool** | Maven |
-| **Frontend (Web)** | Angular |
+| **Frontend (Web)** | React + Vite |
 | **Frontend (Mobile)** | React Native |
 | **Cloud** | AWS |
 | **IDE** | IntelliJ IDEA |

@@ -33,6 +33,6 @@ public class JwtAuthResponse {
     private String email;
 
     /** User Id which  will be used to identify who have  access to  what page*/
-    private  final Long Id;
+    private   Long id;
 
 }

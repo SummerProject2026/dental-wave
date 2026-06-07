@@ -21,9 +21,6 @@ import java.util.stream.Collectors;
  *  - User          → userId / firstName / lastName / email  (flattened)
  *  - Office        → OfficeDto  (via private helper)
  *  - Availability  → AvailabilityDto  (delegated to AvailabilityMapper)
- *
- * The DTO → Entity direction produces STUB entities (id-only) for User and Office.
- * The service layer MUST replace stubs with managed entities before persisting.
  */
 @Component
 public class EmployeeMapper {

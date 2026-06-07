@@ -27,7 +27,6 @@ import java.util.stream.Collectors;
  * Implementation of EmployeeService.
  *
  * Design notes:
- *  - Mappers produce STUB entities (id-only refs for User / Office).
  *    This impl fetches managed entities from repositories before persisting
  *    to prevent JPA detached/transient exceptions.
  *  - Availability is managed through the Employee aggregate root

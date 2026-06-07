@@ -69,7 +69,7 @@ public class AuthServiceImpl implements AuthService {
     public JwtAuthResponse login(LoginDto loginDto) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                        loginDto.getUsernameOrEmail(),
+                        loginDto.getUsername(),
                         loginDto.getPassword()
                 )
         );
@@ -78,10 +78,10 @@ public class AuthServiceImpl implements AuthService {
 
         String token = jwtTokenProvider.generateToken(authentication);
 
-        User user = userRepository.findByUsername(loginDto.getUsernameOrEmail())
-                .or(() -> userRepository.findByEmail(loginDto.getUsernameOrEmail()))
+        User user = userRepository.findByUsername(loginDto.getUsername())
+                .or(() -> userRepository.findByEmail(loginDto.getUsername()))
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "User not found with email or username : " + loginDto.getUsernameOrEmail()));
+                        "User not found with email or username : " + loginDto.getUsername()));
 
         String role = user.getRoles()
                 .stream()

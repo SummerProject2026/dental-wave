@@ -57,10 +57,10 @@ public class AuthServiceImpl implements AuthService {
     private final JwtTokenProvider jwtTokenProvider;
 
     /** Mapper used to convert User entities into UserDto objects. */
-    private final UserMapper userMapper;
+    //private final UserMapper userMapper;
 
     /**
-     * Authenticates a user using their email and password.
+     * Authenticates a user using their username or email and password.
      *
      * @param loginDto the login credentials entered by the user
      * @return a JWT authentication response containing token and user details
@@ -83,26 +83,27 @@ public class AuthServiceImpl implements AuthService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "User not found with email or username : " + loginDto.getUsername()));
 
+        // Get the user's primary role
         String role = user.getRoles()
                 .stream()
                 .findFirst()
                 .map(Role::getName)
                 .orElse(null);
 
+        // Build the JWT response with all user details
         JwtAuthResponse jwtAuthResponse = new JwtAuthResponse();
         jwtAuthResponse.setAccessToken(token);
         jwtAuthResponse.setTokenType("Bearer");
         jwtAuthResponse.setRole(role);
         jwtAuthResponse.setEmail(user.getEmail());
+        jwtAuthResponse.setUsername(user.getUsername());
+        jwtAuthResponse.setId(user.getId());
 
         return jwtAuthResponse;
     }
 
     /**
-     * Registers a new user account.
-     *
-     * <p>The RegisterDto is used instead of UserDto because registration
-     * requires a password, while UserDto should not expose password data.</p>
+     * Registers a new user account with default ROLE_ASSISTANT.
      *
      * @param registerDto the registration information for the new user
      * @return the newly registered user as a UserDto
@@ -136,6 +137,55 @@ public class AuthServiceImpl implements AuthService {
 
         User savedUser = userRepository.save(user);
 
-        return userMapper.toDto(savedUser);
+        return UserMapper.toDto(savedUser);
+    }
+
+    /**
+     * Registers a new user account with a specific role.
+     * Used by admin to create HR users.
+     *
+     * @param registerDto the registration information for the new user
+     * @param roleName the role name to assign e.g. ROLE_HR
+     * @return the newly registered user as a UserDto
+     * @throws DuplicateResourceException if the email or username is already in use
+     * @throws ResourceNotFoundException if the role is not found
+     */
+    @Override
+    public UserDto registerWithRole(RegisterDto registerDto, String roleName) {
+
+        // Check for duplicate email
+        if (userRepository.existsByEmail(registerDto.getEmail())) {
+            throw new DuplicateResourceException(
+                    "A user with email '" + registerDto.getEmail() + "' already exists.");
+        }
+
+        // Check for duplicate username
+        if (userRepository.existsByUsername(registerDto.getUsername())) {
+            throw new DuplicateResourceException(
+                    "Username '" + registerDto.getUsername() + "' is already taken.");
+        }
+
+        // Build the new user
+        User user = new User();
+        user.setFirstName(registerDto.getFirstName());
+        user.setLastName(registerDto.getLastName());
+        user.setUsername(registerDto.getUsername());
+        user.setEmail(registerDto.getEmail());
+        user.setPhoneNumber(registerDto.getPhoneNumber());
+        user.setPassword(passwordEncoder.encode(registerDto.getPassword()));
+        user.setEnabled(true);
+
+        // Find and assign the specified role
+        Role role = roleRepository.findByName(roleName)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Role not found with name: " + roleName));
+
+        Set<Role> roles = new HashSet<>();
+        roles.add(role);
+        user.setRoles(roles);
+
+        // Save and return the new user
+        User savedUser = userRepository.save(user);
+        return UserMapper.toDto(savedUser);
     }
 }

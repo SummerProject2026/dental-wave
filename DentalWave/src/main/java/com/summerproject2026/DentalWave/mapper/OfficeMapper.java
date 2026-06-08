@@ -1,9 +1,8 @@
-package com.dentalwave.mapper;
+package com.summerproject2026.DentalWave.mapper;
 
 import com.summerproject2026.DentalWave.dto.OfficeDto;
-import com.summerproject2026.DentalWave.entityOffice;
+import com.summerproject2026.DentalWave.entity.Office;
 import org.springframework.stereotype.Component;
-
 /**
  * Mapper class responsible for converting between
  * {@link Office} entity and {@link OfficeDto} objects.

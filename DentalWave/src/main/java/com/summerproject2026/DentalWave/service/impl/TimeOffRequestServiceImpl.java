@@ -4,7 +4,7 @@ import com.summerproject2026.DentalWave.dto.TimeOffRequestDto;
 import com.summerproject2026.DentalWave.entity.Employee;
 import com.summerproject2026.DentalWave.entity.TimeOffRequest;
 import com.summerproject2026.DentalWave.entity.User;
-import ccom.summerproject2026.DentalWave.enums.RequestStatus;
+import com.summerproject2026.DentalWave.enums.RequestStatus;
 import com.summerproject2026.DentalWave.exception.ResourceNotFoundException;
 import com.summerproject2026.DentalWave.mapper.TimeOffRequestMapper;
 import com.summerproject2026.DentalWave.repository.EmployeeRepository;

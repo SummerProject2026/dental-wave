@@ -1,7 +1,7 @@
 package com.summerproject2026.DentalWave.entity;
 
 import jakarta.persistence.*;
-import java.time.*
+import java.time.*;
 
 @Entity
 @Table(name = "offices")

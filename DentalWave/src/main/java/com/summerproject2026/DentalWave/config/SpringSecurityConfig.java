@@ -39,7 +39,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
             http.csrf(csrf -> csrf.disable())
                     .authorizeHttpRequests(authorize -> {
                         // Public endpoints - no login required
-                        authorize.requestMatchers("/api/auth/**").permitAll();
+                        authorize.requestMatchers("/api/auth/login").permitAll();
+                        authorize.requestMatchers("/api/auth/register").permitAll();
                         // Allow preflight requests from the frontend
                         authorize.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll();
                         // All other endpoints require authentication

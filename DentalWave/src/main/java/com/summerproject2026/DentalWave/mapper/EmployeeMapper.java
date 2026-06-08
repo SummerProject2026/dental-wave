@@ -150,6 +150,6 @@ public class EmployeeMapper {
 
     private OfficeDto toOfficeDto(Office office) {
         if (office == null) return null;
-        return new OfficeDto(office.getId(), office.getName(), office.getAddress());
+        return new OfficeDto(office.getId(), office.getName(), office.getAddress(), office.getPhoneNumber());
     }
 }

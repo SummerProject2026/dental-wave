@@ -1,7 +1,12 @@
 package com.summerproject2026.DentalWave.entity;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.NoArgsConstructor;
 import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -9,159 +14,52 @@ import java.util.List;
  */
 @Entity
 @Table(name = "schedules")
+@Getter
+@Setter
+@NoArgsConstructor
 public class Schedule {
 
-    /**
-     * Unique identifier for the schedule.
-     */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /**
-     * First day covered by the schedule.
-     */
-    @Column(name = "start_schedule_date", nullable = false)
+    /** The specific date this schedule covers */
+    private LocalDate date;
+
+    /** Start time of the shift */
+    private LocalTime startTime;
+
+    /** End time of the shift */
+    private LocalTime endTime;
+
+    /** Optional notes for this schedule */
+    private String notes;
+
+    /** First day covered by the schedule */
+    @Column(name = "start_schedule_date")
     private LocalDate startScheduleDate;
 
-    /**
-     * Last day covered by the schedule.
-     */
-    @Column(name = "end_schedule_date", nullable = false)
+    /** Last day covered by the schedule */
+    @Column(name = "end_schedule_date")
     private LocalDate endScheduleDate;
 
-    /**
-     * Indicates whether the schedule has been published
-     * and is visible to employees.
-     */
+    /** Indicates whether the schedule has been published */
     @Column(nullable = false)
     private Boolean published = false;
 
-    /**
-     * User who created the schedule.
-     */
+    /** User who created the schedule */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "created_by_id", nullable = false)
+    @JoinColumn(name = "created_by_id")
     private User createdBy;
 
-    /**
-     * Associated schedules.
-     * (Replace this relationship if your UML changes.)
-     */
+    /** The calendar this schedule belongs to */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "calendar_id")
+    private Calendar calendar;
+
+    /** Teams assigned to this schedule */
     @OneToMany(mappedBy = "schedule", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Schedule> schedules;
+    private List<ScheduleTeam> teams = new ArrayList<>();
 
-    /**
-     * Default constructor required by JPA.
-     */
-    public Schedule() {
-    }
 
-    /**
-     * Full constructor.
-     *
-     * @param id unique identifier
-     * @param startScheduleDate first day of the schedule
-     * @param endScheduleDate last day of the schedule
-     * @param published publication status
-     * @param createdBy user who created the schedule
-     * @param schedules associated schedules
-     */
-    public Schedule(Long id,
-                    LocalDate startScheduleDate,
-                    LocalDate endScheduleDate,
-                    Boolean published,
-                    User createdBy,
-                    List<Schedule> schedules) {
-        this.id = id;
-        this.startScheduleDate = startScheduleDate;
-        this.endScheduleDate = endScheduleDate;
-        this.published = published;
-        this.createdBy = createdBy;
-        this.schedules = schedules;
-    }
-
-    /**
-     * @return schedule id
-     */
-    public Long getId() {
-        return id;
-    }
-
-    /**
-     * @param id schedule id
-     */
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    /**
-     * @return schedule start date
-     */
-    public LocalDate getStartScheduleDate() {
-        return startScheduleDate;
-    }
-
-    /**
-     * @param startScheduleDate schedule start date
-     */
-    public void setStartScheduleDate(LocalDate startScheduleDate) {
-        this.startScheduleDate = startScheduleDate;
-    }
-
-    /**
-     * @return schedule end date
-     */
-    public LocalDate getEndScheduleDate() {
-        return endScheduleDate;
-    }
-
-    /**
-     * @param endScheduleDate schedule end date
-     */
-    public void setEndScheduleDate(LocalDate endScheduleDate) {
-        this.endScheduleDate = endScheduleDate;
-    }
-
-    /**
-     * @return publication status
-     */
-    public Boolean getPublished() {
-        return published;
-    }
-
-    /**
-     * @param published publication status
-     */
-    public void setPublished(Boolean published) {
-        this.published = published;
-    }
-
-    /**
-     * @return creator of the schedule
-     */
-    public User getCreatedBy() {
-        return createdBy;
-    }
-
-    /**
-     * @param createdBy creator of the schedule
-     */
-    public void setCreatedBy(User createdBy) {
-        this.createdBy = createdBy;
-    }
-
-    /**
-     * @return associated schedules
-     */
-    public List<Schedule> getSchedules() {
-        return schedules;
-    }
-
-    /**
-     * @param schedules associated schedules
-     */
-    public void setSchedules(List<Schedule> schedules) {
-        this.schedules = schedules;
-    }
 }

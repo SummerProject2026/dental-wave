@@ -1,6 +1,6 @@
 package com.summerproject2026.DentalWave.repository;
 
-import com.summerproject2026.DentalWavee.entity.TimeOffRequest;
+import com.summerproject2026.DentalWave.entity.TimeOffRequest;
 import com.summerproject2026.DentalWave.enums.RequestStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

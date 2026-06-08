@@ -3,6 +3,7 @@ package com.summerproject2026.DentalWave.dto;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import com.summerproject2026.DentalWave.enums.RequestStatus;
 
 /**
  * Data Transfer Object for TimeOffRequest.

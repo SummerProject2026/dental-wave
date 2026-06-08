@@ -1,6 +1,6 @@
-package com.dentalwave.service;
+package com.summerproject2026.DentalWave.service;
 
-import com.dentalwave.dto.ScheduleDto;
+import com.summerproject2026.DentalWave.dto.ScheduleDto;
 
 import java.time.LocalDate;
 import java.util.List;

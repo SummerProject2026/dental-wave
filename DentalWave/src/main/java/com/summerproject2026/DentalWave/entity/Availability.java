@@ -1,4 +1,4 @@
-package com.dentalwave.entity;
+package com.summerproject2026.DentalWave.entity;
 
 import jakarta.persistence.*;
 import java.time.DayOfWeek;

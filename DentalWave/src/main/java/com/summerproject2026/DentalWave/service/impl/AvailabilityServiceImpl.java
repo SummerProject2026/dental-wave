@@ -1,13 +1,14 @@
-package com.dentalwave.service.impl;
+package com.summerproject2026.DentalWave.service.impl;
 
-import com.dentalwave.dto.AvailabilityDto;
-import com.dentalwave.exception.ResourceNotFoundException;
-import com.dentalwave.mapper.AvailabilityMapper;
-import com.dentalwave.model.Availability;
-import com.dentalwave.model.Employee;
-import com.dentalwave.repository.AvailabilityRepository;
-import com.dentalwave.repository.EmployeeRepository;
-import com.dentalwave.service.AvailabilityService;
+import com.summerproject2026.DentalWave.dto.AvailabilityDto;
+import com.summerproject2026.DentalWave.exception.ResourceNotFoundException;
+import com.summerproject2026.DentalWave.mapper.AvailabilityMapper;
+import com.summerproject2026.DentalWave.entity.Availability;
+import com.summerproject2026.DentalWave.entity.Employee;
+import com.summerproject2026.DentalWave.repository.AvailabilityRepository;
+import com.summerproject2026.DentalWave.repository.EmployeeRepository;
+import com.summerproject2026.DentalWave.service.AvailabilityService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

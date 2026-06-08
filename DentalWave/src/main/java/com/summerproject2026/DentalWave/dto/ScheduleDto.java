@@ -1,85 +1,152 @@
-package com.dentalwave.dto;
+package com.summerproject2026.DentalWave.dto;
 
 import java.time.LocalDate;
-import java.time.LocalTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
- * Data Transfer Object for Schedule.
- * Replaces entity references with IDs and nested DTOs so the API
- * layer never exposes raw JPA entities.
- *
- * The teams map uses Long (userId) as the key and a list of EmployeeDto
- * as the value, mirroring the entity's Map<User, List<Employee>>.
+ * Data Transfer Object (DTO) for Schedule.
+ * Used to transfer schedule data between the backend and frontend.
  */
 public class ScheduleDto {
 
+    /**
+     * Unique identifier for the schedule.
+     */
     private Long id;
 
-    /** Calendar date this schedule covers */
-    private LocalDate date;
-
-    /** Schedule start time */
-    private LocalTime startTime;
-
-    /** Schedule end time */
-    private LocalTime endTime;
-
-    /** ID of the parent calendar */
-    private Long calendarId;
+    /**
+     * First day covered by the schedule.
+     */
+    private LocalDate startScheduleDate;
 
     /**
-     * Team assignments: key = userId of the team lead / doctor,
-     * value = list of employees assigned under that lead for this shift.
+     * Last day covered by the schedule.
      */
-    private Map<Long, List<EmployeeDto>> teams = new HashMap<>();
+    private LocalDate endScheduleDate;
 
-    /** Optional free-text notes for this shift */
-    private String notes;
+    /**
+     * Indicates whether the schedule has been published.
+     */
+    private Boolean published;
 
-    // -------------------------------------------------------------------------
-    // Constructors
-    // -------------------------------------------------------------------------
+    /**
+     * ID of the user who created the schedule.
+     */
+    private Long createdById;
 
-    /** Default no-arg constructor (required for JSON deserialization) */
-    public ScheduleDto() {}
-
-    /** Full constructor */
-    public ScheduleDto(Long id, LocalDate date, LocalTime startTime, LocalTime endTime,
-                       Long calendarId, Map<Long, List<EmployeeDto>> teams, String notes) {
-        this.id = id;
-        this.date = date;
-        this.startTime = startTime;
-        this.endTime = endTime;
-        this.calendarId = calendarId;
-        this.teams = teams != null ? teams : new HashMap<>();
-        this.notes = notes;
+    /**
+     * Default constructor.
+     */
+    public ScheduleDto() {
     }
 
-    // -------------------------------------------------------------------------
-    // Getters & Setters
-    // -------------------------------------------------------------------------
+    /**
+     * Full constructor.
+     *
+     * @param id unique schedule identifier
+     * @param startScheduleDate first day of the schedule
+     * @param endScheduleDate last day of the schedule
+     * @param published publication status
+     * @param createdById ID of the user who created the schedule
+     */
+    public ScheduleDto(Long id,
+                       LocalDate startScheduleDate,
+                       LocalDate endScheduleDate,
+                       Boolean published,
+                       Long createdById) {
+        this.id = id;
+        this.startScheduleDate = startScheduleDate;
+        this.endScheduleDate = endScheduleDate;
+        this.published = published;
+        this.createdById = createdById;
+    }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    /**
+     * Returns the schedule ID.
+     *
+     * @return schedule ID
+     */
+    public Long getId() {
+        return id;
+    }
 
-    public LocalDate getDate() { return date; }
-    public void setDate(LocalDate date) { this.date = date; }
+    /**
+     * Sets the schedule ID.
+     *
+     * @param id schedule ID
+     */
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public LocalTime getStartTime() { return startTime; }
-    public void setStartTime(LocalTime startTime) { this.startTime = startTime; }
+    /**
+     * Returns the schedule start date.
+     *
+     * @return start date
+     */
+    public LocalDate getStartScheduleDate() {
+        return startScheduleDate;
+    }
 
-    public LocalTime getEndTime() { return endTime; }
-    public void setEndTime(LocalTime endTime) { this.endTime = endTime; }
+    /**
+     * Sets the schedule start date.
+     *
+     * @param startScheduleDate start date
+     */
+    public void setStartScheduleDate(LocalDate startScheduleDate) {
+        this.startScheduleDate = startScheduleDate;
+    }
 
-    public Long getCalendarId() { return calendarId; }
-    public void setCalendarId(Long calendarId) { this.calendarId = calendarId; }
+    /**
+     * Returns the schedule end date.
+     *
+     * @return end date
+     */
+    public LocalDate getEndScheduleDate() {
+        return endScheduleDate;
+    }
 
-    public Map<Long, List<EmployeeDto>> getTeams() { return teams; }
-    public void setTeams(Map<Long, List<EmployeeDto>> teams) { this.teams = teams; }
+    /**
+     * Sets the schedule end date.
+     *
+     * @param endScheduleDate end date
+     */
+    public void setEndScheduleDate(LocalDate endScheduleDate) {
+        this.endScheduleDate = endScheduleDate;
+    }
 
-    public String getNotes() { return notes; }
-    public void setNotes(String notes) { this.notes = notes; }
+    /**
+     * Returns whether the schedule has been published.
+     *
+     * @return publication status
+     */
+    public Boolean getPublished() {
+        return published;
+    }
+
+    /**
+     * Sets the publication status.
+     *
+     * @param published publication status
+     */
+    public void setPublished(Boolean published) {
+        this.published = published;
+    }
+
+    /**
+     * Returns the ID of the user who created the schedule.
+     *
+     * @return creator user ID
+     */
+    public Long getCreatedById() {
+        return createdById;
+    }
+
+    /**
+     * Sets the ID of the user who created the schedule.
+     *
+     * @param createdById creator user ID
+     */
+    public void setCreatedById(Long createdById) {
+        this.createdById = createdById;
+    }
 }

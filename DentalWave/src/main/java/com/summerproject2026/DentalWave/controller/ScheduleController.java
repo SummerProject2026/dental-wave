@@ -1,7 +1,7 @@
-package com.dentalwave.controller;
+package com.summerproject2026.DentalWave.controller;
 
-import com.dentalwave.dto.ScheduleDto;
-import com.dentalwave.service.ScheduleService;
+import com.summerproject2026.DentalWave.dto.ScheduleDto;
+import com.summerproject2026.DentalWave.service.ScheduleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;

@@ -1,6 +1,6 @@
-package com.dentalwave.service;
+package com.summerproject2026.DentalWave.service;
 
-import com.dentalwave.dto.AvailabilityDto;
+import com.summerproject2026.DentalWave.dto.AvailabilityDto;
 
 import java.util.List;
 

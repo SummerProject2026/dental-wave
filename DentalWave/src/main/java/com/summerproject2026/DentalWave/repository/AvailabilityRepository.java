@@ -1,6 +1,6 @@
-package com.dentalwave.repository;
+package com.summerproject2026.DentalWave.repository;
 
-import com.dentalwave.model.Availability;
+import com.summerproject2026.DentalWave.entity.Availability;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

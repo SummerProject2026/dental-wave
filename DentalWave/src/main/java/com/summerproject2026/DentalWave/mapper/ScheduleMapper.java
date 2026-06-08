@@ -1,10 +1,10 @@
-package com.dentalwave.mapper;
+package com.summerproject2026.DentalWave.mapper;
 
-import com.dentalwave.dto.EmployeeDto;
-import com.dentalwave.dto.ScheduleDto;
-import com.dentalwave.model.Employee;
-import com.dentalwave.model.Schedule;
-import com.dentalwave.model.User;
+import com.summerproject2026.DentalWave.dto.EmployeeDto;
+import com.summerproject2026.DentalWave.dto.ScheduleDto;
+import com.summerproject2026.DentalWave.entity.Employee;
+import com.summerproject2026.DentalWave.entity.Schedule;
+import com.summerproject2026.DentalWave.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 

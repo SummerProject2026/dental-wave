@@ -1,4 +1,4 @@
-package com.dentalwave.dto;
+package com.summerproject2026.DentalWave.dto;
 
 import java.time.LocalDate;
 import java.util.ArrayList;

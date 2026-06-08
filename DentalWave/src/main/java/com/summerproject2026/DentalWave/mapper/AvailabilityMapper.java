@@ -1,8 +1,8 @@
-package com.dentalwave.mapper;
+package com.summerproject2026.DentalWave.mapper;
 
-import com.dentalwave.dto.AvailabilityDto;
-import com.dentalwave.model.Availability;
-import com.dentalwave.model.Employee;
+import com.summerproject2026.DentalWave.dto.AvailabilityDto;
+import com.summerproject2026.DentalWave.entity.Availability;
+import com.summerproject2026.DentalWave.entity.Employee;
 import org.springframework.stereotype.Component;
 
 /**

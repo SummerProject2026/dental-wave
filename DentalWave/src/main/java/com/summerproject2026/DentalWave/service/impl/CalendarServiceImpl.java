@@ -1,17 +1,18 @@
-package com.dentalwave.service.impl;
+package com.summerproject2026.DentalWave.service.impl;
 
-import com.dentalwave.dto.CalendarDto;
-import com.dentalwave.dto.ScheduleDto;
-import com.dentalwave.exception.ResourceNotFoundException;
-import com.dentalwave.mapper.CalendarMapper;
-import com.dentalwave.mapper.ScheduleMapper;
-import com.dentalwave.model.Calendar;
-import com.dentalwave.model.Schedule;
-import com.dentalwave.model.User;
-import com.dentalwave.repository.CalendarRepository;
-import com.dentalwave.repository.ScheduleRepository;
-import com.dentalwave.repository.UserRepository;
-import com.dentalwave.service.CalendarService;
+import com.summerproject2026.DentalWave.dto.CalendarDto;
+import com.summerproject2026.DentalWave.dto.ScheduleDto;
+import com.summerproject2026.DentalWave.exception.ResourceNotFoundException;
+import com.summerproject2026.DentalWave.mapper.CalendarMapper;
+import com.summerproject2026.DentalWave.mapper.ScheduleMapper;
+import com.summerproject2026.DentalWave.entity.Calendar;
+import com.summerproject2026.DentalWave.entity.Schedule;
+import com.summerproject2026.DentalWave.entity.User;
+import com.summerproject2026.DentalWave.repository.CalendarRepository;
+import com.summerproject2026.DentalWave.repository.ScheduleRepository;
+import com.summerproject2026.DentalWave.repository.UserRepository;
+import com.summerproject2026.DentalWave.service.CalendarService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

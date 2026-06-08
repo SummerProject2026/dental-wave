@@ -1,7 +1,8 @@
-package com.dentalwave.controller;
+package com.summerproject2026.DentalWave.controller;
 
-import com.dentalwave.dto.AvailabilityDto;
-import com.dentalwave.service.AvailabilityService;
+import com.summerproject2026.DentalWave.dto.AvailabilityDto;
+import com.summerproject2026.DentalWave.service.AvailabilityService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

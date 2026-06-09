@@ -1,14 +1,16 @@
-package com.dentalwave.repository;
+package com.summerproject2026.DentalWave.repository;
 
-import com.dentalwave.model.Availability;
-import com.dentalwave.model.Employee;
-import com.dentalwave.model.User;
+import com.summerproject2026.DentalWave.entity.Availability;
+import com.summerproject2026.DentalWave.entity.Employee;
+import com.summerproject2026.DentalWave.entity.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.time.DayOfWeek;
 import java.time.LocalTime;

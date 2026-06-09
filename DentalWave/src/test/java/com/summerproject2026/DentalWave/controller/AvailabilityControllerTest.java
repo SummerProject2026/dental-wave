@@ -1,7 +1,7 @@
-package com.dentalwave.controller;
+package com.summerproject2026.DentalWave.controller;
 
-import com.dentalwave.dto.AvailabilityDto;
-import com.dentalwave.service.AvailabilityService;
+import com.summerproject2026.DentalWave.dto.AvailabilityDto;
+import com.summerproject2026.DentalWave.service.AvailabilityService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

@@ -1,8 +1,8 @@
-package com.dentalwave.controller;
+package com.summerproject2026.DentalWave.controller;
 
-import com.dentalwave.dto.CalendarDto;
-import com.dentalwave.dto.ScheduleDto;
-import com.dentalwave.service.CalendarService;
+import com.summerproject2026.DentalWave.dto.CalendarDto;
+import com.summerproject2026.DentalWave.dto.ScheduleDto;
+import com.summerproject2026.DentalWave.service.CalendarService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

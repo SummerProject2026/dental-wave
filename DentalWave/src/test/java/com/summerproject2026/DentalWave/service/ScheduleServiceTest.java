@@ -1,14 +1,15 @@
-package com.dentalwave.service;
+package com.summerproject2026.DentalWave.service;
 
-import com.dentalwave.dto.ScheduleDto;
-import com.dentalwave.exception.ResourceNotFoundException;
-import com.dentalwave.mapper.ScheduleMapper;
-import com.dentalwave.model.Employee;
-import com.dentalwave.model.Schedule;
-import com.dentalwave.model.User;
-import com.dentalwave.repository.EmployeeRepository;
-import com.dentalwave.repository.ScheduleRepository;
-import com.dentalwave.repository.UserRepository;
+import com.summerproject2026.DentalWave.dto.ScheduleDto;
+import com.summerproject2026.DentalWave.service.impl.ScheduleServiceImpl;
+import com.summerproject2026.DentalWave.exception.ResourceNotFoundException;
+import com.summerproject2026.DentalWave.mapper.ScheduleMapper;
+import com.summerproject2026.DentalWave.entity.Employee;
+import com.summerproject2026.DentalWave.entity.Schedule;
+import com.summerproject2026.DentalWave.entity.User;
+import com.summerproject2026.DentalWave.repository.EmployeeRepository;
+import com.summerproject2026.DentalWave.repository.ScheduleRepository;
+import com.summerproject2026.DentalWave.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -18,6 +19,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalDate;
 import java.util.*;

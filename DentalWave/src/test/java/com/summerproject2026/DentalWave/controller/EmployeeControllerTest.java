@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.summerproject2026.DentalWave.dto.AvailabilityDto;
 import com.summerproject2026.DentalWave.dto.EmployeeDto;
 import com.summerproject2026.DentalWave.enums.WorkStatus;
-import com.summerproject2026.DentalWave.model.Employee;
+import com.summerproject2026.DentalWave.entity.Employee;
 import com.summerproject2026.DentalWave.repository.EmployeeRepository;
 import com.summerproject2026.DentalWave.service.EmployeeService;
 import org.junit.jupiter.api.BeforeEach;

@@ -65,6 +65,7 @@ class EmployeeServiceImplTest {
         user.setId(1L);
         user.setFirstName("Alice");
         user.setLastName("Smith");
+        user.setUsername("alice_test");
         user.setEmail("alice@dentalwave.com");
 
         office = new Office();
@@ -79,7 +80,7 @@ class EmployeeServiceImplTest {
         employee.setHireDate(LocalDate.of(2020, 1, 15));
         employee.setOffices(new ArrayList<>(List.of(office)));
 
-        Office officeDto = new Office();
+        com.summerproject2026.DentalWave.dto.OfficeDto officeDto = new com.summerproject2026.DentalWave.dto.OfficeDto();
         officeDto.setId(10L);
 
         employeeDto = new EmployeeDto();

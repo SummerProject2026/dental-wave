@@ -33,6 +33,7 @@ class AvailabilityRepositoryTest {
     @Autowired
     private AvailabilityRepository availabilityRepository;
 
+
     private Employee employeeA;
     private Employee employeeB;
 
@@ -46,23 +47,27 @@ class AvailabilityRepositoryTest {
         User userA = new User();
         userA.setFirstName("Alice");
         userA.setLastName("Smith");
+        userA.setUsername("alice");
         userA.setEmail("alice@dentalwave.com");
         entityManager.persist(userA);
 
         User userB = new User();
         userB.setFirstName("Bob");
         userB.setLastName("Jones");
+        userB.setUsername("bob");
         userB.setEmail("bob@dentalwave.com");
         entityManager.persist(userB);
 
         employeeA = new Employee();
         employeeA.setUser(userA);
         employeeA.setPosition("Dental Hygienist");
+        employeeA.setHireDate(java.time.LocalDate.of(2020, 1, 1));
         entityManager.persist(employeeA);
 
         employeeB = new Employee();
         employeeB.setUser(userB);
         employeeB.setPosition("Receptionist");
+        employeeB.setHireDate(java.time.LocalDate.of(2020, 1, 1));
         entityManager.persist(employeeB);
 
         entityManager.flush();
@@ -186,7 +191,7 @@ class AvailabilityRepositoryTest {
 
         assertThat(found).isPresent();
         assertThat(found.get().getDayOfWeek()).isEqualTo(DayOfWeek.SATURDAY);
-        assertThat(found.get().isAvailable()).isFalse();
+        assertThat(found.get().getAvailable()).isFalse();
     }
 
     @Test

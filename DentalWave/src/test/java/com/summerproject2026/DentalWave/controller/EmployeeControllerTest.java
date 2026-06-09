@@ -23,7 +23,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 /**
  * Unit tests for EmployeeController.
  *
@@ -34,6 +34,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * permissive test-security config so that MockMvc requests are not rejected.
  */
 @WebMvcTest(EmployeeController.class)
+@AutoConfigureMockMvc(addFilters = false)
 @DisplayName("EmployeeController")
 class EmployeeControllerTest {
 
@@ -43,10 +44,16 @@ class EmployeeControllerTest {
     @MockBean
     private EmployeeService employeeService;
 
+
     // Controller injects EmployeeRepository directly for search — must be mocked.
     @MockBean
     private EmployeeRepository employeeRepository;
 
+    @MockBean
+    private com.summerproject2026.DentalWave.security.JwtTokenProvider jwtTokenProvider;
+
+    @MockBean
+    private com.summerproject2026.DentalWave.security.JwtAuthenticationFilter jwtAuthenticationFilter;
     @Autowired
     private ObjectMapper objectMapper;
 
@@ -65,7 +72,7 @@ class EmployeeControllerTest {
         employeeDto.setLastName("Doe");
         employeeDto.setEmail("jane.doe@clinic.com");
         employeeDto.setPosition("Dental Hygienist");
-        employeeDto.setWorkStatus(WorkStatus.ACTIVE);
+        employeeDto.setStatus(WorkStatus.ACTIVE);
 
         availabilityDto = new AvailabilityDto();
         availabilityDto.setId(20L);
@@ -254,7 +261,7 @@ class EmployeeControllerTest {
             mockMvc.perform(get("/api/employees/status/ACTIVE"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.length()").value(1))
-                    .andExpect(jsonPath("$[0].workStatus").value("ACTIVE"));
+                    .andExpect(jsonPath("$[0].status").value("ACTIVE"));
         }
 
         @Test
@@ -262,14 +269,14 @@ class EmployeeControllerTest {
         void getByStatus_inactive_returns200() throws Exception {
             EmployeeDto inactive = new EmployeeDto();
             inactive.setId(3L);
-            inactive.setWorkStatus(WorkStatus.INACTIVE);
+            inactive.setStatus(WorkStatus.INACTIVE);
 
             when(employeeService.getEmployeesByStatus(WorkStatus.INACTIVE))
                     .thenReturn(List.of(inactive));
 
             mockMvc.perform(get("/api/employees/status/INACTIVE"))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$[0].workStatus").value("INACTIVE"));
+                    .andExpect(jsonPath("$[0].status").value("INACTIVE"));
         }
     }
 

@@ -50,6 +50,7 @@ class ScheduleRepositoryTest {
         User adminUser = new User();
         adminUser.setFirstName("Admin");
         adminUser.setLastName("User");
+        adminUser.setUsername("admin_test");
         adminUser.setEmail("admin@dentalwave.com");
         entityManager.persist(adminUser);
 

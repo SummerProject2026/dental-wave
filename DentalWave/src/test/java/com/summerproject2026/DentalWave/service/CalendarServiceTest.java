@@ -55,6 +55,7 @@ class CalendarServiceImplTest {
     void setUp() {
         creator = new User();
         creator.setId(1L);
+        creator.setUsername("admin_cal_test");
         creator.setFirstName("Admin");
 
         calendar = new Calendar();

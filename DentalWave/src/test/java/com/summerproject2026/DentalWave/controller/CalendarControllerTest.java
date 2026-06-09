@@ -20,7 +20,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 /**
  * Unit tests for CalendarController.
  *
@@ -33,6 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * or provide a test-only security config that permits all requests.
  */
 @WebMvcTest(CalendarController.class)
+@AutoConfigureMockMvc(addFilters = false)
 @DisplayName("CalendarController")
 class CalendarControllerTest {
 
@@ -41,6 +42,12 @@ class CalendarControllerTest {
 
     @MockBean
     private CalendarService calendarService;
+    @MockBean
+    private com.summerproject2026.DentalWave.security.JwtTokenProvider jwtTokenProvider;
+
+    @MockBean
+    private com.summerproject2026.DentalWave.security.JwtAuthenticationFilter jwtAuthenticationFilter;
+
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -123,7 +130,7 @@ class CalendarControllerTest {
         @DisplayName("propagates ResourceNotFoundException from service (results in 404)")
         void getCalendarById_notFound_propagatesException() throws Exception {
             when(calendarService.getCalendarById(99L))
-                    .thenThrow(new com.dentalwave.exception.ResourceNotFoundException("Calendar not found"));
+                    .thenThrow(new com.summerproject2026.DentalWave.exception.ResourceNotFoundException("Calendar not found"));
 
             mockMvc.perform(get("/api/calendars/99"))
                     .andExpect(status().isNotFound());

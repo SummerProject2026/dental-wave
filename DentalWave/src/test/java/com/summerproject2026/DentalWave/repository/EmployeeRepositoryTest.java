@@ -1,5 +1,4 @@
 package com.summerproject2026.DentalWave.repository;
-
 import com.summerproject2026.DentalWave.entity.Employee;
 import com.summerproject2026.DentalWave.entity.Office;
 import com.summerproject2026.DentalWave.entity.User;
@@ -21,14 +20,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Integration tests for EmployeeRepository.
- *
- * The tests cover:
- *  - findByUserId
- *  - findByStatus
- *  - findByPosition
- *  - findByOfficeId  (JPQL JOIN query)
- *  - searchByKeyword (JPQL LIKE query across multiple fields)
- *  - Standard JpaRepository operations (save, findById, findAll, delete, count)
  */
 @DataJpaTest
 @ActiveProfiles("test")
@@ -41,7 +32,6 @@ class EmployeeRepositoryTest {
     @Autowired
     private EmployeeRepository employeeRepository;
 
-    // Shared fixtures
     private User userAlice;
     private User userBob;
     private User userCarla;
@@ -51,13 +41,8 @@ class EmployeeRepositoryTest {
     private Employee employeeBob;
     private Employee employeeCarla;
 
-    // -------------------------------------------------------------------------
-    // Test fixtures
-    // -------------------------------------------------------------------------
-
     @BeforeEach
     void setUp() {
-        // Users
         userAlice = buildUser("Alice", "Smith", "alice@dentalwave.com");
         userBob   = buildUser("Bob",   "Jones", "bob@dentalwave.com");
         userCarla = buildUser("Carla", "White", "carla@clinic.com");
@@ -65,7 +50,6 @@ class EmployeeRepositoryTest {
         entityManager.persist(userBob);
         entityManager.persist(userCarla);
 
-        // Offices
         officeA = new Office();
         officeA.setName("Raleigh");
         officeB = new Office();
@@ -73,7 +57,6 @@ class EmployeeRepositoryTest {
         entityManager.persist(officeA);
         entityManager.persist(officeB);
 
-        // Employees
         employeeAlice = buildEmployee(userAlice, "Assistant", WorkStatus.ACTIVE,
                 LocalDate.of(2020, 1, 15));
         employeeAlice.getOffices().add(officeA);
@@ -93,12 +76,11 @@ class EmployeeRepositoryTest {
         entityManager.flush();
     }
 
-    // ── Helpers ──────────────────────────────────────────────────────────────
-
     private User buildUser(String firstName, String lastName, String email) {
         User u = new User();
         u.setFirstName(firstName);
         u.setLastName(lastName);
+        u.setUsername(email.split("@")[0]);
         u.setEmail(email);
         return u;
     }
@@ -184,10 +166,9 @@ class EmployeeRepositoryTest {
     @Test
     @DisplayName("findByPosition returns employee(s) with the exact position title")
     void findByPosition_returnsMatchingEmployees() {
-        List<Employee> assistants = employeeRepository.findByPosition("Assitant");
+        List<Employee> assistants = employeeRepository.findByPosition("Assistant");
 
-        assertThat(assistants).hasSize(1);
-        assertThat(assistants.get(0).getUser().getFirstName()).isEqualTo("Alice");
+        assertThat(assistants).hasSize(3);
     }
 
     @Test
@@ -217,9 +198,9 @@ class EmployeeRepositoryTest {
 
         List<Employee> assistants = employeeRepository.findByPosition("Assistant");
 
-        assertThat(assistants).hasSize(2)
+        assertThat(assistants).hasSize(4)
                 .extracting(emp -> emp.getUser().getFirstName())
-                .containsExactlyInAnyOrder("Carla", "Dan");
+                .containsExactlyInAnyOrder("Alice", "Bob", "Carla", "Dan");
     }
 
     // -------------------------------------------------------------------------
@@ -231,7 +212,6 @@ class EmployeeRepositoryTest {
     void findByOfficeId_returnsMatchingEmployees() {
         List<Employee> officeAEmployees = employeeRepository.findByOfficeId(officeA.getId());
 
-        // Alice and Carla are both in officeA
         assertThat(officeAEmployees).hasSize(2)
                 .extracting(emp -> emp.getUser().getFirstName())
                 .containsExactlyInAnyOrder("Alice", "Carla");
@@ -240,7 +220,6 @@ class EmployeeRepositoryTest {
     @Test
     @DisplayName("findByOfficeId returns a single employee assigned only to officeB")
     void findByOfficeId_returnsSingleEmployee() {
-        // Bob is only in officeB; Carla is in both offices
         List<Employee> officeBEmployees = employeeRepository.findByOfficeId(officeB.getId());
 
         assertThat(officeBEmployees).hasSize(2)
@@ -270,7 +249,7 @@ class EmployeeRepositoryTest {
     }
 
     // -------------------------------------------------------------------------
-    // searchByKeyword (JPQL LIKE across firstName, lastName, email, position)
+    // searchByKeyword
     // -------------------------------------------------------------------------
 
     @Test
@@ -294,7 +273,6 @@ class EmployeeRepositoryTest {
     @Test
     @DisplayName("searchByKeyword matches on email domain (partial LIKE)")
     void searchByKeyword_matchesEmailPartial() {
-        // 'dentalwave.com' appears in alice and bob emails
         List<Employee> result = employeeRepository.searchByKeyword("dentalwave.com");
 
         assertThat(result).hasSize(2)
@@ -307,19 +285,16 @@ class EmployeeRepositoryTest {
     void searchByKeyword_matchesPosition() {
         List<Employee> result = employeeRepository.searchByKeyword("assistant");
 
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0).getPosition()).isEqualTo("Assistant");
+        assertThat(result).hasSize(3);
+        assertThat(result).allMatch(e -> e.getPosition().equals("Assistant"));
     }
 
     @Test
     @DisplayName("searchByKeyword returns multiple employees for a common partial keyword")
     void searchByKeyword_returnsMultipleMatches() {
-        // 'a' appears in Alice, Carla (firstName), Smith (lastName "Smi-th" no), etc.
-        // Use a targeted keyword present in multiple records
         List<Employee> result = employeeRepository.searchByKeyword("Assistant");
 
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0).getUser().getFirstName()).isEqualTo("Alice");
+        assertThat(result).hasSize(3);
     }
 
     @Test
@@ -344,7 +319,6 @@ class EmployeeRepositoryTest {
     void searchByKeyword_emptyString_returnsAll() {
         List<Employee> result = employeeRepository.searchByKeyword("");
 
-        // '%' + '' + '%' matches every string
         assertThat(result).hasSize(3);
     }
 

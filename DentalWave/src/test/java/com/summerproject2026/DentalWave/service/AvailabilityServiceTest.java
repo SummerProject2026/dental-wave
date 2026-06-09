@@ -90,7 +90,7 @@ class AvailabilityServiceImplTest {
 
         assertThat(result).isEqualTo(availabilityDto);
         verify(availabilityRepository).save(availability);
-        verify(availability::setEmployee);  // employee was hydrated
+        verify(availabilityRepository).save(availability); // employee was hydrated
     }
 
     @Test

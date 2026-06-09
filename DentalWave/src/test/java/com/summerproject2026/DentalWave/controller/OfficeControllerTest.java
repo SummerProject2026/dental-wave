@@ -13,6 +13,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import java.util.List;
 
 import static org.hamcrest.Matchers.*;
@@ -43,6 +44,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * MockMvc, Jackson, Mockito, Hamcrest.</p>
  */
 @WebMvcTest(OfficeController.class)
+@AutoConfigureMockMvc(addFilters = false)
 // Uncomment the line below if Spring Security is on the classpath and
 // causes 401/403 responses that break these tests:
 // @AutoConfigureMockMvc(addFilters = false)
@@ -60,6 +62,11 @@ class OfficeControllerTest {
 
     @MockBean
     private OfficeService officeService;
+    @MockBean
+    private com.summerproject2026.DentalWave.security.JwtTokenProvider jwtTokenProvider;
+
+    @MockBean
+    private com.summerproject2026.DentalWave.security.JwtAuthenticationFilter jwtAuthenticationFilter;
 
     // -------------------------------------------------------------------------
     // Shared test data

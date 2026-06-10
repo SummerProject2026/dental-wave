@@ -6,6 +6,8 @@ import ManagerCalendarPage from './pages/ManagerCalendarPage'
 import EmployeeCalendarPage from './pages/EmployeeCalendarPage'
 import EmployeeProfilePage from './pages/EmployeeProfilePage.jsx'
 import EmployeeEditProfilePage from './pages/EmployeeEditProfilePage.jsx'
+import EmployeeMyRequestsPage from './pages/EmployeeMyRequestsPage.jsx'
+import EmployeeRequestViewPage from './pages/EmployeeRequestViewPage.jsx'
 
 function App() {
     return (
@@ -36,6 +38,13 @@ function App() {
 
                 {/* Employee Edit Profile */}
                 <Route path="/employee/profile/edit" element={<EmployeeEditProfilePage />} />
+
+                {/* Employee Request list */}
+                <Route path="/employee/requests" element={<EmployeeMyRequestsPage />} />
+
+                {/* Single request for employee to review */ }
+                <Route path="/employee/requests/:requestId" element={<EmployeeRequestViewPage />} />
+
 
             </Routes>
         </BrowserRouter>

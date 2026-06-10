@@ -56,6 +56,10 @@ class OfficeServiceImplTest {
     private Office officeEntity;
     private OfficeDto officeDto;
 
+    /**
+     * Creates fresh shared Office entity and OfficeDto fixtures before each test.
+     * This prevents one test's mutations from affecting another test.
+     */
     @BeforeEach
     void setUp() {
         officeEntity = new Office();
@@ -75,6 +79,10 @@ class OfficeServiceImplTest {
     // createOffice()
     // =========================================================================
 
+    /**
+     * Verifies that createOffice maps the incoming DTO to an entity,
+     * saves the entity, and returns the saved office as a DTO.
+     */
     @Test
     @DisplayName("createOffice() maps DTO to entity, saves it, and returns mapped DTO")
     void createOffice_mapsAndSavesAndReturnsDto() {
@@ -93,6 +101,10 @@ class OfficeServiceImplTest {
         verify(officeMapper, times(1)).mapToOfficeDto(officeEntity);
     }
 
+    /**
+     * Verifies that createOffice does not swallow repository exceptions.
+     * Any save failure should propagate to the caller.
+     */
     @Test
     @DisplayName("createOffice() propagates any exception thrown by the repository")
     void createOffice_propagatesRepositoryException() {
@@ -109,6 +121,9 @@ class OfficeServiceImplTest {
     // getOfficeById()
     // =========================================================================
 
+    /**
+     * Verifies that getOfficeById returns a mapped DTO when the office exists.
+     */
     @Test
     @DisplayName("getOfficeById() returns the DTO when the office exists")
     void getOfficeById_returnsDto_whenExists() {
@@ -122,6 +137,10 @@ class OfficeServiceImplTest {
         assertThat(result.getName()).isEqualTo("Downtown Dental");
     }
 
+    /**
+     * Verifies that getOfficeById throws ResourceNotFoundException when
+     * no office exists for the requested ID.
+     */
     @Test
     @DisplayName("getOfficeById() throws ResourceNotFoundException when the office does not exist")
     void getOfficeById_throwsResourceNotFoundException_whenNotExists() {
@@ -139,6 +158,9 @@ class OfficeServiceImplTest {
     // getAllOffices()
     // =========================================================================
 
+    /**
+     * Verifies that getAllOffices returns all persisted offices mapped to DTOs.
+     */
     @Test
     @DisplayName("getAllOffices() returns a list of DTOs for all persisted offices")
     void getAllOffices_returnsListOfDtos() {
@@ -162,6 +184,10 @@ class OfficeServiceImplTest {
                 .containsExactlyInAnyOrder("Downtown Dental", "Uptown Smiles");
     }
 
+    /**
+     * Verifies that getAllOffices returns an empty list when the repository
+     * contains no offices.
+     */
     @Test
     @DisplayName("getAllOffices() returns an empty list when no offices exist")
     void getAllOffices_returnsEmptyList_whenNoneExist() {
@@ -177,6 +203,10 @@ class OfficeServiceImplTest {
     // updateOffice()
     // =========================================================================
 
+    /**
+     * Verifies that updateOffice copies all editable DTO fields onto the existing
+     * entity, saves it, and returns the updated DTO.
+     */
     @Test
     @DisplayName("updateOffice() applies all DTO fields onto the existing entity and returns updated DTO")
     void updateOffice_appliesChangesAndReturnsUpdatedDto() {
@@ -206,6 +236,10 @@ class OfficeServiceImplTest {
         verify(officeRepository, times(1)).save(officeEntity);
     }
 
+    /**
+     * Verifies that updateOffice throws ResourceNotFoundException when
+     * the office to update does not exist.
+     */
     @Test
     @DisplayName("updateOffice() throws ResourceNotFoundException when the office does not exist")
     void updateOffice_throwsResourceNotFoundException_whenNotExists() {
@@ -223,6 +257,10 @@ class OfficeServiceImplTest {
     // deleteOffice()
     // =========================================================================
 
+    /**
+     * Verifies that deleteOffice looks up the office first and then deletes
+     * the found entity.
+     */
     @Test
     @DisplayName("deleteOffice() fetches the entity, then deletes it")
     void deleteOffice_fetchesAndDeletes() {
@@ -234,6 +272,10 @@ class OfficeServiceImplTest {
         verify(officeRepository, times(1)).delete(officeEntity);
     }
 
+    /**
+     * Verifies that deleteOffice throws ResourceNotFoundException when
+     * the requested office does not exist.
+     */
     @Test
     @DisplayName("deleteOffice() throws ResourceNotFoundException when the office does not exist")
     void deleteOffice_throwsResourceNotFoundException_whenNotExists() {

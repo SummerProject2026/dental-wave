@@ -15,11 +15,11 @@ import java.util.Date;
 @Component
 public class JwtTokenProvider {
 
-    // Secret key loaded from application.properties
+    // Secret key loaded from applicationTest.properties
     @Value("${app.jwt-secret}")
     private String jwtSecret;
 
-    // Token expiration time loaded from application.properties
+    // Token expiration time loaded from applicationTest.properties
     @Value("${app.jwt-expiration-milliseconds}")
     private long jwtExpirationDate;
 

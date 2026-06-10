@@ -96,6 +96,10 @@ class EmployeeServiceImplTest {
     // createEmployee
     // -------------------------------------------------------------------------
 
+    /**
+     * Verifies that createEmployee successfully saves an employee
+     * after resolving the associated user and office.
+     */
     @Test
     @DisplayName("createEmployee — persists employee with resolved user and offices")
     void createEmployee_success() {
@@ -113,6 +117,10 @@ class EmployeeServiceImplTest {
         verify(officeRepository).findById(10L);
     }
 
+    /**
+     * Verifies that createEmployee throws ResourceNotFoundException
+     * when the referenced user does not exist.
+     */
     @Test
     @DisplayName("createEmployee — throws ResourceNotFoundException when user not found")
     void createEmployee_userNotFound_throws() {
@@ -126,6 +134,10 @@ class EmployeeServiceImplTest {
         verify(employeeRepository, never()).save(any());
     }
 
+    /**
+     * Verifies that createEmployee throws ResourceNotFoundException
+     * when the referenced office does not exist.
+     */
     @Test
     @DisplayName("createEmployee — throws ResourceNotFoundException when office not found")
     void createEmployee_officeNotFound_throws() {
@@ -140,6 +152,10 @@ class EmployeeServiceImplTest {
         verify(employeeRepository, never()).save(any());
     }
 
+    /**
+     * Verifies that createEmployee succeeds when the employee DTO
+     * has an empty offices list.
+     */
     @Test
     @DisplayName("createEmployee — succeeds with empty offices list")
     void createEmployee_emptyOffices_success() {
@@ -159,6 +175,10 @@ class EmployeeServiceImplTest {
     // getEmployeeById
     // -------------------------------------------------------------------------
 
+    /**
+     * Verifies that getEmployeeById returns the mapped DTO
+     * when the employee exists.
+     */
     @Test
     @DisplayName("getEmployeeById — returns mapped DTO for existing employee")
     void getEmployeeById_success() {
@@ -170,6 +190,10 @@ class EmployeeServiceImplTest {
         assertThat(result).isEqualTo(employeeDto);
     }
 
+    /**
+     * Verifies that getEmployeeById throws ResourceNotFoundException
+     * when the employee does not exist.
+     */
     @Test
     @DisplayName("getEmployeeById — throws ResourceNotFoundException when not found")
     void getEmployeeById_notFound_throws() {
@@ -184,6 +208,9 @@ class EmployeeServiceImplTest {
     // getAllEmployees
     // -------------------------------------------------------------------------
 
+    /**
+     * Verifies that getAllEmployees returns all employees mapped to DTOs.
+     */
     @Test
     @DisplayName("getAllEmployees — returns mapped list of all employees")
     void getAllEmployees_success() {
@@ -201,6 +228,10 @@ class EmployeeServiceImplTest {
         assertThat(result).hasSize(2);
     }
 
+    /**
+     * Verifies that getAllEmployees returns an empty list
+     * when no employees exist.
+     */
     @Test
     @DisplayName("getAllEmployees — returns empty list when no employees exist")
     void getAllEmployees_empty() {
@@ -215,6 +246,10 @@ class EmployeeServiceImplTest {
     // getEmployeesByOffice
     // -------------------------------------------------------------------------
 
+    /**
+     * Verifies that getEmployeesByOffice returns employees
+     * assigned to the requested office.
+     */
     @Test
     @DisplayName("getEmployeesByOffice — returns employees for the given office")
     void getEmployeesByOffice_success() {
@@ -231,6 +266,10 @@ class EmployeeServiceImplTest {
     // getEmployeesByStatus
     // -------------------------------------------------------------------------
 
+    /**
+     * Verifies that getEmployeesByStatus returns employees
+     * matching the requested work status.
+     */
     @Test
     @DisplayName("getEmployeesByStatus — returns employees matching the given status")
     void getEmployeesByStatus_success() {
@@ -243,6 +282,10 @@ class EmployeeServiceImplTest {
         assertThat(result.get(0).getStatus()).isEqualTo(WorkStatus.ACTIVE);
     }
 
+    /**
+     * Verifies that getEmployeesByStatus returns an empty list
+     * when no employees match the requested status.
+     */
     @Test
     @DisplayName("getEmployeesByStatus — returns empty list when no employees match")
     void getEmployeesByStatus_noMatch_returnsEmpty() {
@@ -257,6 +300,10 @@ class EmployeeServiceImplTest {
     // updateEmployee
     // -------------------------------------------------------------------------
 
+    /**
+     * Verifies that updateEmployee updates employee fields
+     * and returns the mapped DTO.
+     */
     @Test
     @DisplayName("updateEmployee — updates fields and returns mapped DTO")
     void updateEmployee_success() {
@@ -279,6 +326,10 @@ class EmployeeServiceImplTest {
         verify(employeeRepository).save(employee);
     }
 
+    /**
+     * Verifies that updateEmployee throws ResourceNotFoundException
+     * when the employee does not exist.
+     */
     @Test
     @DisplayName("updateEmployee — throws ResourceNotFoundException when employee not found")
     void updateEmployee_notFound_throws() {
@@ -293,6 +344,9 @@ class EmployeeServiceImplTest {
     // deleteEmployee
     // -------------------------------------------------------------------------
 
+    /**
+     * Verifies that deleteEmployee deletes an existing employee.
+     */
     @Test
     @DisplayName("deleteEmployee — deletes employee when found")
     void deleteEmployee_success() {
@@ -303,6 +357,10 @@ class EmployeeServiceImplTest {
         verify(employeeRepository).delete(employee);
     }
 
+    /**
+     * Verifies that deleteEmployee throws ResourceNotFoundException
+     * when the employee does not exist.
+     */
     @Test
     @DisplayName("deleteEmployee — throws ResourceNotFoundException when not found")
     void deleteEmployee_notFound_throws() {
@@ -319,6 +377,10 @@ class EmployeeServiceImplTest {
     // addAvailability
     // -------------------------------------------------------------------------
 
+    /**
+     * Verifies that addAvailability creates an availability record,
+     * links it to the employee, and returns the mapped DTO.
+     */
     @Test
     @DisplayName("addAvailability — wires back-reference and cascades save through employee")
     void addAvailability_success() {
@@ -344,6 +406,10 @@ class EmployeeServiceImplTest {
         assertThat(employee.getAvailabilities()).contains(availability);
     }
 
+    /**
+     * Verifies that updateAvailability updates an availability record
+     * when it belongs to the requested employee.
+     */
     @Test
     @DisplayName("addAvailability — throws ResourceNotFoundException when employee not found")
     void addAvailability_employeeNotFound_throws() {
@@ -358,6 +424,10 @@ class EmployeeServiceImplTest {
     // updateAvailability (nested)
     // -------------------------------------------------------------------------
 
+    /**
+     * Verifies that updateAvailability updates an availability record
+     * when it belongs to the requested employee.
+     */
     @Test
     @DisplayName("updateAvailability — updates fields when availability belongs to employee")
     void updateAvailability_success() {
@@ -389,6 +459,10 @@ class EmployeeServiceImplTest {
         verify(availabilityRepository).save(availability);
     }
 
+    /**
+     * Verifies that updateAvailability throws IllegalArgumentException
+     * when the availability belongs to a different employee.
+     */
     @Test
     @DisplayName("updateAvailability — throws IllegalArgumentException when availability belongs to different employee")
     void updateAvailability_wrongEmployee_throws() {
@@ -407,6 +481,10 @@ class EmployeeServiceImplTest {
                 .hasMessageContaining("Availability 200 does not belong to employee 100");
     }
 
+    /**
+     * Verifies that updateAvailability throws ResourceNotFoundException
+     * when the availability record does not exist.
+     */
     @Test
     @DisplayName("updateAvailability — throws ResourceNotFoundException when availability not found")
     void updateAvailability_availabilityNotFound_throws() {
@@ -422,6 +500,10 @@ class EmployeeServiceImplTest {
     // deleteAvailability (nested)
     // -------------------------------------------------------------------------
 
+    /**
+     * Verifies that deleteAvailability removes an availability record
+     * from the employee.
+     */
     @Test
     @DisplayName("deleteAvailability — removes availability via orphanRemoval")
     void deleteAvailability_success() {
@@ -440,6 +522,10 @@ class EmployeeServiceImplTest {
         assertThat(employee.getAvailabilities()).doesNotContain(availability);
     }
 
+    /**
+     * Verifies that deleteAvailability throws IllegalArgumentException
+     * when the availability belongs to a different employee.
+     */
     @Test
     @DisplayName("deleteAvailability — throws IllegalArgumentException when availability belongs to different employee")
     void deleteAvailability_wrongEmployee_throws() {
@@ -460,6 +546,10 @@ class EmployeeServiceImplTest {
         verify(employeeRepository, never()).save(any());
     }
 
+    /**
+     * Verifies that deleteAvailability throws ResourceNotFoundException
+     * when the employee does not exist.
+     */
     @Test
     @DisplayName("deleteAvailability — throws ResourceNotFoundException when employee not found")
     void deleteAvailability_employeeNotFound_throws() {

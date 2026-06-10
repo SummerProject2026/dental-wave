@@ -27,7 +27,7 @@ public class SetupDataLoader implements ApplicationListener<ContextRefreshedEven
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    // Admin password loaded from application.properties
+    // Admin password loaded from applicationTest.properties
     @Value("${app.admin-user-password}")
     private String adminUserPassword;
 

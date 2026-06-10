@@ -42,8 +42,8 @@ class CalendarRepositoryTest {
         adminUser = new User();
         adminUser.setFirstName("Admin");
         adminUser.setLastName("User");
-        adminUser.setUsername("admin_test_cal");
-        adminUser.setEmail("admin@dentalwave.com");
+        adminUser.setUsername("admin_test_cal_" + System.nanoTime());
+        adminUser.setEmail("admin_" + System.nanoTime() + "@dentalwave.com");
         entityManager.persist(adminUser);
         entityManager.flush();
     }

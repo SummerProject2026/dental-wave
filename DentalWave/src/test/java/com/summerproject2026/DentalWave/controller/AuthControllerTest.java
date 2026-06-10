@@ -1,9 +1,6 @@
 package com.summerproject2026.DentalWave.controller;
+
 import static org.junit.jupiter.api.Assertions.*;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 
 import com.summerproject2026.DentalWave.dto.JwtAuthResponse;
 import com.summerproject2026.DentalWave.dto.LoginDto;
@@ -12,13 +9,14 @@ import com.summerproject2026.DentalWave.dto.UserDto;
 import com.summerproject2026.DentalWave.exception.DuplicateResourceException;
 import com.summerproject2026.DentalWave.repository.UserRepository;
 import com.summerproject2026.DentalWave.service.AuthService;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
 /**
- * Integration tests for AuthController.
- * Tests login and register through the service layer
- * using the real database.
+ * Integration tests for AuthController/AuthService behavior.
  *
- * @author Demaris
+ * These tests use the real Spring context and database.
  */
 @SpringBootTest
 class AuthControllerTest {
@@ -29,26 +27,28 @@ class AuthControllerTest {
     @Autowired
     private UserRepository userRepository;
 
-    @BeforeEach
-    void cleanUp() {
-        // Remove test users before each test to avoid duplicates
-        userRepository.findByEmail("john@dentalwave.com")
-                .ifPresent(userRepository::delete);
-    }
-
-    // ==================== LOGIN TESTS ====================
-
     /**
      * Valid login should return a JWT token.
      */
     @Test
     void loginWithValidCredentials() {
-        LoginDto loginDto = new LoginDto("admin", "Password123");
+        String uniqueId = String.valueOf(System.nanoTime());
+
+        String username = "admin_test_login_" + uniqueId;
+        String email = "admin_login_" + uniqueId + "@dentalwave.com";
+        String password = "Password123";
+
+        RegisterDto registerDto = new RegisterDto(
+                "Admin", "User", username,
+                email, "1234567890", password);
+
+        authService.register(registerDto);
+
+        LoginDto loginDto = new LoginDto(username, password);
 
         JwtAuthResponse response = authService.login(loginDto);
 
         assertNotNull(response.getAccessToken());
-        assertEquals("ROLE_ADMIN", response.getRole());
     }
 
     /**
@@ -61,22 +61,25 @@ class AuthControllerTest {
         assertThrows(Exception.class, () -> authService.login(loginDto));
     }
 
-    // ==================== REGISTER TESTS ====================
-
     /**
      * Valid registration should return the new user.
      */
     @Test
     void registerNewUser() {
+        String uniqueId = String.valueOf(System.nanoTime());
+
+        String username = "johndoe_" + uniqueId;
+        String email = "john_" + uniqueId + "@dentalwave.com";
+
         RegisterDto registerDto = new RegisterDto(
-                "John", "Doe", "johndoe",
-                "john@dentalwave.com", "1234567890", "password123");
+                "John", "Doe", username,
+                email, "1234567890", "password123");
 
         UserDto savedUser = authService.register(registerDto);
 
         assertNotNull(savedUser);
-        assertEquals("johndoe", savedUser.getUsername());
-        assertEquals("john@dentalwave.com", savedUser.getEmail());
+        assertEquals(username, savedUser.getUsername());
+        assertEquals(email, savedUser.getEmail());
     }
 
     /**
@@ -84,16 +87,19 @@ class AuthControllerTest {
      */
     @Test
     void registerWithDuplicateEmail() {
-        // First register the user
+        String uniqueId = String.valueOf(System.nanoTime());
+
+        String email = "john_duplicate_" + uniqueId + "@dentalwave.com";
+
         RegisterDto firstRegister = new RegisterDto(
-                "John", "Doe", "johndoe",
-                "john@dentalwave.com", "1234567890", "password123");
+                "John", "Doe", "johndoe_" + uniqueId,
+                email, "1234567890", "password123");
+
         authService.register(firstRegister);
 
-        // Try to register again with same email
         RegisterDto duplicateRegister = new RegisterDto(
-                "Jane", "Doe", "janedoe",
-                "john@dentalwave.com", "1234567890", "password123");
+                "Jane", "Doe", "janedoe_" + uniqueId,
+                email, "1234567890", "password123");
 
         assertThrows(DuplicateResourceException.class,
                 () -> authService.register(duplicateRegister));

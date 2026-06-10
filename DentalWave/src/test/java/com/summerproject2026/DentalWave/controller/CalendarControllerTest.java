@@ -10,8 +10,9 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
@@ -40,12 +41,13 @@ class CalendarControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @MockitoBean
     private CalendarService calendarService;
-    @MockBean
+
+    @MockitoBean
     private com.summerproject2026.DentalWave.security.JwtTokenProvider jwtTokenProvider;
 
-    @MockBean
+    @MockitoBean
     private com.summerproject2026.DentalWave.security.JwtAuthenticationFilter jwtAuthenticationFilter;
 
 

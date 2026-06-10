@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -35,14 +35,15 @@ class ScheduleControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @MockitoBean
     private ScheduleService scheduleService;
 
-    @MockBean
+    @MockitoBean
     private com.summerproject2026.DentalWave.security.JwtTokenProvider jwtTokenProvider;
 
-    @MockBean
+    @MockitoBean
     private com.summerproject2026.DentalWave.security.JwtAuthenticationFilter jwtAuthenticationFilter;
+
     @Autowired
     private ObjectMapper objectMapper;
 
@@ -353,5 +354,25 @@ class ScheduleControllerTest {
             mockMvc.perform(patch("/api/schedules/99/publish"))
                     .andExpect(status().isNotFound());
         }
+    }
+    @Test
+    @DisplayName("GET /api/schedules/employee/name/{employeeName} → returns 200 with Jane Smith's published schedules")
+    void getSchedulesByEmployeeName_returns200() throws Exception {
+        // Mark schedule as published so it appears in employee calendar
+        scheduleDto.setPublished(true);
+
+        // Mock service to return one schedule for Jane Smith
+        when(scheduleService.getSchedulesByEmployeeName("Jane Smith"))
+                .thenReturn(List.of(scheduleDto));
+
+        // Perform GET request with employee full name
+        mockMvc.perform(get("/api/schedules/employee/name/Jane Smith"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].id").value(1L))
+                .andExpect(jsonPath("$[0].published").value(true));
+
+        // Verify service was called with correct employee name
+        verify(scheduleService).getSchedulesByEmployeeName("Jane Smith");
     }
 }

@@ -80,6 +80,23 @@ public class ScheduleServiceImpl implements ScheduleService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Returns all published schedules assigned to a given employee.
+     * Used by UC2 — Employee Views Personal Calendar.
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public List<ScheduleDto> getSchedulesByEmployee(Long employeeId) {
+        // Verify employee exists
+        if (!employeeRepository.existsById(employeeId)) {
+            throw new ResourceNotFoundException(
+                    "Employee not found with id: " + employeeId);
+        }
+        return scheduleRepository.findPublishedSchedulesByEmployeeId(employeeId).stream()
+                .map(scheduleMapper::mapToScheduleDto)
+                .collect(Collectors.toList());
+    }
+
     /** Updates scalar fields on an existing schedule */
     @Override
     public ScheduleDto updateSchedule(Long id, ScheduleDto scheduleDto) {
@@ -123,4 +140,14 @@ public class ScheduleServiceImpl implements ScheduleService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Schedule not found with id: " + id));
     }
+
+    /** Returns all published schedules assigned to a given employee by name */
+    @Override
+    @Transactional(readOnly = true)
+    public List<ScheduleDto> getSchedulesByEmployeeName(String employeeName) {
+        return scheduleRepository.findPublishedSchedulesByEmployeeName(employeeName).stream()
+                .map(scheduleMapper::mapToScheduleDto)
+                .collect(Collectors.toList());
+    }
+
 }

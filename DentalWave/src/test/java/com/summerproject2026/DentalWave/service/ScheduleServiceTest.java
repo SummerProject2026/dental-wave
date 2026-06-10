@@ -317,4 +317,97 @@ class ScheduleServiceImplTest {
                     .isInstanceOf(ResourceNotFoundException.class);
         }
     }
+    @Nested
+    @DisplayName("getSchedulesByEmployee")
+    class GetSchedulesByEmployee {
+
+        @Test
+        @DisplayName("returns published schedules for existing employee")
+        void getSchedulesByEmployee_returnsSchedules() {
+            // Mock employee exists
+            when(employeeRepository.existsById(1L)).thenReturn(true);
+
+            // Mock repository returns one published schedule
+            when(scheduleRepository.findPublishedSchedulesByEmployeeId(1L))
+                    .thenReturn(List.of(schedule));
+
+            // Mock mapper
+            when(scheduleMapper.mapToScheduleDto(schedule)).thenReturn(scheduleDto);
+
+            // Call service
+            List<ScheduleDto> results = scheduleService.getSchedulesByEmployee(1L);
+
+            // Verify results
+            assertThat(results).hasSize(1);
+            verify(scheduleRepository).findPublishedSchedulesByEmployeeId(1L);
+        }
+
+        @Test
+        @DisplayName("returns empty list when employee has no published schedules")
+        void getSchedulesByEmployee_emptyList() {
+            // Mock employee exists
+            when(employeeRepository.existsById(1L)).thenReturn(true);
+
+            // Mock repository returns empty list
+            when(scheduleRepository.findPublishedSchedulesByEmployeeId(1L))
+                    .thenReturn(List.of());
+
+            // Call service
+            List<ScheduleDto> results = scheduleService.getSchedulesByEmployee(1L);
+
+            // Verify empty list returned
+            assertThat(results).isEmpty();
+        }
+
+        @Test
+        @DisplayName("throws ResourceNotFoundException when employee not found")
+        void getSchedulesByEmployee_employeeNotFound() {
+            // Mock employee does not exist
+            when(employeeRepository.existsById(99L)).thenReturn(false);
+
+            // Verify exception thrown
+            assertThatThrownBy(() -> scheduleService.getSchedulesByEmployee(99L))
+                    .isInstanceOf(ResourceNotFoundException.class)
+                    .hasMessageContaining("Employee not found with id: 99");
+        }
+    }
+
+    @Nested
+    @DisplayName("getSchedulesByEmployeeName")
+    class GetSchedulesByEmployeeName {
+
+        @Test
+        @DisplayName("returns published schedules for Jane Smith")
+        void getSchedulesByEmployeeName_returnsSchedules() {
+            // Mock repository returns one published schedule for Jane Smith
+            when(scheduleRepository.findPublishedSchedulesByEmployeeName("Jane Smith"))
+                    .thenReturn(List.of(schedule));
+
+            // Mock mapper
+            when(scheduleMapper.mapToScheduleDto(schedule)).thenReturn(scheduleDto);
+
+            // Call service
+            List<ScheduleDto> results = scheduleService.getSchedulesByEmployeeName("Jane Smith");
+
+            // Verify results
+            assertThat(results).hasSize(1);
+            verify(scheduleRepository).findPublishedSchedulesByEmployeeName("Jane Smith");
+        }
+
+        @Test
+        @DisplayName("returns empty list when no schedules found for employee name")
+        void getSchedulesByEmployeeName_emptyList() {
+            // Mock repository returns empty list for unknown name
+            when(scheduleRepository.findPublishedSchedulesByEmployeeName("Unknown Person"))
+                    .thenReturn(List.of());
+
+            // Call service
+            List<ScheduleDto> results = scheduleService.getSchedulesByEmployeeName("Unknown Person");
+
+            // Verify empty list returned
+            assertThat(results).isEmpty();
+        }
+    }
+
+
 }

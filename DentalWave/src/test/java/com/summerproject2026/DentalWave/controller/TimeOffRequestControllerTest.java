@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -35,13 +35,13 @@ class TimeOffRequestControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @MockBean
+    @MockitoBean
     private TimeOffRequestService timeOffRequestService;
 
-    @MockBean
+    @MockitoBean
     private com.summerproject2026.DentalWave.security.JwtTokenProvider jwtTokenProvider;
 
-    @MockBean
+    @MockitoBean
     private com.summerproject2026.DentalWave.security.JwtAuthenticationFilter jwtAuthenticationFilter;
 
     private TimeOffRequestDto pendingDto;
@@ -225,7 +225,7 @@ class TimeOffRequestControllerTest {
 
         mockMvc.perform(patch("/api/time-off-requests/{id}/approve", 1L)
                         .param("reviewedById", "20"))
-                .andExpect(status().is5xxServerError());
+                .andExpect(status().isConflict());
     }
 
     @Test
@@ -266,7 +266,7 @@ class TimeOffRequestControllerTest {
 
         mockMvc.perform(patch("/api/time-off-requests/{id}/deny", 1L)
                         .param("reviewedById", "20"))
-                .andExpect(status().is5xxServerError());
+                .andExpect(status().isConflict());
     }
 
     @Test

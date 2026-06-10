@@ -17,7 +17,7 @@ import java.util.List;
  *
  * Responsibilities:
  *  - CRUD for schedules
- *  - Filtering by date or parent calendar
+ *  - Filtering by date, calendar, or employee
  *  - Team assignment / removal
  *  - Publishing a schedule
  */
@@ -37,7 +37,7 @@ public class ScheduleController {
     // -------------------------------------------------------------------------
 
     /**
-     * Creates a standalone schedule (not linked via the calendar endpoint).
+     * Creates a standalone schedule.
      *
      * @param scheduleDto the schedule data from the request body
      * @return 201 Created with the persisted ScheduleDto
@@ -45,7 +45,7 @@ public class ScheduleController {
     @PostMapping
     public ResponseEntity<ScheduleDto> createSchedule(@RequestBody ScheduleDto scheduleDto) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                             .body(scheduleService.createSchedule(scheduleDto));
+                .body(scheduleService.createSchedule(scheduleDto));
     }
 
     // -------------------------------------------------------------------------
@@ -90,7 +90,7 @@ public class ScheduleController {
      */
     @PutMapping("/{id}")
     public ResponseEntity<ScheduleDto> updateSchedule(@PathVariable Long id,
-                                                       @RequestBody ScheduleDto scheduleDto) {
+                                                      @RequestBody ScheduleDto scheduleDto) {
         return ResponseEntity.ok(scheduleService.updateSchedule(id, scheduleDto));
     }
 
@@ -117,7 +117,7 @@ public class ScheduleController {
     /**
      * Returns all schedules on a specific date.
      *
-     * @param date ISO date string in the path, e.g. /date/2025-06-15
+     * @param date ISO date string e.g. /date/2025-06-15
      * @return 200 OK with the matching list
      */
     @GetMapping("/date/{date}")
@@ -142,6 +142,24 @@ public class ScheduleController {
     }
 
     // -------------------------------------------------------------------------
+    // GET /api/schedules/employee/{employeeId} — UC2: employee views personal calendar
+    // -------------------------------------------------------------------------
+
+    /**
+     * Returns all published schedules assigned to a given employee.
+     * Used by UC2 — Employee Views Personal Calendar.
+     * Only returns published schedules — drafts are not visible to assistants.
+     *
+     * @param employeeId the employee ID
+     * @return 200 OK with the list of published schedules for the employee
+     */
+    @GetMapping("/employee/{employeeId}")
+    public ResponseEntity<List<ScheduleDto>> getSchedulesByEmployee(
+            @PathVariable Long employeeId) {
+        return ResponseEntity.ok(scheduleService.getSchedulesByEmployee(employeeId));
+    }
+
+    // -------------------------------------------------------------------------
     // POST /api/schedules/{scheduleId}/teams/{userId}/employees/{employeeId}
     // -------------------------------------------------------------------------
 
@@ -155,8 +173,8 @@ public class ScheduleController {
      */
     @PostMapping("/{scheduleId}/teams/{userId}/employees/{employeeId}")
     public ResponseEntity<ScheduleDto> assignEmployeeToTeam(@PathVariable Long scheduleId,
-                                                              @PathVariable Long userId,
-                                                              @PathVariable Long employeeId) {
+                                                            @PathVariable Long userId,
+                                                            @PathVariable Long employeeId) {
         return ResponseEntity.ok(
                 scheduleService.assignEmployeeToTeam(scheduleId, userId, employeeId));
     }
@@ -175,8 +193,8 @@ public class ScheduleController {
      */
     @DeleteMapping("/{scheduleId}/teams/{userId}/employees/{employeeId}")
     public ResponseEntity<ScheduleDto> removeEmployeeFromTeam(@PathVariable Long scheduleId,
-                                                               @PathVariable Long userId,
-                                                               @PathVariable Long employeeId) {
+                                                              @PathVariable Long userId,
+                                                              @PathVariable Long employeeId) {
         return ResponseEntity.ok(
                 scheduleService.removeEmployeeFromTeam(scheduleId, userId, employeeId));
     }
@@ -194,5 +212,18 @@ public class ScheduleController {
     @PatchMapping("/{id}/publish")
     public ResponseEntity<ScheduleDto> publishSchedule(@PathVariable Long id) {
         return ResponseEntity.ok(scheduleService.publishSchedule(id));
+    }
+
+    /**
+     * Returns all published schedules assigned to a given employee by name.
+     * Used by UC2 — Employee Views Personal Calendar.
+     *
+     * @param employeeName the full name of the employee e.g. "Jane Smith"
+     * @return 200 OK with the list of published schedules for the employee
+     */
+    @GetMapping("/employee/name/{employeeName}")
+    public ResponseEntity<List<ScheduleDto>> getSchedulesByEmployeeName(
+            @PathVariable String employeeName) {
+        return ResponseEntity.ok(scheduleService.getSchedulesByEmployeeName(employeeName));
     }
 }

@@ -9,7 +9,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -60,20 +60,20 @@ class OfficeControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @MockBean
+    @MockitoBean
     private OfficeService officeService;
-    @MockBean
+    @MockitoBean
     private com.summerproject2026.DentalWave.security.JwtTokenProvider jwtTokenProvider;
 
-    @MockBean
+    @MockitoBean
     private com.summerproject2026.DentalWave.security.JwtAuthenticationFilter jwtAuthenticationFilter;
-
     // -------------------------------------------------------------------------
     // Shared test data
     // -------------------------------------------------------------------------
 
     private OfficeDto officeDto;
     private OfficeDto officeDto2;
+    private OfficeDto officeDto3;
 
     @BeforeEach
     void setUp() {
@@ -88,6 +88,12 @@ class OfficeControllerTest {
         officeDto2.setName("Uptown Smiles");
         officeDto2.setAddress("456 Trade St, Charlotte, NC 28202");
         officeDto2.setPhoneNumber("704-555-0202");
+
+        officeDto3 = new OfficeDto();
+        officeDto3.setId(3L);
+        officeDto3.setName("South Smiles");
+        officeDto3.setAddress("456 Trade St, Char, NC 28202");
+        officeDto3.setPhoneNumber("714-555-0202");
     }
 
     // =========================================================================
@@ -254,5 +260,36 @@ class OfficeControllerTest {
 
         mockMvc.perform(delete("/api/offices/{id}", 99L))
                 .andExpect(status().isNotFound());
+    }
+
+    // More test
+    @Test
+    @DisplayName("POST /api/offices → 201 Created with only name provided")
+    void createOffice_returns201WithOnlyName() throws Exception {
+        OfficeDto minimalOffice = new OfficeDto();
+        minimalOffice.setId(3L);
+        minimalOffice.setName("North Dental");
+
+        when(officeService.createOffice(any(OfficeDto.class))).thenReturn(minimalOffice);
+
+        mockMvc.perform(post("/api/offices")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(minimalOffice)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id", is(3)))
+                .andExpect(jsonPath("$.name", is("North Dental")));
+
+        verify(officeService, times(1)).createOffice(any(OfficeDto.class));
+    }
+    @Test
+    @DisplayName("GET /api/offices → returns correct number of offices")
+    void getAllOffices_returnsCorrectCount() throws Exception {
+        when(officeService.getAllOffices()).thenReturn(List.of(officeDto, officeDto2 , officeDto3));
+
+        mockMvc.perform(get("/api/offices"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()", is(3)));
+
+        verify(officeService, times(1)).getAllOffices();
     }
 }

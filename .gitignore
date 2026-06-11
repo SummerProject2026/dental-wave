@@ -1,0 +1,12 @@
+# IntelliJ
+.idea/
+
+# Node
+node_modules/
+
+# Build output
+dist/
+
+# Environment variables
+.env
+

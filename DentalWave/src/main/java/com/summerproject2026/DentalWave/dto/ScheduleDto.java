@@ -1,57 +1,52 @@
 package com.summerproject2026.DentalWave.dto;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.List;
+import java.util.Map;
 
 /**
- * Data Transfer Object (DTO) for Schedule.
- * Used to transfer schedule data between the backend and frontend.
+ * Data Transfer Object for Schedule.
  */
 public class ScheduleDto {
 
-    /**
-     * Unique identifier for the schedule.
-     */
+    /** Unique identifier for the schedule. */
     private Long id;
 
-    /**
-     * First day covered by the schedule.
-     */
+    /** The specific date this schedule covers */
+    private LocalDate date;
+
+    /** Start time of the shift */
+    private LocalTime startTime;
+
+    /** End time of the shift */
+    private LocalTime endTime;
+
+    /** Optional notes for this schedule */
+    private String notes;
+
+    /** First day covered by the schedule */
     private LocalDate startScheduleDate;
 
-    /**
-     * Last day covered by the schedule.
-     */
+    /** Last day covered by the schedule */
     private LocalDate endScheduleDate;
 
-    /**
-     * Indicates whether the schedule has been published.
-     */
+    /** Indicates whether the schedule has been published */
     private Boolean published;
 
-    /**
-     * ID of the user who created the schedule.
-     */
+    /** ID of the user who created the schedule */
     private Long createdById;
 
-    /**
-     * Default constructor.
-     */
-    public ScheduleDto() {
-    }
+    /** ID of the calendar this schedule belongs to */
+    private Long calendarId;
 
-    /**
-     * Full constructor.
-     *
-     * @param id unique schedule identifier
-     * @param startScheduleDate first day of the schedule
-     * @param endScheduleDate last day of the schedule
-     * @param published publication status
-     * @param createdById ID of the user who created the schedule
-     */
-    public ScheduleDto(Long id,
-                       LocalDate startScheduleDate,
-                       LocalDate endScheduleDate,
-                       Boolean published,
+    /** Team assignments: team lead user ID → list of employees */
+    private Map<Long, List<EmployeeDto>> teams;
+
+    public ScheduleDto() {}
+
+    public ScheduleDto(Long id, LocalDate startScheduleDate,
+                       LocalDate endScheduleDate, Boolean published,
                        Long createdById) {
         this.id = id;
         this.startScheduleDate = startScheduleDate;
@@ -60,93 +55,36 @@ public class ScheduleDto {
         this.createdById = createdById;
     }
 
-    /**
-     * Returns the schedule ID.
-     *
-     * @return schedule ID
-     */
-    public Long getId() {
-        return id;
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    /**
-     * Sets the schedule ID.
-     *
-     * @param id schedule ID
-     */
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public LocalDate getDate() { return date; }
+    public void setDate(LocalDate date) { this.date = date; }
 
-    /**
-     * Returns the schedule start date.
-     *
-     * @return start date
-     */
-    public LocalDate getStartScheduleDate() {
-        return startScheduleDate;
-    }
+    public LocalTime getStartTime() { return startTime; }
+    public void setStartTime(LocalTime startTime) { this.startTime = startTime; }
 
-    /**
-     * Sets the schedule start date.
-     *
-     * @param startScheduleDate start date
-     */
-    public void setStartScheduleDate(LocalDate startScheduleDate) {
-        this.startScheduleDate = startScheduleDate;
-    }
+    public LocalTime getEndTime() { return endTime; }
+    public void setEndTime(LocalTime endTime) { this.endTime = endTime; }
 
-    /**
-     * Returns the schedule end date.
-     *
-     * @return end date
-     */
-    public LocalDate getEndScheduleDate() {
-        return endScheduleDate;
-    }
+    public String getNotes() { return notes; }
+    public void setNotes(String notes) { this.notes = notes; }
 
-    /**
-     * Sets the schedule end date.
-     *
-     * @param endScheduleDate end date
-     */
-    public void setEndScheduleDate(LocalDate endScheduleDate) {
-        this.endScheduleDate = endScheduleDate;
-    }
+    public LocalDate getStartScheduleDate() { return startScheduleDate; }
+    public void setStartScheduleDate(LocalDate startScheduleDate) { this.startScheduleDate = startScheduleDate; }
 
-    /**
-     * Returns whether the schedule has been published.
-     *
-     * @return publication status
-     */
-    public Boolean getPublished() {
-        return published;
-    }
+    public LocalDate getEndScheduleDate() { return endScheduleDate; }
+    public void setEndScheduleDate(LocalDate endScheduleDate) { this.endScheduleDate = endScheduleDate; }
 
-    /**
-     * Sets the publication status.
-     *
-     * @param published publication status
-     */
-    public void setPublished(Boolean published) {
-        this.published = published;
-    }
+    public Boolean getPublished() { return published; }
+    public void setPublished(Boolean published) { this.published = published; }
 
-    /**
-     * Returns the ID of the user who created the schedule.
-     *
-     * @return creator user ID
-     */
-    public Long getCreatedById() {
-        return createdById;
-    }
+    public Long getCreatedById() { return createdById; }
+    public void setCreatedById(Long createdById) { this.createdById = createdById; }
 
-    /**
-     * Sets the ID of the user who created the schedule.
-     *
-     * @param createdById creator user ID
-     */
-    public void setCreatedById(Long createdById) {
-        this.createdById = createdById;
-    }
+    public Long getCalendarId() { return calendarId; }
+    public void setCalendarId(Long calendarId) { this.calendarId = calendarId; }
+
+    public Map<Long, List<EmployeeDto>> getTeams() { return teams; }
+    public void setTeams(Map<Long, List<EmployeeDto>> teams) { this.teams = teams; }
 }

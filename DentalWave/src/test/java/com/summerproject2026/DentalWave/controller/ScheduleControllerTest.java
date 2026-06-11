@@ -1,7 +1,7 @@
-package com.dentalwave.controller;
+package com.summerproject2026.DentalWave.controller;
 
-import com.dentalwave.dto.ScheduleDto;
-import com.dentalwave.service.ScheduleService;
+import com.summerproject2026.DentalWave.dto.ScheduleDto;
+import com.summerproject2026.DentalWave.service.ScheduleService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -9,10 +9,10 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -28,14 +28,21 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Date-path variables are tested using ISO format (yyyy-MM-dd).
  */
 @WebMvcTest(ScheduleController.class)
+@AutoConfigureMockMvc(addFilters = false)
 @DisplayName("ScheduleController")
 class ScheduleControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @MockitoBean
     private ScheduleService scheduleService;
+
+    @MockitoBean
+    private com.summerproject2026.DentalWave.security.JwtTokenProvider jwtTokenProvider;
+
+    @MockitoBean
+    private com.summerproject2026.DentalWave.security.JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -100,7 +107,7 @@ class ScheduleControllerTest {
         @DisplayName("propagates ResourceNotFoundException (results in 404)")
         void getScheduleById_notFound() throws Exception {
             when(scheduleService.getScheduleById(99L))
-                    .thenThrow(new com.dentalwave.exception.ResourceNotFoundException("Schedule not found"));
+                    .thenThrow(new com.summerproject2026.DentalWave.exception.ResourceNotFoundException("Schedule not found"));
 
             mockMvc.perform(get("/api/schedules/99"))
                     .andExpect(status().isNotFound());
@@ -279,7 +286,7 @@ class ScheduleControllerTest {
         @DisplayName("propagates ResourceNotFoundException when any entity is missing (results in 404)")
         void assignEmployeeToTeam_entityNotFound() throws Exception {
             when(scheduleService.assignEmployeeToTeam(1L, 2L, 99L))
-                    .thenThrow(new com.dentalwave.exception.ResourceNotFoundException("Employee not found"));
+                    .thenThrow(new com.summerproject2026.DentalWave.exception.ResourceNotFoundException("Employee not found"));
 
             mockMvc.perform(post("/api/schedules/1/teams/2/employees/99"))
                     .andExpect(status().isNotFound());
@@ -310,7 +317,7 @@ class ScheduleControllerTest {
         @DisplayName("propagates ResourceNotFoundException when any entity is missing (results in 404)")
         void removeEmployeeFromTeam_entityNotFound() throws Exception {
             when(scheduleService.removeEmployeeFromTeam(1L, 2L, 99L))
-                    .thenThrow(new com.dentalwave.exception.ResourceNotFoundException("Employee not found"));
+                    .thenThrow(new com.summerproject2026.DentalWave.exception.ResourceNotFoundException("Employee not found"));
 
             mockMvc.perform(delete("/api/schedules/1/teams/2/employees/99"))
                     .andExpect(status().isNotFound());
@@ -342,10 +349,30 @@ class ScheduleControllerTest {
         @DisplayName("propagates ResourceNotFoundException (results in 404)")
         void publishSchedule_notFound() throws Exception {
             when(scheduleService.publishSchedule(99L))
-                    .thenThrow(new com.dentalwave.exception.ResourceNotFoundException("Schedule not found"));
+                    .thenThrow(new com.summerproject2026.DentalWave.exception.ResourceNotFoundException("Schedule not found"));
 
             mockMvc.perform(patch("/api/schedules/99/publish"))
                     .andExpect(status().isNotFound());
         }
+    }
+    @Test
+    @DisplayName("GET /api/schedules/employee/name/{employeeName} → returns 200 with Jane Smith's published schedules")
+    void getSchedulesByEmployeeName_returns200() throws Exception {
+        // Mark schedule as published so it appears in employee calendar
+        scheduleDto.setPublished(true);
+
+        // Mock service to return one schedule for Jane Smith
+        when(scheduleService.getSchedulesByEmployeeName("Jane Smith"))
+                .thenReturn(List.of(scheduleDto));
+
+        // Perform GET request with employee full name
+        mockMvc.perform(get("/api/schedules/employee/name/Jane Smith"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].id").value(1L))
+                .andExpect(jsonPath("$[0].published").value(true));
+
+        // Verify service was called with correct employee name
+        verify(scheduleService).getSchedulesByEmployeeName("Jane Smith");
     }
 }

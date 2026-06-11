@@ -5,7 +5,6 @@ import com.summerproject2026.DentalWave.dto.UserDto;
 import com.summerproject2026.DentalWave.dto.LoginDto;
 import com.summerproject2026.DentalWave.dto.RegisterDto;
 
-
 /**
  * NOTE:
  * Authentication requires different data than standard user management.
@@ -51,10 +50,20 @@ public interface AuthService {
     JwtAuthResponse login(LoginDto loginDto);
 
     /**
-     * Registers a new user account.
+     * Registers a new user account with default ROLE_ASSISTANT.
      *
-     * @param userDto the information for the new user
+     * @param registerDto the information for the new user
      * @return the newly registered user
      */
     UserDto register(RegisterDto registerDto);
+
+    /**
+     * Registers a new user account with a specific role.
+     * Used by admin to create HR users.
+     *
+     * @param registerDto the information for the new user
+     * @param role the role name to assign e.g. ROLE_HR
+     * @return the newly registered user
+     */
+    UserDto registerWithRole(RegisterDto registerDto, String role);
 }

@@ -9,8 +9,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -24,18 +25,8 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-/**
- * Web-layer (slice) tests for {@link TimeOffRequestController}.
- *
- * <p>{@code @WebMvcTest} loads only the MVC layer; {@link TimeOffRequestService}
- * is replaced by a Mockito mock via {@code @MockBean}. Tests verify HTTP
- * status codes, response body structure, and correct delegation to the service.</p>
- *
- * <p>If Spring Security is on the classpath and returns 401/403, uncomment:
- * {@code @AutoConfigureMockMvc(addFilters = false)}</p>
- */
 @WebMvcTest(TimeOffRequestController.class)
-// @AutoConfigureMockMvc(addFilters = false)
+@AutoConfigureMockMvc(addFilters = false)
 class TimeOffRequestControllerTest {
 
     @Autowired
@@ -44,12 +35,14 @@ class TimeOffRequestControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @MockBean
+    @MockitoBean
     private TimeOffRequestService timeOffRequestService;
 
-    // -------------------------------------------------------------------------
-    // Shared test data
-    // -------------------------------------------------------------------------
+    @MockitoBean
+    private com.summerproject2026.DentalWave.security.JwtTokenProvider jwtTokenProvider;
+
+    @MockitoBean
+    private com.summerproject2026.DentalWave.security.JwtAuthenticationFilter jwtAuthenticationFilter;
 
     private TimeOffRequestDto pendingDto;
     private TimeOffRequestDto approvedDto;
@@ -69,10 +62,6 @@ class TimeOffRequestControllerTest {
         approvedDto.setStatus(RequestStatus.APPROVED);
         approvedDto.setReviewComment("Looks good");
     }
-
-    // =========================================================================
-    // POST /api/time-off-requests
-    // =========================================================================
 
     @Test
     @DisplayName("POST /api/time-off-requests → 201 Created with the created request")
@@ -102,10 +91,6 @@ class TimeOffRequestControllerTest {
         verify(timeOffRequestService, never()).createTimeOffRequest(any());
     }
 
-    // =========================================================================
-    // GET /api/time-off-requests/{id}
-    // =========================================================================
-
     @Test
     @DisplayName("GET /api/time-off-requests/{id} → 200 OK with matching request")
     void getTimeOffRequestById_returns200_whenExists() throws Exception {
@@ -126,10 +111,6 @@ class TimeOffRequestControllerTest {
         mockMvc.perform(get("/api/time-off-requests/{id}", 99L))
                 .andExpect(status().isNotFound());
     }
-
-    // =========================================================================
-    // GET /api/time-off-requests
-    // =========================================================================
 
     @Test
     @DisplayName("GET /api/time-off-requests → 200 OK with all requests")
@@ -157,10 +138,6 @@ class TimeOffRequestControllerTest {
                 .andExpect(jsonPath("$", hasSize(0)));
     }
 
-    // =========================================================================
-    // GET /api/time-off-requests/employee/{employeeId}
-    // =========================================================================
-
     @Test
     @DisplayName("GET /api/time-off-requests/employee/{employeeId} → 200 OK with employee's requests")
     void getRequestsByEmployee_returns200() throws Exception {
@@ -181,10 +158,6 @@ class TimeOffRequestControllerTest {
         mockMvc.perform(get("/api/time-off-requests/employee/{employeeId}", 99L))
                 .andExpect(status().isNotFound());
     }
-
-    // =========================================================================
-    // GET /api/time-off-requests/status/{status}
-    // =========================================================================
 
     @Test
     @DisplayName("GET /api/time-off-requests/status/PENDING → 200 OK with pending requests")
@@ -208,10 +181,6 @@ class TimeOffRequestControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(0)));
     }
-
-    // =========================================================================
-    // PATCH /api/time-off-requests/{id}/approve
-    // =========================================================================
 
     @Test
     @DisplayName("PATCH /api/time-off-requests/{id}/approve → 200 OK with approved request")
@@ -249,7 +218,7 @@ class TimeOffRequestControllerTest {
     }
 
     @Test
-    @DisplayName("PATCH /api/time-off-requests/{id}/approve → 409 Conflict when request is not PENDING")
+    @DisplayName("PATCH /api/time-off-requests/{id}/approve → 5xx when request is not PENDING")
     void approveRequest_returns409_whenRequestNotPending() throws Exception {
         when(timeOffRequestService.approveRequest(eq(1L), any(), any()))
                 .thenThrow(new IllegalStateException("Only PENDING requests can be reviewed."));
@@ -258,10 +227,6 @@ class TimeOffRequestControllerTest {
                         .param("reviewedById", "20"))
                 .andExpect(status().isConflict());
     }
-
-    // =========================================================================
-    // PATCH /api/time-off-requests/{id}/deny
-    // =========================================================================
 
     @Test
     @DisplayName("PATCH /api/time-off-requests/{id}/deny → 200 OK with denied request")
@@ -294,7 +259,7 @@ class TimeOffRequestControllerTest {
     }
 
     @Test
-    @DisplayName("PATCH /api/time-off-requests/{id}/deny → 409 Conflict when request is not PENDING")
+    @DisplayName("PATCH /api/time-off-requests/{id}/deny → 5xx when request is not PENDING")
     void denyRequest_returns409_whenRequestNotPending() throws Exception {
         when(timeOffRequestService.denyRequest(eq(1L), any(), any()))
                 .thenThrow(new IllegalStateException("Only PENDING requests can be reviewed."));
@@ -303,10 +268,6 @@ class TimeOffRequestControllerTest {
                         .param("reviewedById", "20"))
                 .andExpect(status().isConflict());
     }
-
-    // =========================================================================
-    // DELETE /api/time-off-requests/{id}
-    // =========================================================================
 
     @Test
     @DisplayName("DELETE /api/time-off-requests/{id} → 200 OK with confirmation message")

@@ -1,16 +1,16 @@
-package com.dentalwave.service.impl;
+package com.summerproject2026.DentalWave.service.impl;
 
-import com.dentalwave.dto.CalendarDto;
-import com.dentalwave.dto.ScheduleDto;
-import com.dentalwave.exception.ResourceNotFoundException;
-import com.dentalwave.mapper.CalendarMapper;
-import com.dentalwave.mapper.ScheduleMapper;
-import com.dentalwave.model.Calendar;
-import com.dentalwave.model.Schedule;
-import com.dentalwave.model.User;
-import com.dentalwave.repository.CalendarRepository;
-import com.dentalwave.repository.ScheduleRepository;
-import com.dentalwave.repository.UserRepository;
+import com.summerproject2026.DentalWave.dto.CalendarDto;
+import com.summerproject2026.DentalWave.dto.ScheduleDto;
+import com.summerproject2026.DentalWave.entity.Calendar;
+import com.summerproject2026.DentalWave.entity.Schedule;
+import com.summerproject2026.DentalWave.entity.User;
+import com.summerproject2026.DentalWave.exception.ResourceNotFoundException;
+import com.summerproject2026.DentalWave.mapper.CalendarMapper;
+import com.summerproject2026.DentalWave.mapper.ScheduleMapper;
+import com.summerproject2026.DentalWave.repository.CalendarRepository;
+import com.summerproject2026.DentalWave.repository.ScheduleRepository;
+import com.summerproject2026.DentalWave.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -31,30 +31,47 @@ import static org.mockito.Mockito.*;
 /**
  * Unit tests for CalendarServiceImpl.
  *
- * All collaborators are mocked — no Spring context or database involved.
+ * All collaborators are mocked, so these tests do not use
+ * the Spring context or a real database.
  */
 @ExtendWith(MockitoExtension.class)
 class CalendarServiceImplTest {
 
-    @Mock private CalendarRepository calendarRepository;
-    @Mock private ScheduleRepository scheduleRepository;
-    @Mock private UserRepository     userRepository;
-    @Mock private CalendarMapper     calendarMapper;
-    @Mock private ScheduleMapper     scheduleMapper;
+    @Mock
+    private CalendarRepository calendarRepository;
+
+    @Mock
+    private ScheduleRepository scheduleRepository;
+
+    @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private CalendarMapper calendarMapper;
+
+    @Mock
+    private ScheduleMapper scheduleMapper;
 
     @InjectMocks
     private CalendarServiceImpl calendarService;
-
-    // ── Fixtures ──────────────────────────────────────────────────────────────
 
     private User creator;
     private Calendar calendar;
     private CalendarDto calendarDto;
 
+    /**
+     * Creates shared test fixtures before each test.
+     *
+     * Initializes:
+     * - A creator user
+     * - A calendar entity
+     * - A matching calendar DTO
+     */
     @BeforeEach
     void setUp() {
         creator = new User();
         creator.setId(1L);
+        creator.setUsername("admin_cal_test");
         creator.setFirstName("Admin");
 
         calendar = new Calendar();
@@ -74,10 +91,9 @@ class CalendarServiceImplTest {
         calendarDto.setCreatedById(1L);
     }
 
-    // -------------------------------------------------------------------------
-    // createCalendar
-    // -------------------------------------------------------------------------
-
+    /**
+     * Verifies that createCalendar saves a calendar and returns the mapped DTO.
+     */
     @Test
     @DisplayName("createCalendar — persists calendar and returns mapped DTO")
     void createCalendar_success() {
@@ -92,6 +108,10 @@ class CalendarServiceImplTest {
         verify(calendarRepository).save(calendar);
     }
 
+    /**
+     * Verifies that createCalendar throws ResourceNotFoundException
+     * when the creator user does not exist.
+     */
     @Test
     @DisplayName("createCalendar — throws ResourceNotFoundException when creator user not found")
     void createCalendar_userNotFound_throws() {
@@ -105,10 +125,14 @@ class CalendarServiceImplTest {
         verify(calendarRepository, never()).save(any());
     }
 
+    /**
+     * Verifies that createCalendar skips the user lookup when createdById is null.
+     */
     @Test
     @DisplayName("createCalendar — skips user lookup when createdById is null")
     void createCalendar_nullCreatedById_skipsUserLookup() {
         calendarDto.setCreatedById(null);
+
         when(calendarMapper.mapToCalendar(calendarDto)).thenReturn(calendar);
         when(calendarRepository.save(calendar)).thenReturn(calendar);
         when(calendarMapper.mapToCalendarDto(calendar)).thenReturn(calendarDto);
@@ -119,10 +143,9 @@ class CalendarServiceImplTest {
         verify(calendarRepository).save(calendar);
     }
 
-    // -------------------------------------------------------------------------
-    // getCalendarById
-    // -------------------------------------------------------------------------
-
+    /**
+     * Verifies that getCalendarById returns a mapped DTO for an existing calendar.
+     */
     @Test
     @DisplayName("getCalendarById — returns mapped DTO for existing calendar")
     void getCalendarById_success() {
@@ -134,6 +157,10 @@ class CalendarServiceImplTest {
         assertThat(result).isEqualTo(calendarDto);
     }
 
+    /**
+     * Verifies that getCalendarById throws ResourceNotFoundException
+     * when the calendar does not exist.
+     */
     @Test
     @DisplayName("getCalendarById — throws ResourceNotFoundException when not found")
     void getCalendarById_notFound_throws() {
@@ -144,15 +171,15 @@ class CalendarServiceImplTest {
                 .hasMessageContaining("Calendar not found with id: 99");
     }
 
-    // -------------------------------------------------------------------------
-    // getAllCalendars
-    // -------------------------------------------------------------------------
-
+    /**
+     * Verifies that getAllCalendars returns all calendars as mapped DTOs.
+     */
     @Test
     @DisplayName("getAllCalendars — returns mapped list of all calendars")
     void getAllCalendars_success() {
         Calendar calendar2 = new Calendar();
         calendar2.setId(101L);
+
         CalendarDto dto2 = new CalendarDto();
         dto2.setId(101L);
 
@@ -165,6 +192,9 @@ class CalendarServiceImplTest {
         assertThat(result).hasSize(2);
     }
 
+    /**
+     * Verifies that getAllCalendars returns an empty list when no calendars exist.
+     */
     @Test
     @DisplayName("getAllCalendars — returns empty list when no calendars exist")
     void getAllCalendars_empty() {
@@ -175,10 +205,9 @@ class CalendarServiceImplTest {
         assertThat(result).isEmpty();
     }
 
-    // -------------------------------------------------------------------------
-    // getCalendarsByMonth
-    // -------------------------------------------------------------------------
-
+    /**
+     * Verifies that getCalendarsByMonth returns calendars matching the given month.
+     */
     @Test
     @DisplayName("getCalendarsByMonth — returns matching calendars for given month")
     void getCalendarsByMonth_success() {
@@ -191,6 +220,9 @@ class CalendarServiceImplTest {
         assertThat(result.get(0).getMonth()).isEqualTo("June 2025");
     }
 
+    /**
+     * Verifies that getCalendarsByMonth returns an empty list when no calendars match.
+     */
     @Test
     @DisplayName("getCalendarsByMonth — returns empty list when no calendars match")
     void getCalendarsByMonth_noMatch_returnsEmpty() {
@@ -201,10 +233,9 @@ class CalendarServiceImplTest {
         assertThat(result).isEmpty();
     }
 
-    // -------------------------------------------------------------------------
-    // getPublishedCalendars
-    // -------------------------------------------------------------------------
-
+    /**
+     * Verifies that getPublishedCalendars returns published calendars.
+     */
     @Test
     @DisplayName("getPublishedCalendars — returns only published calendars")
     void getPublishedCalendars_success() {
@@ -220,10 +251,9 @@ class CalendarServiceImplTest {
         assertThat(result.get(0).getPublished()).isTrue();
     }
 
-    // -------------------------------------------------------------------------
-    // updateCalendar
-    // -------------------------------------------------------------------------
-
+    /**
+     * Verifies that updateCalendar updates scalar fields and returns the mapped DTO.
+     */
     @Test
     @DisplayName("updateCalendar — updates scalar fields and returns mapped DTO")
     void updateCalendar_success() {
@@ -247,6 +277,10 @@ class CalendarServiceImplTest {
         verify(calendarRepository).save(calendar);
     }
 
+    /**
+     * Verifies that updateCalendar throws ResourceNotFoundException
+     * when the calendar does not exist.
+     */
     @Test
     @DisplayName("updateCalendar — throws ResourceNotFoundException when calendar not found")
     void updateCalendar_notFound_throws() {
@@ -257,6 +291,10 @@ class CalendarServiceImplTest {
                 .hasMessageContaining("Calendar not found with id: 99");
     }
 
+    /**
+     * Verifies that updateCalendar does not overwrite the published flag
+     * when published is not provided in the DTO.
+     */
     @Test
     @DisplayName("updateCalendar — does not change published flag when not provided in DTO")
     void updateCalendar_nullPublished_doesNotChangeFlag() {
@@ -264,7 +302,7 @@ class CalendarServiceImplTest {
         updateDto.setMonth("June 2025");
         updateDto.setStartCalendarDate(LocalDate.of(2025, 6, 1));
         updateDto.setEndCalendarDate(LocalDate.of(2025, 6, 30));
-        updateDto.setPublished(null); // not provided
+        updateDto.setPublished(null);
 
         when(calendarRepository.findById(100L)).thenReturn(Optional.of(calendar));
         when(calendarRepository.save(calendar)).thenReturn(calendar);
@@ -272,14 +310,13 @@ class CalendarServiceImplTest {
 
         calendarService.updateCalendar(100L, updateDto);
 
-        // published remains false (original value), was not overwritten
+        // Published remains false because updateDto did not provide a new value.
         assertThat(calendar.getPublished()).isFalse();
     }
 
-    // -------------------------------------------------------------------------
-    // deleteCalendar
-    // -------------------------------------------------------------------------
-
+    /**
+     * Verifies that deleteCalendar deletes an existing calendar.
+     */
     @Test
     @DisplayName("deleteCalendar — deletes calendar when it exists")
     void deleteCalendar_success() {
@@ -290,6 +327,10 @@ class CalendarServiceImplTest {
         verify(calendarRepository).delete(calendar);
     }
 
+    /**
+     * Verifies that deleteCalendar throws ResourceNotFoundException
+     * when the calendar does not exist.
+     */
     @Test
     @DisplayName("deleteCalendar — throws ResourceNotFoundException when not found")
     void deleteCalendar_notFound_throws() {
@@ -302,10 +343,9 @@ class CalendarServiceImplTest {
         verify(calendarRepository, never()).delete(any());
     }
 
-    // -------------------------------------------------------------------------
-    // publishCalendar / unpublishCalendar
-    // -------------------------------------------------------------------------
-
+    /**
+     * Verifies that publishCalendar sets published to true and saves the calendar.
+     */
     @Test
     @DisplayName("publishCalendar — sets published to true and saves")
     void publishCalendar_success() {
@@ -323,6 +363,10 @@ class CalendarServiceImplTest {
         verify(calendarRepository).save(calendar);
     }
 
+    /**
+     * Verifies that publishCalendar throws ResourceNotFoundException
+     * when the calendar does not exist.
+     */
     @Test
     @DisplayName("publishCalendar — throws ResourceNotFoundException when calendar not found")
     void publishCalendar_notFound_throws() {
@@ -333,6 +377,9 @@ class CalendarServiceImplTest {
                 .hasMessageContaining("Calendar not found with id: 99");
     }
 
+    /**
+     * Verifies that unpublishCalendar sets published to false and saves the calendar.
+     */
     @Test
     @DisplayName("unpublishCalendar — sets published to false and saves")
     void unpublishCalendar_success() {
@@ -352,6 +399,10 @@ class CalendarServiceImplTest {
         verify(calendarRepository).save(calendar);
     }
 
+    /**
+     * Verifies that unpublishCalendar throws ResourceNotFoundException
+     * when the calendar does not exist.
+     */
     @Test
     @DisplayName("unpublishCalendar — throws ResourceNotFoundException when calendar not found")
     void unpublishCalendar_notFound_throws() {
@@ -362,10 +413,10 @@ class CalendarServiceImplTest {
                 .hasMessageContaining("Calendar not found with id: 99");
     }
 
-    // -------------------------------------------------------------------------
-    // addSchedule
-    // -------------------------------------------------------------------------
-
+    /**
+     * Verifies that addSchedule creates a schedule, links it to the calendar,
+     * and returns the mapped schedule DTO.
+     */
     @Test
     @DisplayName("addSchedule — creates schedule, links to calendar, and returns DTO")
     void addSchedule_success() {
@@ -384,10 +435,15 @@ class CalendarServiceImplTest {
 
         assertThat(result.getId()).isEqualTo(200L);
         verify(calendarRepository).save(calendar);
-        // Verify schedule was linked to the calendar via addSchedule()
+
+        // Verify schedule was linked to the calendar through Calendar.addSchedule().
         assertThat(calendar.getSchedules()).contains(schedule);
     }
 
+    /**
+     * Verifies that addSchedule throws ResourceNotFoundException
+     * when the calendar does not exist.
+     */
     @Test
     @DisplayName("addSchedule — throws ResourceNotFoundException when calendar not found")
     void addSchedule_calendarNotFound_throws() {
@@ -398,10 +454,10 @@ class CalendarServiceImplTest {
                 .hasMessageContaining("Calendar not found with id: 99");
     }
 
-    // -------------------------------------------------------------------------
-    // removeSchedule
-    // -------------------------------------------------------------------------
-
+    /**
+     * Verifies that removeSchedule unlinks a schedule from the calendar
+     * and saves the updated calendar.
+     */
     @Test
     @DisplayName("removeSchedule — unlinks and deletes schedule from calendar")
     void removeSchedule_success() {
@@ -419,6 +475,10 @@ class CalendarServiceImplTest {
         assertThat(calendar.getSchedules()).doesNotContain(schedule);
     }
 
+    /**
+     * Verifies that removeSchedule throws ResourceNotFoundException
+     * when the calendar does not exist.
+     */
     @Test
     @DisplayName("removeSchedule — throws ResourceNotFoundException when calendar not found")
     void removeSchedule_calendarNotFound_throws() {
@@ -429,6 +489,10 @@ class CalendarServiceImplTest {
                 .hasMessageContaining("Calendar not found with id: 99");
     }
 
+    /**
+     * Verifies that removeSchedule throws ResourceNotFoundException
+     * when the schedule does not exist.
+     */
     @Test
     @DisplayName("removeSchedule — throws ResourceNotFoundException when schedule not found")
     void removeSchedule_scheduleNotFound_throws() {
@@ -440,6 +504,10 @@ class CalendarServiceImplTest {
                 .hasMessageContaining("Schedule not found with id: 99");
     }
 
+    /**
+     * Verifies that removeSchedule throws IllegalArgumentException
+     * when the schedule belongs to a different calendar.
+     */
     @Test
     @DisplayName("removeSchedule — throws IllegalArgumentException when schedule belongs to different calendar")
     void removeSchedule_scheduleBelongsToDifferentCalendar_throws() {
@@ -448,7 +516,7 @@ class CalendarServiceImplTest {
 
         Schedule schedule = new Schedule();
         schedule.setId(200L);
-        schedule.setCalendar(otherCalendar); // belongs to a DIFFERENT calendar
+        schedule.setCalendar(otherCalendar);
 
         when(calendarRepository.findById(100L)).thenReturn(Optional.of(calendar));
         when(scheduleRepository.findById(200L)).thenReturn(Optional.of(schedule));

@@ -1,13 +1,15 @@
-package com.dentalwave.repository;
+package com.summerproject2026.DentalWave.repository;
 
-import com.dentalwave.model.Calendar;
-import com.dentalwave.model.User;
+import com.summerproject2026.DentalWave.entity.Calendar;
+import com.summerproject2026.DentalWave.entity.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -40,7 +42,8 @@ class CalendarRepositoryTest {
         adminUser = new User();
         adminUser.setFirstName("Admin");
         adminUser.setLastName("User");
-        adminUser.setEmail("admin@dentalwave.com");
+        adminUser.setUsername("admin_test_cal_" + System.nanoTime());
+        adminUser.setEmail("admin_" + System.nanoTime() + "@dentalwave.com");
         entityManager.persist(adminUser);
         entityManager.flush();
     }

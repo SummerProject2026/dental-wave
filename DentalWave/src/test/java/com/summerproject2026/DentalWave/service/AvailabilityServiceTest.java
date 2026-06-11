@@ -1,12 +1,12 @@
-package com.dentalwave.service.impl;
+package com.summerproject2026.DentalWave.service.impl;
 
-import com.dentalwave.dto.AvailabilityDto;
-import com.dentalwave.exception.ResourceNotFoundException;
-import com.dentalwave.mapper.AvailabilityMapper;
-import com.dentalwave.model.Availability;
-import com.dentalwave.model.Employee;
-import com.dentalwave.repository.AvailabilityRepository;
-import com.dentalwave.repository.EmployeeRepository;
+import com.summerproject2026.DentalWave.dto.AvailabilityDto;
+import com.summerproject2026.DentalWave.entity.Availability;
+import com.summerproject2026.DentalWave.entity.Employee;
+import com.summerproject2026.DentalWave.exception.ResourceNotFoundException;
+import com.summerproject2026.DentalWave.mapper.AvailabilityMapper;
+import com.summerproject2026.DentalWave.repository.AvailabilityRepository;
+import com.summerproject2026.DentalWave.repository.EmployeeRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -28,8 +28,8 @@ import static org.mockito.Mockito.*;
 /**
  * Unit tests for AvailabilityServiceImpl.
  *
- * All dependencies are mocked with Mockito — no Spring context, no database.
- * Each test exercises a single method in isolation.
+ * All dependencies are mocked with Mockito, so these tests do not use
+ * the Spring context or a real database.
  */
 @ExtendWith(MockitoExtension.class)
 class AvailabilityServiceImplTest {
@@ -46,12 +46,13 @@ class AvailabilityServiceImplTest {
     @InjectMocks
     private AvailabilityServiceImpl availabilityService;
 
-    // ── Shared fixtures ───────────────────────────────────────────────────────
-
     private Employee employee;
     private Availability availability;
     private AvailabilityDto availabilityDto;
 
+    /**
+     * Creates shared test fixtures before each test.
+     */
     @BeforeEach
     void setUp() {
         employee = new Employee();
@@ -74,10 +75,10 @@ class AvailabilityServiceImplTest {
         availabilityDto.setAvailable(true);
     }
 
-    // -------------------------------------------------------------------------
-    // createAvailability
-    // -------------------------------------------------------------------------
-
+    /**
+     * Verifies that createAvailability saves a new availability record
+     * and returns the mapped DTO.
+     */
     @Test
     @DisplayName("createAvailability — persists record and returns mapped DTO")
     void createAvailability_success() {
@@ -90,9 +91,12 @@ class AvailabilityServiceImplTest {
 
         assertThat(result).isEqualTo(availabilityDto);
         verify(availabilityRepository).save(availability);
-        verify(availability::setEmployee);  // employee was hydrated
     }
 
+    /**
+     * Verifies that createAvailability throws ResourceNotFoundException
+     * when the requested employee does not exist.
+     */
     @Test
     @DisplayName("createAvailability — throws ResourceNotFoundException when employee not found")
     void createAvailability_employeeNotFound_throws() {
@@ -106,10 +110,15 @@ class AvailabilityServiceImplTest {
         verify(availabilityRepository, never()).save(any());
     }
 
+    /**
+     * Verifies that createAvailability skips employee lookup when
+     * the DTO does not contain an employee ID.
+     */
     @Test
     @DisplayName("createAvailability — skips employee lookup when employeeId is null")
     void createAvailability_nullEmployeeId_skipsLookup() {
         availabilityDto.setEmployeeId(null);
+
         when(availabilityMapper.mapToAvailability(availabilityDto)).thenReturn(availability);
         when(availabilityRepository.save(availability)).thenReturn(availability);
         when(availabilityMapper.mapToAvailabilityDto(availability)).thenReturn(availabilityDto);
@@ -120,10 +129,10 @@ class AvailabilityServiceImplTest {
         verify(availabilityRepository).save(availability);
     }
 
-    // -------------------------------------------------------------------------
-    // getAvailabilityByEmployee
-    // -------------------------------------------------------------------------
-
+    /**
+     * Verifies that getAvailabilityByEmployee returns a mapped list
+     * of availability records for an existing employee.
+     */
     @Test
     @DisplayName("getAvailabilityByEmployee — returns mapped list for existing employee")
     void getAvailabilityByEmployee_success() {
@@ -146,6 +155,10 @@ class AvailabilityServiceImplTest {
         verify(availabilityRepository).findByEmployeeId(1L);
     }
 
+    /**
+     * Verifies that getAvailabilityByEmployee throws ResourceNotFoundException
+     * when the employee does not exist.
+     */
     @Test
     @DisplayName("getAvailabilityByEmployee — throws ResourceNotFoundException when employee not found")
     void getAvailabilityByEmployee_employeeNotFound_throws() {
@@ -158,6 +171,10 @@ class AvailabilityServiceImplTest {
         verify(availabilityRepository, never()).findByEmployeeId(any());
     }
 
+    /**
+     * Verifies that getAvailabilityByEmployee returns an empty list
+     * when the employee exists but has no availability records.
+     */
     @Test
     @DisplayName("getAvailabilityByEmployee — returns empty list when employee has no records")
     void getAvailabilityByEmployee_noRecords_returnsEmpty() {
@@ -169,10 +186,10 @@ class AvailabilityServiceImplTest {
         assertThat(result).isEmpty();
     }
 
-    // -------------------------------------------------------------------------
-    // updateAvailability
-    // -------------------------------------------------------------------------
-
+    /**
+     * Verifies that updateAvailability updates the availability fields
+     * and returns the mapped DTO.
+     */
     @Test
     @DisplayName("updateAvailability — updates fields and returns mapped DTO")
     void updateAvailability_success() {
@@ -196,6 +213,10 @@ class AvailabilityServiceImplTest {
         verify(availabilityRepository).save(availability);
     }
 
+    /**
+     * Verifies that updateAvailability reassigns the availability record
+     * to a different employee when a new employee ID is provided.
+     */
     @Test
     @DisplayName("updateAvailability — re-assigns employee when a different employeeId is provided")
     void updateAvailability_reassignsEmployee() {
@@ -203,7 +224,7 @@ class AvailabilityServiceImplTest {
         newEmployee.setId(2L);
 
         AvailabilityDto updateDto = new AvailabilityDto();
-        updateDto.setEmployeeId(2L); // different from current employee (id=1)
+        updateDto.setEmployeeId(2L);
         updateDto.setDayOfWeek(DayOfWeek.FRIDAY);
         updateDto.setStartTime(LocalTime.of(8, 0));
         updateDto.setEndTime(LocalTime.of(12, 0));
@@ -220,6 +241,10 @@ class AvailabilityServiceImplTest {
         assertThat(availability.getEmployee().getId()).isEqualTo(2L);
     }
 
+    /**
+     * Verifies that updateAvailability throws ResourceNotFoundException
+     * when the availability record does not exist.
+     */
     @Test
     @DisplayName("updateAvailability — throws ResourceNotFoundException when record not found")
     void updateAvailability_recordNotFound_throws() {
@@ -232,6 +257,10 @@ class AvailabilityServiceImplTest {
         verify(availabilityRepository, never()).save(any());
     }
 
+    /**
+     * Verifies that updateAvailability throws ResourceNotFoundException
+     * when the new employee ID does not exist.
+     */
     @Test
     @DisplayName("updateAvailability — throws when new employeeId does not exist")
     void updateAvailability_newEmployeeNotFound_throws() {
@@ -250,10 +279,9 @@ class AvailabilityServiceImplTest {
                 .hasMessageContaining("Employee not found with id: 99");
     }
 
-    // -------------------------------------------------------------------------
-    // deleteAvailability
-    // -------------------------------------------------------------------------
-
+    /**
+     * Verifies that deleteAvailability deletes an existing availability record.
+     */
     @Test
     @DisplayName("deleteAvailability — deletes record when it exists")
     void deleteAvailability_success() {
@@ -264,6 +292,10 @@ class AvailabilityServiceImplTest {
         verify(availabilityRepository).delete(availability);
     }
 
+    /**
+     * Verifies that deleteAvailability throws ResourceNotFoundException
+     * when the availability record does not exist.
+     */
     @Test
     @DisplayName("deleteAvailability — throws ResourceNotFoundException when record not found")
     void deleteAvailability_recordNotFound_throws() {

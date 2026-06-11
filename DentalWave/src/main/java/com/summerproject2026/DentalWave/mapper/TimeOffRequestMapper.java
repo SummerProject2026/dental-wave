@@ -1,4 +1,4 @@
-package com.dentalwave.mapper;
+package com.summerproject2026.DentalWave.mapper;
 
 import com.summerproject2026.DentalWave.dto.TimeOffRequestDto;
 import com.summerproject2026.DentalWave.entity.Employee;

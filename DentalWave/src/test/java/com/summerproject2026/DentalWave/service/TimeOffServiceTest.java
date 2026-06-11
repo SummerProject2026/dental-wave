@@ -39,6 +39,28 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class TimeOffRequestServiceImplTest {
 
+    /**
+     * NOTE:
+     * This is a pure Mockito unit test.
+     *
+     * Spring Boot is NOT started for these tests. All repositories,
+     * mappers, and other dependencies are replaced with Mockito mocks.
+     *
+     * Because no Spring context is loaded:
+     * - No database is used
+     * - No JPA repositories are created
+     * - No web server is started
+     * - Tests execute very quickly
+     *
+     * These tests focus only on the business logic contained within
+     * the service class. Repository behavior is simulated using
+     * Mockito stubs (when(...).thenReturn(...)).
+     *
+     * Repository integration, JPA mappings, and database queries
+     * should be tested separately in @DataJpaTest repository tests.
+     */
+
+
     // -------------------------------------------------------------------------
     // Mocks & subject under test
     // -------------------------------------------------------------------------
@@ -68,6 +90,17 @@ class TimeOffRequestServiceImplTest {
     private TimeOffRequestDto requestDto;
     private TimeOffRequestDto responseDto;
 
+    /**
+     * Creates shared test fixtures before each test.
+     *
+     * Initializes:
+     * - A sample Employee
+     * - A sample reviewer User
+     * - A pending TimeOffRequest entity
+     * - Request and response DTOs
+     *
+     * These objects are reused throughout the test suite.
+     */
     @BeforeEach
     void setUp() {
         employee = new Employee();
@@ -97,6 +130,11 @@ class TimeOffRequestServiceImplTest {
     // createTimeOffRequest()
     // =========================================================================
 
+    /**
+     * Verifies that createTimeOffRequest resolves the employee,
+     * forces the request status to PENDING, assigns a server-side
+     * submission timestamp, persists the request, and returns the DTO.
+     */
     @Test
     @DisplayName("createTimeOffRequest() resolves employee, forces PENDING status and server timestamp, saves and returns DTO")
     void createTimeOffRequest_savesWithPendingStatusAndServerTimestamp() {
@@ -120,6 +158,10 @@ class TimeOffRequestServiceImplTest {
         assertThat(captured.getEmployee()).isEqualTo(employee);
     }
 
+    /**
+     * Verifies that createTimeOffRequest overrides any client-supplied
+     * status value and always persists new requests with PENDING status.
+     */
     @Test
     @DisplayName("createTimeOffRequest() overrides any client-supplied status with PENDING")
     void createTimeOffRequest_overridesClientStatus_withPending() {
@@ -140,6 +182,10 @@ class TimeOffRequestServiceImplTest {
         assertThat(captor.getValue().getStatus()).isEqualTo(RequestStatus.PENDING);
     }
 
+    /**
+     * Verifies that createTimeOffRequest throws ResourceNotFoundException
+     * when the specified employee does not exist.
+     */
     @Test
     @DisplayName("createTimeOffRequest() throws ResourceNotFoundException when employee does not exist")
     void createTimeOffRequest_throwsResourceNotFoundException_whenEmployeeNotFound() {
@@ -156,6 +202,10 @@ class TimeOffRequestServiceImplTest {
     // getTimeOffRequestById()
     // =========================================================================
 
+    /**
+     * Verifies that getTimeOffRequestById returns the mapped DTO
+     * when the requested time-off request exists.
+     */
     @Test
     @DisplayName("getTimeOffRequestById() returns DTO when the request exists")
     void getTimeOffRequestById_returnsDto_whenExists() {
@@ -168,6 +218,10 @@ class TimeOffRequestServiceImplTest {
         assertThat(result.getId()).isEqualTo(1L);
     }
 
+    /**
+     * Verifies that getTimeOffRequestById throws ResourceNotFoundException
+     * when the requested time-off request cannot be found.
+     */
     @Test
     @DisplayName("getTimeOffRequestById() throws ResourceNotFoundException when request does not exist")
     void getTimeOffRequestById_throwsResourceNotFoundException_whenNotFound() {
@@ -184,6 +238,10 @@ class TimeOffRequestServiceImplTest {
     // getAllRequests()
     // =========================================================================
 
+    /**
+     * Verifies that getAllRequests returns all persisted requests
+     * mapped to DTOs.
+     */
     @Test
     @DisplayName("getAllRequests() returns a list of DTOs for all existing requests")
     void getAllRequests_returnsListOfDtos() {
@@ -207,6 +265,10 @@ class TimeOffRequestServiceImplTest {
                 .containsExactlyInAnyOrder(1L, 2L);
     }
 
+    /**
+     * Verifies that getAllRequests returns an empty list when
+     * no time-off requests exist.
+     */
     @Test
     @DisplayName("getAllRequests() returns an empty list when no requests exist")
     void getAllRequests_returnsEmptyList_whenNoneExist() {
@@ -222,6 +284,10 @@ class TimeOffRequestServiceImplTest {
     // getRequestsByEmployee()
     // =========================================================================
 
+    /**
+     * Verifies that getRequestsByEmployee returns all requests
+     * belonging to the specified employee.
+     */
     @Test
     @DisplayName("getRequestsByEmployee() returns matching DTOs when employee exists")
     void getRequestsByEmployee_returnsDtos_whenEmployeeExists() {
@@ -235,6 +301,10 @@ class TimeOffRequestServiceImplTest {
         assertThat(results.get(0).getEmployeeId()).isEqualTo(10L);
     }
 
+    /**
+     * Verifies that getRequestsByEmployee returns an empty list
+     * when the employee exists but has no requests.
+     */
     @Test
     @DisplayName("getRequestsByEmployee() returns empty list when employee has no requests")
     void getRequestsByEmployee_returnsEmptyList_whenNoRequestsFound() {
@@ -246,6 +316,10 @@ class TimeOffRequestServiceImplTest {
         assertThat(results).isEmpty();
     }
 
+    /**
+     * Verifies that getRequestsByEmployee throws ResourceNotFoundException
+     * when the specified employee does not exist.
+     */
     @Test
     @DisplayName("getRequestsByEmployee() throws ResourceNotFoundException when employee does not exist")
     void getRequestsByEmployee_throwsResourceNotFoundException_whenEmployeeNotFound() {
@@ -262,6 +336,10 @@ class TimeOffRequestServiceImplTest {
     // getRequestsByStatus()
     // =========================================================================
 
+    /**
+     * Verifies that getRequestsByStatus returns only requests
+     * matching the specified status.
+     */
     @Test
     @DisplayName("getRequestsByStatus() returns only requests matching the given status")
     void getRequestsByStatus_returnsMatchingDtos() {
@@ -276,6 +354,10 @@ class TimeOffRequestServiceImplTest {
         assertThat(results.get(0).getStatus()).isEqualTo(RequestStatus.PENDING);
     }
 
+    /**
+     * Verifies that getRequestsByStatus returns an empty list
+     * when no requests match the specified status.
+     */
     @Test
     @DisplayName("getRequestsByStatus() returns empty list when no requests match the status")
     void getRequestsByStatus_returnsEmptyList_whenNoMatch() {
@@ -292,6 +374,11 @@ class TimeOffRequestServiceImplTest {
     // approveRequest()
     // =========================================================================
 
+    /**
+     * Verifies that approveRequest marks a pending request as APPROVED,
+     * records the reviewer, stores the review timestamp and comment,
+     * and persists the updated request.
+     */
     @Test
     @DisplayName("approveRequest() sets status to APPROVED, assigns reviewer, sets reviewedAt, and saves")
     void approveRequest_setsApprovedStatusAndReviewerAndTimestamp() {
@@ -317,6 +404,10 @@ class TimeOffRequestServiceImplTest {
         verify(timeOffRequestRepository, times(1)).save(pendingEntity);
     }
 
+    /**
+     * Verifies that approveRequest accepts a null review comment
+     * and still completes the approval process successfully.
+     */
     @Test
     @DisplayName("approveRequest() works with a null reviewComment")
     void approveRequest_worksWithNullReviewComment() {
@@ -330,6 +421,10 @@ class TimeOffRequestServiceImplTest {
         assertThat(pendingEntity.getReviewComment()).isNull();
     }
 
+    /**
+     * Verifies that approveRequest throws ResourceNotFoundException
+     * when the requested time-off request does not exist.
+     */
     @Test
     @DisplayName("approveRequest() throws ResourceNotFoundException when the request does not exist")
     void approveRequest_throwsResourceNotFoundException_whenRequestNotFound() {
@@ -343,6 +438,10 @@ class TimeOffRequestServiceImplTest {
         verify(timeOffRequestRepository, never()).save(any());
     }
 
+    /**
+     * Verifies that approveRequest throws ResourceNotFoundException
+     * when the reviewer user does not exist.
+     */
     @Test
     @DisplayName("approveRequest() throws ResourceNotFoundException when the reviewer does not exist")
     void approveRequest_throwsResourceNotFoundException_whenReviewerNotFound() {
@@ -356,6 +455,10 @@ class TimeOffRequestServiceImplTest {
         verify(timeOffRequestRepository, never()).save(any());
     }
 
+    /**
+     * Verifies that approveRequest throws IllegalStateException
+     * when the request has already been reviewed and is no longer PENDING.
+     */
     @Test
     @DisplayName("approveRequest() throws IllegalStateException when request is not PENDING")
     void approveRequest_throwsIllegalStateException_whenRequestNotPending() {
@@ -376,6 +479,11 @@ class TimeOffRequestServiceImplTest {
     // denyRequest()
     // =========================================================================
 
+    /**
+     * Verifies that denyRequest marks a pending request as DENIED,
+     * records the reviewer, stores the review timestamp and comment,
+     * and persists the updated request.
+     */
     @Test
     @DisplayName("denyRequest() sets status to DENIED, assigns reviewer, sets reviewedAt, and saves")
     void denyRequest_setsDeniedStatusAndReviewerAndTimestamp() {
@@ -399,6 +507,10 @@ class TimeOffRequestServiceImplTest {
         assertThat(pendingEntity.getReviewComment()).isEqualTo("Insufficient coverage");
     }
 
+    /**
+     * Verifies that denyRequest throws ResourceNotFoundException
+     * when the requested time-off request does not exist.
+     */
     @Test
     @DisplayName("denyRequest() throws ResourceNotFoundException when the request does not exist")
     void denyRequest_throwsResourceNotFoundException_whenRequestNotFound() {
@@ -412,6 +524,10 @@ class TimeOffRequestServiceImplTest {
         verify(timeOffRequestRepository, never()).save(any());
     }
 
+    /**
+     * Verifies that denyRequest throws ResourceNotFoundException
+     * when the reviewer user does not exist.
+     */
     @Test
     @DisplayName("denyRequest() throws ResourceNotFoundException when the reviewer does not exist")
     void denyRequest_throwsResourceNotFoundException_whenReviewerNotFound() {
@@ -425,6 +541,10 @@ class TimeOffRequestServiceImplTest {
         verify(timeOffRequestRepository, never()).save(any());
     }
 
+    /**
+     * Verifies that denyRequest throws IllegalStateException
+     * when the request has already been reviewed and is no longer PENDING.
+     */
     @Test
     @DisplayName("denyRequest() throws IllegalStateException when request is not PENDING")
     void denyRequest_throwsIllegalStateException_whenRequestNotPending() {
@@ -445,6 +565,10 @@ class TimeOffRequestServiceImplTest {
     // deleteRequest()
     // =========================================================================
 
+    /**
+     * Verifies that deleteRequest retrieves the request and
+     * removes it from persistence.
+     */
     @Test
     @DisplayName("deleteRequest() fetches the request then deletes it")
     void deleteRequest_fetchesAndDeletes() {
@@ -456,6 +580,10 @@ class TimeOffRequestServiceImplTest {
         verify(timeOffRequestRepository, times(1)).delete(pendingEntity);
     }
 
+    /**
+     * Verifies that deleteRequest throws ResourceNotFoundException
+     * when the requested time-off request does not exist.
+     */
     @Test
     @DisplayName("deleteRequest() throws ResourceNotFoundException when request does not exist")
     void deleteRequest_throwsResourceNotFoundException_whenNotFound() {

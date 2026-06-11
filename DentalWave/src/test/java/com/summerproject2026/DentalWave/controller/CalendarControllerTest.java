@@ -1,8 +1,8 @@
-package com.dentalwave.controller;
+package com.summerproject2026.DentalWave.controller;
 
-import com.dentalwave.dto.CalendarDto;
-import com.dentalwave.dto.ScheduleDto;
-import com.dentalwave.service.CalendarService;
+import com.summerproject2026.DentalWave.dto.CalendarDto;
+import com.summerproject2026.DentalWave.dto.ScheduleDto;
+import com.summerproject2026.DentalWave.service.CalendarService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -10,8 +10,9 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
@@ -20,7 +21,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 /**
  * Unit tests for CalendarController.
  *
@@ -33,14 +34,22 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * or provide a test-only security config that permits all requests.
  */
 @WebMvcTest(CalendarController.class)
+@AutoConfigureMockMvc(addFilters = false)
 @DisplayName("CalendarController")
 class CalendarControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @MockitoBean
     private CalendarService calendarService;
+
+    @MockitoBean
+    private com.summerproject2026.DentalWave.security.JwtTokenProvider jwtTokenProvider;
+
+    @MockitoBean
+    private com.summerproject2026.DentalWave.security.JwtAuthenticationFilter jwtAuthenticationFilter;
+
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -123,7 +132,7 @@ class CalendarControllerTest {
         @DisplayName("propagates ResourceNotFoundException from service (results in 404)")
         void getCalendarById_notFound_propagatesException() throws Exception {
             when(calendarService.getCalendarById(99L))
-                    .thenThrow(new com.dentalwave.exception.ResourceNotFoundException("Calendar not found"));
+                    .thenThrow(new com.summerproject2026.DentalWave.exception.ResourceNotFoundException("Calendar not found"));
 
             mockMvc.perform(get("/api/calendars/99"))
                     .andExpect(status().isNotFound());

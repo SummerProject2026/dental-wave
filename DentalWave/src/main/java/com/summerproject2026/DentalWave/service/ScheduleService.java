@@ -25,7 +25,7 @@ public interface ScheduleService {
      *
      * @param id the schedule ID
      * @return the matching ScheduleDto
-     * @throws com.dentalwave.exception.ResourceNotFoundException if not found
+     * @throws com.summerproject2026.DentalWave.exception.ResourceNotFoundException if not found
      */
     ScheduleDto getScheduleById(Long id);
 
@@ -42,7 +42,7 @@ public interface ScheduleService {
      * @param id          the ID of the schedule to update
      * @param scheduleDto the updated data
      * @return the updated ScheduleDto
-     * @throws com.dentalwave.exception.ResourceNotFoundException if not found
+     * @throws com.summerproject2026.DentalWave.exception.ResourceNotFoundException if not found
      */
     ScheduleDto updateSchedule(Long id, ScheduleDto scheduleDto);
 
@@ -50,7 +50,7 @@ public interface ScheduleService {
      * Deletes a schedule by ID.
      *
      * @param id the ID of the schedule to delete
-     * @throws com.dentalwave.exception.ResourceNotFoundException if not found
+     * @throws com.summerproject2026.DentalWave.exception.ResourceNotFoundException if not found
      */
     void deleteSchedule(Long id);
 
@@ -71,6 +71,26 @@ public interface ScheduleService {
     List<ScheduleDto> getSchedulesByCalendar(Long calendarId);
 
     /**
+     * Returns all published schedules assigned to a given employee by ID.
+     * Used by UC2 — Employee Views Personal Calendar.
+     *
+     * @param employeeId the employee ID
+     * @return list of published ScheduleDtos assigned to the employee
+     * @throws com.summerproject2026.DentalWave.exception.ResourceNotFoundException if employee not found
+     */
+    List<ScheduleDto> getSchedulesByEmployee(Long employeeId);
+
+    /**
+     * Returns all published schedules assigned to a given employee by full name.
+     * Used by UC2 — Employee Views Personal Calendar.
+     * Name matching is case-insensitive e.g. "jane smith" matches "Jane Smith".
+     *
+     * @param employeeName the full name of the employee e.g. "Jane Smith"
+     * @return list of published ScheduleDtos assigned to the employee
+     */
+    List<ScheduleDto> getSchedulesByEmployeeName(String employeeName);
+
+    /**
      * Assigns an employee to a specific team lead's team for this schedule.
      * If the user key doesn't exist in the teams map yet, it is created.
      *
@@ -78,7 +98,7 @@ public interface ScheduleService {
      * @param userId     the ID of the team lead (User)
      * @param employeeId the ID of the Employee to add
      * @return the updated ScheduleDto
-     * @throws com.dentalwave.exception.ResourceNotFoundException if any entity is not found
+     * @throws com.summerproject2026.DentalWave.exception.ResourceNotFoundException if any entity is not found
      */
     ScheduleDto assignEmployeeToTeam(Long scheduleId, Long userId, Long employeeId);
 
@@ -89,16 +109,16 @@ public interface ScheduleService {
      * @param userId     the ID of the team lead (User)
      * @param employeeId the ID of the Employee to remove
      * @return the updated ScheduleDto
-     * @throws com.dentalwave.exception.ResourceNotFoundException if any entity is not found
+     * @throws com.summerproject2026.DentalWave.exception.ResourceNotFoundException if any entity is not found
      */
     ScheduleDto removeEmployeeFromTeam(Long scheduleId, Long userId, Long employeeId);
 
     /**
      * Marks a schedule as published.
-     * (Requires a 'published' flag on Schedule entity — add it if not present.)
      *
      * @param id the schedule ID
      * @return the updated ScheduleDto
+     * @throws com.summerproject2026.DentalWave.exception.ResourceNotFoundException if not found
      */
     ScheduleDto publishSchedule(Long id);
 }

@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.summerproject2026.DentalWave.dto.AvailabilityDto;
 import com.summerproject2026.DentalWave.dto.EmployeeDto;
 import com.summerproject2026.DentalWave.enums.WorkStatus;
-import com.summerproject2026.DentalWave.model.Employee;
+import com.summerproject2026.DentalWave.entity.Employee;
 import com.summerproject2026.DentalWave.repository.EmployeeRepository;
 import com.summerproject2026.DentalWave.service.EmployeeService;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -23,7 +23,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 /**
  * Unit tests for EmployeeController.
  *
@@ -34,18 +34,27 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * permissive test-security config so that MockMvc requests are not rejected.
  */
 @WebMvcTest(EmployeeController.class)
+@AutoConfigureMockMvc(addFilters = false)
 @DisplayName("EmployeeController")
 class EmployeeControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @MockitoBean
     private EmployeeService employeeService;
 
+
     // Controller injects EmployeeRepository directly for search — must be mocked.
-    @MockBean
+    @MockitoBean
     private EmployeeRepository employeeRepository;
+
+    @MockitoBean
+    private com.summerproject2026.DentalWave.security.JwtTokenProvider jwtTokenProvider;
+
+    @MockitoBean
+    private com.summerproject2026.DentalWave.security.JwtAuthenticationFilter jwtAuthenticationFilter;
+
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -65,7 +74,7 @@ class EmployeeControllerTest {
         employeeDto.setLastName("Doe");
         employeeDto.setEmail("jane.doe@clinic.com");
         employeeDto.setPosition("Dental Hygienist");
-        employeeDto.setWorkStatus(WorkStatus.ACTIVE);
+        employeeDto.setStatus(WorkStatus.ACTIVE);
 
         availabilityDto = new AvailabilityDto();
         availabilityDto.setId(20L);
@@ -254,7 +263,7 @@ class EmployeeControllerTest {
             mockMvc.perform(get("/api/employees/status/ACTIVE"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.length()").value(1))
-                    .andExpect(jsonPath("$[0].workStatus").value("ACTIVE"));
+                    .andExpect(jsonPath("$[0].status").value("ACTIVE"));
         }
 
         @Test
@@ -262,14 +271,14 @@ class EmployeeControllerTest {
         void getByStatus_inactive_returns200() throws Exception {
             EmployeeDto inactive = new EmployeeDto();
             inactive.setId(3L);
-            inactive.setWorkStatus(WorkStatus.INACTIVE);
+            inactive.setStatus(WorkStatus.INACTIVE);
 
             when(employeeService.getEmployeesByStatus(WorkStatus.INACTIVE))
                     .thenReturn(List.of(inactive));
 
             mockMvc.perform(get("/api/employees/status/INACTIVE"))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$[0].workStatus").value("INACTIVE"));
+                    .andExpect(jsonPath("$[0].status").value("INACTIVE"));
         }
     }
 

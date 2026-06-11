@@ -38,3 +38,5 @@ build/
 
 ### Environment Files ###
 DentalWave/src/main/resources/application.properties
+
+DentalWave/src/test/resources/applicationTest.properties

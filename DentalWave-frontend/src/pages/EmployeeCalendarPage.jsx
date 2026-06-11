@@ -1,14 +1,8 @@
 import '../App.css'
 import logo from '../pictures/wake-logo.png'
-import EmployeeHeader from "../components/EmployeeHeader.jsx";
+import EmployeeHeader from '../components/EmployeeHeader'
 
-/**
- * Manager Calendar Page
- *
- * This is the main page a Manager sees after logging in.
- * For Sprint 1, this page uses placeholder calendar data.
- */
-function ManagerCalendarPage() {
+function EmployeeCalendarPage() {
 
     const currentMonth = new Date().toLocaleString('default', {
         month: 'long',
@@ -45,4 +39,4 @@ function ManagerCalendarPage() {
     )
 }
 
-export default ManagerCalendarPage
+export default EmployeeCalendarPage

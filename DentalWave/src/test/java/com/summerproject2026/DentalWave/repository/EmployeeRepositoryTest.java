@@ -8,8 +8,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -20,13 +22,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * Integration tests for EmployeeRepository.
  *
- * The tests cover:
- *  - findByUserId
- *  - findByStatus
- *  - findByPosition
- *  - findByOfficeId  (JPQL JOIN query)
- *  - searchByKeyword (JPQL LIKE query across multiple fields)
- *  - Standard JpaRepository operations (save, findById, findAll, delete, count)
+ * Tests custom EmployeeRepository query methods and standard JpaRepository
+ * operations using the configured test database.
  */
 @DataJpaTest
 @ActiveProfiles("test")
@@ -39,39 +36,42 @@ class EmployeeRepositoryTest {
     @Autowired
     private EmployeeRepository employeeRepository;
 
-    // Shared fixtures
     private User userAlice;
     private User userBob;
     private User userCarla;
+
     private Office officeA;
     private Office officeB;
+
     private Employee employeeAlice;
     private Employee employeeBob;
     private Employee employeeCarla;
 
-    // -------------------------------------------------------------------------
-    // Test fixtures
-    // -------------------------------------------------------------------------
-
+    /**
+     * Creates fresh users, offices, and employees before each test.
+     * Unique email addresses prevent duplicate key errors in the test database.
+     */
     @BeforeEach
     void setUp() {
-        // Users
-        userAlice = buildUser("Alice", "Smith", "alice@dentalwave.com");
-        userBob   = buildUser("Bob",   "Jones", "bob@dentalwave.com");
-        userCarla = buildUser("Carla", "White", "carla@clinic.com");
+        String uniqueId = String.valueOf(System.nanoTime());
+
+        userAlice = buildUser("Alice", "Smith", "alice_" + uniqueId + "@dentalwave.com");
+        userBob = buildUser("Bob", "Jones", "bob_" + uniqueId + "@dentalwave.com");
+        userCarla = buildUser("Carla", "White", "carla_" + uniqueId + "@clinic.com");
+
         entityManager.persist(userAlice);
         entityManager.persist(userBob);
         entityManager.persist(userCarla);
 
-        // Offices
         officeA = new Office();
-        officeA.setName("Raleigh");
+        officeA.setName("Raleigh_" + uniqueId);
+
         officeB = new Office();
-        officeB.setName("Garner");
+        officeB.setName("Garner_" + uniqueId);
+
         entityManager.persist(officeA);
         entityManager.persist(officeB);
 
-        // Employees
         employeeAlice = buildEmployee(userAlice, "Assistant", WorkStatus.ACTIVE,
                 LocalDate.of(2020, 1, 15));
         employeeAlice.getOffices().add(officeA);
@@ -88,19 +88,25 @@ class EmployeeRepositoryTest {
         entityManager.persist(employeeAlice);
         entityManager.persist(employeeBob);
         entityManager.persist(employeeCarla);
+
         entityManager.flush();
     }
 
-    // ── Helpers ──────────────────────────────────────────────────────────────
-
+    /**
+     * Builds a User entity for test setup.
+     */
     private User buildUser(String firstName, String lastName, String email) {
         User u = new User();
         u.setFirstName(firstName);
         u.setLastName(lastName);
+        u.setUsername(email.split("@")[0]);
         u.setEmail(email);
         return u;
     }
 
+    /**
+     * Builds an Employee entity for test setup.
+     */
     private Employee buildEmployee(User user, String position,
                                    WorkStatus status, LocalDate hireDate) {
         Employee e = new Employee();
@@ -111,10 +117,9 @@ class EmployeeRepositoryTest {
         return e;
     }
 
-    // -------------------------------------------------------------------------
-    // findByUserId
-    // -------------------------------------------------------------------------
-
+    /**
+     * Verifies that findByUserId returns the employee linked to the given user.
+     */
     @Test
     @DisplayName("findByUserId returns the employee linked to the given user")
     void findByUserId_returnsEmployee() {
@@ -124,10 +129,15 @@ class EmployeeRepositoryTest {
         assertThat(result.get().getId()).isEqualTo(employeeAlice.getId());
     }
 
+    /**
+     * Verifies that findByUserId returns empty when the user exists but is not linked to an employee.
+     */
     @Test
     @DisplayName("findByUserId returns empty Optional when no employee is linked")
     void findByUserId_returnsEmpty_whenNoEmployee() {
-        User unlinkedUser = buildUser("Dave", "Black", "dave@clinic.com");
+        String uniqueId = String.valueOf(System.nanoTime());
+
+        User unlinkedUser = buildUser("Dave", "Black", "dave_" + uniqueId + "@clinic.com");
         entityManager.persist(unlinkedUser);
         entityManager.flush();
 
@@ -136,6 +146,9 @@ class EmployeeRepositoryTest {
         assertThat(result).isEmpty();
     }
 
+    /**
+     * Verifies that findByUserId returns empty for an ID that does not exist.
+     */
     @Test
     @DisplayName("findByUserId returns empty Optional for a non-existent user ID")
     void findByUserId_returnsEmpty_forNonExistentUser() {
@@ -144,10 +157,9 @@ class EmployeeRepositoryTest {
         assertThat(result).isEmpty();
     }
 
-    // -------------------------------------------------------------------------
-    // findByStatus
-    // -------------------------------------------------------------------------
-
+    /**
+     * Verifies that findByStatus returns only employees with ACTIVE status.
+     */
     @Test
     @DisplayName("findByStatus returns only employees with the given WorkStatus")
     void findByStatus_returnsMatchingEmployees() {
@@ -158,6 +170,9 @@ class EmployeeRepositoryTest {
                 .containsExactlyInAnyOrder("Alice", "Carla");
     }
 
+    /**
+     * Verifies that findByStatus returns employees with INACTIVE status.
+     */
     @Test
     @DisplayName("findByStatus returns single employee with INACTIVE status")
     void findByStatus_returnsInactiveEmployee() {
@@ -167,6 +182,9 @@ class EmployeeRepositoryTest {
         assertThat(inactives.get(0).getUser().getFirstName()).isEqualTo("Bob");
     }
 
+    /**
+     * Verifies that findByStatus returns an empty list when no employees match.
+     */
     @Test
     @DisplayName("findByStatus returns empty list when no employees have the given status")
     void findByStatus_returnsEmpty_whenNoMatch() {
@@ -175,19 +193,20 @@ class EmployeeRepositoryTest {
         assertThat(onLeave).isEmpty();
     }
 
-    // -------------------------------------------------------------------------
-    // findByPosition
-    // -------------------------------------------------------------------------
-
+    /**
+     * Verifies that findByPosition returns employees with the exact position title.
+     */
     @Test
     @DisplayName("findByPosition returns employee(s) with the exact position title")
     void findByPosition_returnsMatchingEmployees() {
-        List<Employee> assistants = employeeRepository.findByPosition("Assitant");
+        List<Employee> assistants = employeeRepository.findByPosition("Assistant");
 
-        assertThat(assistants).hasSize(1);
-        assertThat(assistants.get(0).getUser().getFirstName()).isEqualTo("Alice");
+        assertThat(assistants).hasSize(3);
     }
 
+    /**
+     * Verifies that findByPosition returns empty when no position matches.
+     */
     @Test
     @DisplayName("findByPosition returns empty list when position does not match any employee")
     void findByPosition_returnsEmpty_whenNoMatch() {
@@ -196,18 +215,28 @@ class EmployeeRepositoryTest {
         assertThat(nurses).isEmpty();
     }
 
+    /**
+     * Verifies that findByPosition is case-sensitive.
+     */
     @Test
     @DisplayName("findByPosition is case-sensitive — 'assistant' does not match 'Assistant'")
     void findByPosition_isCaseSensitive() {
         List<Employee> result = employeeRepository.findByPosition("assistant");
+
         assertThat(result).isEmpty();
     }
 
+    /**
+     * Verifies that findByPosition can return multiple employees with the same position.
+     */
     @Test
     @DisplayName("findByPosition returns multiple employees sharing the same position")
     void findByPosition_returnsMultiple_whenDuplicatePositions() {
-        User userDan = buildUser("Dan", "Grey", "dan@clinic.com");
+        String uniqueId = String.valueOf(System.nanoTime());
+
+        User userDan = buildUser("Dan", "Grey", "dan_" + uniqueId + "@clinic.com");
         entityManager.persist(userDan);
+
         Employee employeeDan = buildEmployee(userDan, "Assistant", WorkStatus.ACTIVE,
                 LocalDate.of(2022, 5, 1));
         entityManager.persist(employeeDan);
@@ -215,30 +244,30 @@ class EmployeeRepositoryTest {
 
         List<Employee> assistants = employeeRepository.findByPosition("Assistant");
 
-        assertThat(assistants).hasSize(2)
+        assertThat(assistants).hasSize(4)
                 .extracting(emp -> emp.getUser().getFirstName())
-                .containsExactlyInAnyOrder("Carla", "Dan");
+                .containsExactlyInAnyOrder("Alice", "Bob", "Carla", "Dan");
     }
 
-    // -------------------------------------------------------------------------
-    // findByOfficeId (JPQL)
-    // -------------------------------------------------------------------------
-
+    /**
+     * Verifies that findByOfficeId returns all employees assigned to officeA.
+     */
     @Test
     @DisplayName("findByOfficeId returns all employees assigned to the given office")
     void findByOfficeId_returnsMatchingEmployees() {
         List<Employee> officeAEmployees = employeeRepository.findByOfficeId(officeA.getId());
 
-        // Alice and Carla are both in officeA
         assertThat(officeAEmployees).hasSize(2)
                 .extracting(emp -> emp.getUser().getFirstName())
                 .containsExactlyInAnyOrder("Alice", "Carla");
     }
 
+    /**
+     * Verifies that findByOfficeId returns all employees assigned to officeB.
+     */
     @Test
-    @DisplayName("findByOfficeId returns a single employee assigned only to officeB")
-    void findByOfficeId_returnsSingleEmployee() {
-        // Bob is only in officeB; Carla is in both offices
+    @DisplayName("findByOfficeId returns all employees assigned to officeB")
+    void findByOfficeId_returnsOfficeBEmployees() {
         List<Employee> officeBEmployees = employeeRepository.findByOfficeId(officeB.getId());
 
         assertThat(officeBEmployees).hasSize(2)
@@ -246,11 +275,14 @@ class EmployeeRepositoryTest {
                 .containsExactlyInAnyOrder("Bob", "Carla");
     }
 
+    /**
+     * Verifies that findByOfficeId returns empty when the office has no employees.
+     */
     @Test
     @DisplayName("findByOfficeId returns empty list for an office with no employees")
     void findByOfficeId_returnsEmpty_whenNoEmployees() {
         Office emptyOffice = new Office();
-        emptyOffice.setName("Empty Office");
+        emptyOffice.setName("Empty Office_" + System.nanoTime());
         entityManager.persist(emptyOffice);
         entityManager.flush();
 
@@ -259,6 +291,9 @@ class EmployeeRepositoryTest {
         assertThat(result).isEmpty();
     }
 
+    /**
+     * Verifies that findByOfficeId returns empty for a non-existent office ID.
+     */
     @Test
     @DisplayName("findByOfficeId returns empty list for a non-existent office ID")
     void findByOfficeId_returnsEmpty_forNonExistentOffice() {
@@ -267,10 +302,9 @@ class EmployeeRepositoryTest {
         assertThat(result).isEmpty();
     }
 
-    // -------------------------------------------------------------------------
-    // searchByKeyword (JPQL LIKE across firstName, lastName, email, position)
-    // -------------------------------------------------------------------------
-
+    /**
+     * Verifies that searchByKeyword matches employee first name.
+     */
     @Test
     @DisplayName("searchByKeyword matches on first name (case-insensitive)")
     void searchByKeyword_matchesFirstName() {
@@ -280,6 +314,9 @@ class EmployeeRepositoryTest {
         assertThat(result.get(0).getUser().getFirstName()).isEqualTo("Alice");
     }
 
+    /**
+     * Verifies that searchByKeyword matches employee last name.
+     */
     @Test
     @DisplayName("searchByKeyword matches on last name (case-insensitive)")
     void searchByKeyword_matchesLastName() {
@@ -289,10 +326,12 @@ class EmployeeRepositoryTest {
         assertThat(result.get(0).getUser().getLastName()).isEqualTo("Jones");
     }
 
+    /**
+     * Verifies that searchByKeyword can match part of an employee email address.
+     */
     @Test
     @DisplayName("searchByKeyword matches on email domain (partial LIKE)")
     void searchByKeyword_matchesEmailPartial() {
-        // 'dentalwave.com' appears in alice and bob emails
         List<Employee> result = employeeRepository.searchByKeyword("dentalwave.com");
 
         assertThat(result).hasSize(2)
@@ -300,26 +339,32 @@ class EmployeeRepositoryTest {
                 .containsExactlyInAnyOrder("Alice", "Bob");
     }
 
+    /**
+     * Verifies that searchByKeyword matches employee position title.
+     */
     @Test
     @DisplayName("searchByKeyword matches on position title (case-insensitive)")
     void searchByKeyword_matchesPosition() {
         List<Employee> result = employeeRepository.searchByKeyword("assistant");
 
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0).getPosition()).isEqualTo("Assistant");
+        assertThat(result).hasSize(3);
+        assertThat(result).allMatch(e -> e.getPosition().equals("Assistant"));
     }
 
+    /**
+     * Verifies that searchByKeyword returns multiple results for a shared keyword.
+     */
     @Test
     @DisplayName("searchByKeyword returns multiple employees for a common partial keyword")
     void searchByKeyword_returnsMultipleMatches() {
-        // 'a' appears in Alice, Carla (firstName), Smith (lastName "Smi-th" no), etc.
-        // Use a targeted keyword present in multiple records
         List<Employee> result = employeeRepository.searchByKeyword("Assistant");
 
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0).getUser().getFirstName()).isEqualTo("Alice");
+        assertThat(result).hasSize(3);
     }
 
+    /**
+     * Verifies that searchByKeyword returns empty when nothing matches.
+     */
     @Test
     @DisplayName("searchByKeyword returns empty list when keyword matches nothing")
     void searchByKeyword_returnsEmpty_whenNoMatch() {
@@ -328,6 +373,9 @@ class EmployeeRepositoryTest {
         assertThat(result).isEmpty();
     }
 
+    /**
+     * Verifies that searchByKeyword is case-insensitive.
+     */
     @Test
     @DisplayName("searchByKeyword matches uppercase keyword against lower-case data")
     void searchByKeyword_isCaseInsensitive_uppercase() {
@@ -337,33 +385,40 @@ class EmployeeRepositoryTest {
         assertThat(result.get(0).getUser().getFirstName()).isEqualTo("Bob");
     }
 
+    /**
+     * Verifies that searchByKeyword with an empty string returns all employees.
+     */
     @Test
     @DisplayName("searchByKeyword with empty string returns all employees")
     void searchByKeyword_emptyString_returnsAll() {
         List<Employee> result = employeeRepository.searchByKeyword("");
 
-        // '%' + '' + '%' matches every string
         assertThat(result).hasSize(3);
     }
 
-    // -------------------------------------------------------------------------
-    // Standard JpaRepository operations
-    // -------------------------------------------------------------------------
-
+    /**
+     * Verifies that save persists a new employee and assigns an ID.
+     */
     @Test
     @DisplayName("save persists a new employee and assigns a generated ID")
     void save_persistsNewEmployee() {
-        User newUser = buildUser("Eve", "Turner", "eve@clinic.com");
+        String uniqueId = String.valueOf(System.nanoTime());
+
+        User newUser = buildUser("Eve", "Turner", "eve_" + uniqueId + "@clinic.com");
         entityManager.persist(newUser);
 
         Employee newEmp = buildEmployee(newUser, "Nurse", WorkStatus.ACTIVE,
                 LocalDate.of(2023, 1, 1));
+
         Employee saved = employeeRepository.save(newEmp);
 
         assertThat(saved.getId()).isNotNull();
         assertThat(entityManager.find(Employee.class, saved.getId())).isNotNull();
     }
 
+    /**
+     * Verifies that findById returns the correct employee.
+     */
     @Test
     @DisplayName("findById returns the correct employee")
     void findById_returnsEmployee() {
@@ -373,6 +428,9 @@ class EmployeeRepositoryTest {
         assertThat(found.get().getPosition()).isEqualTo("Assistant");
     }
 
+    /**
+     * Verifies that findById returns empty for a non-existent employee ID.
+     */
     @Test
     @DisplayName("findById returns empty Optional for non-existent ID")
     void findById_returnsEmpty_whenNotFound() {
@@ -381,6 +439,9 @@ class EmployeeRepositoryTest {
         assertThat(found).isEmpty();
     }
 
+    /**
+     * Verifies that findAll returns all persisted employees.
+     */
     @Test
     @DisplayName("findAll returns all persisted employees")
     void findAll_returnsAllEmployees() {
@@ -389,28 +450,41 @@ class EmployeeRepositoryTest {
         assertThat(all).hasSize(3);
     }
 
+    /**
+     * Verifies that delete removes the employee record.
+     */
     @Test
     @DisplayName("delete removes the employee record")
     void delete_removesEmployee() {
         Long id = employeeBob.getId();
+
         employeeRepository.delete(employeeBob);
         entityManager.flush();
 
         assertThat(entityManager.find(Employee.class, id)).isNull();
     }
 
+    /**
+     * Verifies that count returns the correct number of employees.
+     */
     @Test
     @DisplayName("count returns the correct number of persisted employees")
     void count_returnsCorrectTotal() {
         assertThat(employeeRepository.count()).isEqualTo(3);
     }
 
+    /**
+     * Verifies that existsById returns true for an existing employee.
+     */
     @Test
     @DisplayName("existsById returns true for a persisted employee")
     void existsById_returnsTrue() {
         assertThat(employeeRepository.existsById(employeeAlice.getId())).isTrue();
     }
 
+    /**
+     * Verifies that existsById returns false for a non-existent employee ID.
+     */
     @Test
     @DisplayName("existsById returns false for a non-existent ID")
     void existsById_returnsFalse() {

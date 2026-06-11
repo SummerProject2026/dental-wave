@@ -70,7 +70,7 @@ function LoginPage() {
              * }
              */
 
-                // Creates the full Authorization token, example: "Bearer eyJhbGciOi..."
+            // Creates the full Authorization token, example: "Bearer eyJhbGciOi..."
             const token = response.data.tokenType + ' ' + response.data.accessToken
 
             // Gets user information from the backend response

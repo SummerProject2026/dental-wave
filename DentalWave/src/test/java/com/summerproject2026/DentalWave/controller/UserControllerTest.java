@@ -35,7 +35,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * {@code @AutoConfigureMockMvc(addFilters = false)} to avoid 401/403
  * responses that would break these unit tests.</p>
  *
- * @author Demaris
+ *
  */
 @WebMvcTest(UserController.class)
 @AutoConfigureMockMvc(addFilters = false)
@@ -111,9 +111,48 @@ class UserControllerTest {
         userDto2.setEnabled(true);
     }
 
-    // =========================================================================
-    // GET /api/users/{id}
-    // =========================================================================
+    /**
+     * Verifies that POST /api/users returns 201 Created
+     * with the new user in the response body.
+     *
+     * @throws Exception if MockMvc request fails
+     */
+    @Test
+    @DisplayName("POST /api/users → 201 Created with new user")
+    void createUser_returns201() throws Exception {
+        // Mock service to return created user
+        when(userService.createUser(any(UserDto.class))).thenReturn(userDto);
+
+        // Perform POST request and verify response
+        mockMvc.perform(post("/api/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(userDto)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id", is(1)))
+                .andExpect(jsonPath("$.username", is("alice")))
+                .andExpect(jsonPath("$.email", is("alice@dentalwave.com")));
+
+        // Verify service was called exactly once
+        verify(userService, times(1)).createUser(any(UserDto.class));
+    }
+
+    /**
+     * Verifies that POST /api/users returns 400 Bad Request
+     * when the request body is missing.
+     *
+     * @throws Exception if MockMvc request fails
+     */
+    @Test
+    @DisplayName("POST /api/users → 400 Bad Request when body is missing")
+    void createUser_returns400_whenBodyMissing() throws Exception {
+        // Perform POST request without body
+        mockMvc.perform(post("/api/users")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+
+        // Verify service was never called
+        verify(userService, never()).createUser(any());
+    }
 
     /**
      * Verifies that GET /api/users/{id} returns 200 OK
@@ -140,14 +179,14 @@ class UserControllerTest {
 
     /**
      * Verifies that GET /api/users/{id} returns 404 Not Found
-     * when the user does not exist in the system.
+     * when the user does not exist.
      *
      * @throws Exception if MockMvc request fails
      */
     @Test
     @DisplayName("GET /api/users/{id} → 404 Not Found when user does not exist")
     void getUserById_returns404_whenNotFound() throws Exception {
-        // Mock service to throw ResourceNotFoundException for unknown user
+        // Mock service to throw ResourceNotFoundException
         when(userService.getUserById(99L))
                 .thenThrow(new ResourceNotFoundException("User not found with id: 99"));
 
@@ -156,13 +195,9 @@ class UserControllerTest {
                 .andExpect(status().isNotFound());
     }
 
-
-    // GET /api/users
-
-
     /**
      * Verifies that GET /api/users returns 200 OK
-     * with a list of all users in the system.
+     * with a list of all users.
      *
      * @throws Exception if MockMvc request fails
      */
@@ -172,7 +207,7 @@ class UserControllerTest {
         // Mock service to return two users
         when(userService.getAllUsers()).thenReturn(List.of(userDto, userDto2));
 
-        // Perform GET request and verify both users are returned
+        // Perform GET request and verify both users returned
         mockMvc.perform(get("/api/users"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(2)))
@@ -185,7 +220,7 @@ class UserControllerTest {
 
     /**
      * Verifies that GET /api/users returns 200 OK
-     * with an empty list when no users exist in the system.
+     * with an empty list when no users exist.
      *
      * @throws Exception if MockMvc request fails
      */
@@ -200,28 +235,6 @@ class UserControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(0)));
     }
-
-    /**
-     * Verifies that GET /api/users returns the correct
-     * number of users in the response.
-     *
-     * @throws Exception if MockMvc request fails
-     */
-    @Test
-    @DisplayName("GET /api/users → returns correct count of users")
-    void getAllUsers_returnsCorrectCount() throws Exception {
-        // Mock service to return two users
-        when(userService.getAllUsers()).thenReturn(List.of(userDto, userDto2));
-
-        // Perform GET request and verify count is 2
-        mockMvc.perform(get("/api/users"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()", is(2)));
-    }
-
-
-
-
 
     /**
      * Verifies that PUT /api/users/{id} returns 200 OK
@@ -257,18 +270,18 @@ class UserControllerTest {
 
     /**
      * Verifies that PUT /api/users/{id} returns 404 Not Found
-     * when the user does not exist in the system.
+     * when the user does not exist.
      *
      * @throws Exception if MockMvc request fails
      */
     @Test
     @DisplayName("PUT /api/users/{id} → 404 Not Found when user does not exist")
     void updateUser_returns404_whenNotFound() throws Exception {
-        // Mock service to throw ResourceNotFoundException for unknown user
+        // Mock service to throw ResourceNotFoundException
         when(userService.updateUser(eq(99L), any(UserDto.class)))
                 .thenThrow(new ResourceNotFoundException("User not found with id: 99"));
 
-        // Perform PUT request for non-existent user and verify 404 response
+        // Perform PUT request and verify 404 response
         mockMvc.perform(put("/api/users/{id}", 99L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(userDto)))
@@ -289,13 +302,9 @@ class UserControllerTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
 
-        // Verify service was never called when body is missing
+        // Verify service was never called
         verify(userService, never()).updateUser(any(), any());
     }
-
-
-
-
 
     /**
      * Verifies that DELETE /api/users/{id} returns 200 OK
@@ -312,7 +321,7 @@ class UserControllerTest {
         // Perform DELETE request and verify confirmation message
         mockMvc.perform(delete("/api/users/{id}", 1L))
                 .andExpect(status().isOk())
-                .andExpect(content().string("User deleted successfully"));
+                .andExpect(content().string("User with id 1 deleted successfully."));
 
         // Verify service was called exactly once
         verify(userService, times(1)).deleteUser(1L);
@@ -320,39 +329,223 @@ class UserControllerTest {
 
     /**
      * Verifies that DELETE /api/users/{id} returns 404 Not Found
-     * when the user does not exist in the system.
+     * when the user does not exist.
      *
      * @throws Exception if MockMvc request fails
      */
     @Test
     @DisplayName("DELETE /api/users/{id} → 404 Not Found when user does not exist")
     void deleteUser_returns404_whenNotFound() throws Exception {
-        // Mock service to throw ResourceNotFoundException for unknown user
+        // Mock service to throw ResourceNotFoundException
         doThrow(new ResourceNotFoundException("User not found with id: 99"))
                 .when(userService).deleteUser(99L);
 
-        // Perform DELETE request for non-existent user and verify 404 response
+        // Perform DELETE request and verify 404 response
         mockMvc.perform(delete("/api/users/{id}", 99L))
                 .andExpect(status().isNotFound());
     }
 
     /**
-     * Verifies that DELETE /api/users/{id} calls the service
-     * exactly once with the correct user id.
+     * Verifies that GET /api/users/username/{username} returns 200 OK
+     * with the correct user when the username exists.
      *
      * @throws Exception if MockMvc request fails
      */
     @Test
-    @DisplayName("DELETE /api/users/{id} → service is called exactly once")
-    void deleteUser_callsServiceExactlyOnce() throws Exception {
-        // Mock service to do nothing on delete
-        doNothing().when(userService).deleteUser(1L);
+    @DisplayName("GET /api/users/username/{username} → 200 OK with matching user")
+    void getUserByUsername_returns200_whenExists() throws Exception {
+        // Mock service to return user with username alice
+        when(userService.getUserByUsername("alice")).thenReturn(userDto);
 
-        // Perform DELETE request
-        mockMvc.perform(delete("/api/users/{id}", 1L))
-                .andExpect(status().isOk());
+        // Perform GET request and verify response
+        mockMvc.perform(get("/api/users/username/{username}", "alice"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.username", is("alice")))
+                .andExpect(jsonPath("$.email", is("alice@dentalwave.com")));
 
-        // Verify service was called exactly once with correct id
-        verify(userService, times(1)).deleteUser(1L);
+        // Verify service was called with correct username
+        verify(userService, times(1)).getUserByUsername("alice");
+    }
+
+    /**
+     * Verifies that GET /api/users/username/{username} returns 404 Not Found
+     * when the username does not exist.
+     *
+     * @throws Exception if MockMvc request fails
+     */
+    @Test
+    @DisplayName("GET /api/users/username/{username} → 404 Not Found when username does not exist")
+    void getUserByUsername_returns404_whenNotFound() throws Exception {
+        // Mock service to throw ResourceNotFoundException
+        when(userService.getUserByUsername("unknown"))
+                .thenThrow(new ResourceNotFoundException("User not found with username: unknown"));
+
+        // Perform GET request and verify 404 response
+        mockMvc.perform(get("/api/users/username/{username}", "unknown"))
+                .andExpect(status().isNotFound());
+    }
+
+    /**
+     * Verifies that GET /api/users/role/{role} returns 200 OK
+     * with users matching the given role.
+     *
+     * @throws Exception if MockMvc request fails
+     */
+    @Test
+    @DisplayName("GET /api/users/role/{role} → 200 OK with matching users")
+    void getUsersByRole_returns200() throws Exception {
+        // Mock service to return one user with ROLE_ASSISTANT
+        when(userService.getUsersByRole("ROLE_ASSISTANT")).thenReturn(List.of(userDto));
+
+        // Perform GET request and verify response
+        mockMvc.perform(get("/api/users/role/{role}", "ROLE_ASSISTANT"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].username", is("alice")));
+
+        // Verify service was called with correct role
+        verify(userService, times(1)).getUsersByRole("ROLE_ASSISTANT");
+    }
+
+    /**
+     * Verifies that GET /api/users/role/{role} returns 200 OK
+     * with an empty list when no users have the given role.
+     *
+     * @throws Exception if MockMvc request fails
+     */
+    @Test
+    @DisplayName("GET /api/users/role/{role} → 200 OK with empty list when no users have role")
+    void getUsersByRole_returns200WithEmptyList() throws Exception {
+        // Mock service to return empty list for unknown role
+        when(userService.getUsersByRole("ROLE_UNKNOWN")).thenReturn(List.of());
+
+        // Perform GET request and verify empty list returned
+        mockMvc.perform(get("/api/users/role/{role}", "ROLE_UNKNOWN"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(0)));
+    }
+
+    /**
+     * Verifies that GET /api/users/search returns 200 OK
+     * with users matching the search keyword.
+     *
+     * @throws Exception if MockMvc request fails
+     */
+    @Test
+    @DisplayName("GET /api/users/search?keyword= → 200 OK with matching users")
+    void searchUsers_returns200WithMatchingUsers() throws Exception {
+        // Mock service to return one user matching keyword alice
+        when(userService.searchUsers("alice")).thenReturn(List.of(userDto));
+
+        // Perform GET request with keyword parameter
+        mockMvc.perform(get("/api/users/search").param("keyword", "alice"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].username", is("alice")));
+
+        // Verify service was called with correct keyword
+        verify(userService, times(1)).searchUsers("alice");
+    }
+
+    /**
+     * Verifies that GET /api/users/search returns 200 OK
+     * with an empty list when no users match the keyword.
+     *
+     * @throws Exception if MockMvc request fails
+     */
+    @Test
+    @DisplayName("GET /api/users/search?keyword= → 200 OK with empty list when no match")
+    void searchUsers_returns200WithEmptyList_whenNoMatch() throws Exception {
+        // Mock service to return empty list for unknown keyword
+        when(userService.searchUsers("xyzzy")).thenReturn(List.of());
+
+        // Perform GET request and verify empty list returned
+        mockMvc.perform(get("/api/users/search").param("keyword", "xyzzy"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(0)));
+    }
+
+    /**
+     * Verifies that PATCH /api/users/{id}/enable returns 200 OK
+     * with enabled set to true when the user exists.
+     *
+     * @throws Exception if MockMvc request fails
+     */
+    @Test
+    @DisplayName("PATCH /api/users/{id}/enable → 200 OK with enabled=true")
+    void enableUser_returns200_withEnabledTrue() throws Exception {
+        // Set user as enabled
+        userDto.setEnabled(true);
+
+        // Mock service to return enabled user
+        when(userService.enableUser(1L)).thenReturn(userDto);
+
+        // Perform PATCH request and verify enabled is true
+        mockMvc.perform(patch("/api/users/{id}/enable", 1L))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.enabled", is(true)));
+
+        // Verify service was called with correct id
+        verify(userService, times(1)).enableUser(1L);
+    }
+
+    /**
+     * Verifies that PATCH /api/users/{id}/enable returns 404 Not Found
+     * when the user does not exist.
+     *
+     * @throws Exception if MockMvc request fails
+     */
+    @Test
+    @DisplayName("PATCH /api/users/{id}/enable → 404 Not Found when user does not exist")
+    void enableUser_returns404_whenNotFound() throws Exception {
+        // Mock service to throw ResourceNotFoundException
+        when(userService.enableUser(99L))
+                .thenThrow(new ResourceNotFoundException("User not found with id: 99"));
+
+        // Perform PATCH request and verify 404 response
+        mockMvc.perform(patch("/api/users/{id}/enable", 99L))
+                .andExpect(status().isNotFound());
+    }
+
+    /**
+     * Verifies that PATCH /api/users/{id}/disable returns 200 OK
+     * with enabled set to false when the user exists.
+     *
+     * @throws Exception if MockMvc request fails
+     */
+    @Test
+    @DisplayName("PATCH /api/users/{id}/disable → 200 OK with enabled=false")
+    void disableUser_returns200_withEnabledFalse() throws Exception {
+        // Set user as disabled
+        userDto.setEnabled(false);
+
+        // Mock service to return disabled user
+        when(userService.disableUser(1L)).thenReturn(userDto);
+
+        // Perform PATCH request and verify enabled is false
+        mockMvc.perform(patch("/api/users/{id}/disable", 1L))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.enabled", is(false)));
+
+        // Verify service was called with correct id
+        verify(userService, times(1)).disableUser(1L);
+    }
+
+    /**
+     * Verifies that PATCH /api/users/{id}/disable returns 404 Not Found
+     * when the user does not exist.
+     *
+     * @throws Exception if MockMvc request fails
+     */
+    @Test
+    @DisplayName("PATCH /api/users/{id}/disable → 404 Not Found when user does not exist")
+    void disableUser_returns404_whenNotFound() throws Exception {
+        // Mock service to throw ResourceNotFoundException
+        when(userService.disableUser(99L))
+                .thenThrow(new ResourceNotFoundException("User not found with id: 99"));
+
+        // Perform PATCH request and verify 404 response
+        mockMvc.perform(patch("/api/users/{id}/disable", 99L))
+                .andExpect(status().isNotFound());
     }
 }

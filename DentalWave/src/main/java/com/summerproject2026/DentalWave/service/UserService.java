@@ -9,7 +9,7 @@ import com.summerproject2026.DentalWave.dto.UserDto;
  * Responsibilities:
  * <ul>
  *   <li>Create, retrieve, update, and delete users.</li>
- *   <li>Search for users by email, role, or keyword.</li>
+ *   <li>Search for users by username, role, or keyword.</li>
  *   <li>Enable and disable user accounts.</li>
  * </ul>
  */
@@ -55,6 +55,14 @@ public interface UserService {
     void deleteUser(Long id);
 
     /**
+     * Retrieves a user by their username.
+     *
+     * @param username the username to search for
+     * @return the matching user
+     */
+    UserDto getUserByUsername(String username);
+
+    /**
      * Retrieves a user by their email address.
      *
      * @param email the email address to search for
@@ -72,9 +80,6 @@ public interface UserService {
 
     /**
      * Searches for users matching the provided keyword.
-     *
-     * The keyword may be matched against user fields such as
-     * first name, last name, email, or other searchable attributes.
      *
      * @param keyword the search term
      * @return a list of matching users

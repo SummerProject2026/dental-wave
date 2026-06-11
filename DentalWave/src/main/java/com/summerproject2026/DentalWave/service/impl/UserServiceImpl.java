@@ -343,6 +343,23 @@ public class UserServiceImpl implements UserService {
     }
 
 
+    /**
+     * Retrieves a user by their username.
+     *
+     * @param username the username to search for; must not be {@code null}
+     * @return the corresponding {@link UserDto}
+     * @throws ResourceNotFoundException if no user is registered with {@code username}
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public UserDto getUserByUsername(String username) {
+        // Find user by username or throw ResourceNotFoundException
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "User not found with username: " + username));
+
+        return userMapper.toDto(user);
+    }
     // ================================================================
     //  PRIVATE HELPERS
     // ================================================================

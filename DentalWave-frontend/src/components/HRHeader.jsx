@@ -1,6 +1,15 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { logout } from '../services/AuthService'
 
 function HRHeader() {
+
+    const navigate = useNavigate()
+
+    function handleLogout() {
+        logout()
+        navigate('/login')
+    }
+
     return (
         <header className="calendar-header">
 
@@ -14,9 +23,18 @@ function HRHeader() {
                 <Link to="/hr/employees">Employees</Link>
             </nav>
 
-            <Link to="/hr/profile" className="user-icon">
-                👤
-            </Link>
+            <div className="header-actions">
+                <Link to="/hr/profile" className="user-icon">
+                    👤
+                </Link>
+
+                <button
+                    className="logout-button"
+                    onClick={handleLogout}
+                >
+                    Logout
+                </button>
+            </div>
 
         </header>
     )

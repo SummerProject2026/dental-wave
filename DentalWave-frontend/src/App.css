@@ -331,3 +331,247 @@ body {
   color: #555;
   cursor: not-allowed;
 }
+
+/* ---------- HR Employees Page ---------- */
+
+.hr-page {
+  min-height: 100vh;
+  background-color: #c8cbff;
+  display: flex;
+  flex-direction: column;
+}
+
+.hr-employees-content {
+  flex: 1;
+  padding: 35px 70px;
+  box-sizing: border-box;
+}
+
+.hr-page-title {
+  font-size: 36px;
+  margin: 0 0 25px 0;
+  color: black;
+  text-align: left;
+}
+
+.employee-search-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 10px;
+}
+
+.employee-search-row label {
+  font-size: 28px;
+  color: black;
+}
+
+.employee-search-row input {
+  width: 220px;
+  height: 38px;
+  border: none;
+  border-radius: 8px;
+  padding: 0 14px;
+  font-size: 24px;
+  background-color: white;
+  color: black;
+}
+
+.employee-table-section {
+  width: 75%;
+  margin: 0 auto;
+}
+
+.employee-table-top {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 10px;
+}
+
+.new-employee-btn {
+  background-color: #12b85f;
+  color: black;
+  border: none;
+  border-radius: 7px;
+  padding: 8px 16px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.employee-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background-color: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 3px 4px rgba(0, 0, 0, 0.25);
+}
+
+.employee-table th,
+.employee-table td {
+  height: 65px;
+  text-align: center;
+  vertical-align: middle;
+  border-right: 2px solid black;
+  border-bottom: 2px solid black;
+  font-size: 24px;
+  color: black;
+}
+
+.employee-table th {
+  font-weight: bold;
+}
+
+.employee-table th:last-child,
+.employee-table td:last-child {
+  border-right: none;
+}
+
+.employee-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.employee-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 28px;
+}
+
+.employee-actions button {
+  border: none;
+  background: transparent;
+  font-size: 26px;
+  cursor: pointer;
+}
+
+.employee-actions button:hover {
+  transform: scale(1.1);
+}
+
+.page-footer {
+  text-align: center;
+  padding: 20px;
+  color: gray;
+  font-size: 18px;
+}
+
+/* ---------- HR Add Employee Page ---------- */
+
+.add-employee-content {
+  flex: 1;
+  padding: 10px 45px 20px;
+  box-sizing: border-box;
+}
+
+.add-employee-card {
+  background-color: #f7f7f7;
+  min-height: 620px;
+  padding: 18px 35px;
+  box-sizing: border-box;
+}
+
+.form-section {
+  width: 100%;
+  max-width: 700px;
+  margin-bottom: 25px;
+}
+
+.form-section h2 {
+  color: black;
+  font-size: 20px;
+  margin: 0 0 20px 0;
+  text-align: left;
+  border-bottom: 2px solid black;
+  padding-bottom: 4px;
+}
+
+.form-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-bottom: 14px;
+  color: black;
+  font-weight: bold;
+}
+
+.form-row label {
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+
+.form-row input,
+.form-row select {
+  width: 190px;
+  height: 28px;
+  border: 1px solid #999;
+  background-color: white;
+  color: black;
+  font-size: 14px;
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  column-gap: 70px;
+  row-gap: 18px;
+}
+
+.add-employee-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 100px;
+  margin-top: 45px;
+  padding-right: 170px;
+}
+
+.cancel-employee-btn,
+.save-employee-btn {
+  width: 130px;
+  height: 28px;
+  border: none;
+  border-radius: 14px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.cancel-employee-btn {
+  background-color: #dddddd;
+  color: black;
+}
+
+.save-employee-btn {
+  background-color: #12b85f;
+  color: black;
+}
+
+.add-employee-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+/* ---------- Header Page ---------- */
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.logout-button {
+  background-color: #443066;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 14px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.logout-button:hover {
+  background-color: #33244d;
+}

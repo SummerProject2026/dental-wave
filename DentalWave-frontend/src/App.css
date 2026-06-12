@@ -554,6 +554,22 @@ body {
   align-items: flex-start;
 }
 
+.office-selection-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.office-selection-table th,
+.office-selection-table td {
+  padding: 10px;
+  border: 1px solid #ddd;
+  text-align: left;
+}
+
+.office-selection-table th {
+  background-color: #f5f5f5;
+}
+
 /* ---------- Header Page ---------- */
 
 .header-actions {
@@ -574,4 +590,129 @@ body {
 
 .logout-button:hover {
   background-color: #33244d;
+}
+
+/* ---------- HR View Employee page ---------- */
+
+.view-employee-page {
+  padding: 35px 50px;
+}
+
+.view-employee-card {
+  background: white;
+  padding: 30px;
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 45px;
+  min-height: 620px;
+}
+
+.view-employee-left h2,
+.view-employee-right h2 {
+  font-size: 1.5rem;
+  margin: 0 0 8px;
+  color: black;
+}
+
+.view-line {
+  border-bottom: 3px solid black;
+  margin-bottom: 18px;
+}
+
+.view-field {
+  margin-bottom: 16px;
+  color: black;
+  text-align: left;
+}
+
+.view-field strong {
+  display: block;
+  text-align: left;
+}
+
+.view-field span,
+.view-field li {
+  text-align: left;
+}
+
+.view-field strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.view-field span {
+  display: block;
+}
+
+.view-details-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 25px;
+}
+
+.view-timeoff-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #d9d9d9;
+  color: black;
+}
+
+.view-timeoff-table th,
+.view-timeoff-table td {
+  border: 3px solid black;
+  padding: 15px;
+  text-align: left;
+  height: 55px;
+}
+
+.close-view-btn {
+  display: block;
+  margin: 30px auto 0;
+  background: #14b86a;
+  border: none;
+  border-radius: 20px;
+  padding: 10px 55px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.view-details-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 25px;
+  text-align: left;
+}
+
+.view-employee-left {
+  text-align: left;
+}
+
+.view-employee-left h2 {
+  text-align: center;
+}
+
+/* ---------- HR Edit Employee page ---------- */
+
+.deactivate-employee-btn {
+  background-color: #ff1f1f;
+  color: black;
+  border: none;
+  border-radius: 20px;
+  padding: 10px 45px;
+  font-weight: bold;
+  cursor: pointer;
+  display: block;
+  margin: 20px auto 0;
+}
+
+.activate-employee-btn {
+  background-color: #16c46b;
+  color: black;
+  border: none;
+  border-radius: 20px;
+  padding: 10px 45px;
+  font-weight: bold;
+  cursor: pointer;
+  display: block;
+  margin: 20px auto 0;
 }

@@ -2,6 +2,7 @@ package com.summerproject2026.DentalWave.controller;
 
 import com.summerproject2026.DentalWave.dto.AvailabilityDto;
 import com.summerproject2026.DentalWave.dto.EmployeeDto;
+import com.summerproject2026.DentalWave.dto.CreateEmployeeDto;
 import com.summerproject2026.DentalWave.enums.WorkStatus;
 import com.summerproject2026.DentalWave.repository.EmployeeRepository;
 import com.summerproject2026.DentalWave.service.EmployeeService;
@@ -44,9 +45,10 @@ public class EmployeeController {
      */
     @PreAuthorize("hasAnyRole('HR', 'ADMIN')")
     @PostMapping
-    public ResponseEntity<EmployeeDto> createEmployee(@RequestBody EmployeeDto employeeDto) {
+    public ResponseEntity<EmployeeDto> createEmployee(@RequestBody CreateEmployeeDto createEmployeeDto) {
+        System.out.println("EMPLOYEE CONTROLLER HIT");
         return ResponseEntity.status(HttpStatus.CREATED)
-                             .body(employeeService.createEmployee(employeeDto));
+                .body(employeeService.createEmployee(createEmployeeDto));
     }
 
     // ------------------------------------------------------------------ //

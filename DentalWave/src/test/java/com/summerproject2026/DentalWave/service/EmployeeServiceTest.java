@@ -1,6 +1,8 @@
 package com.summerproject2026.DentalWave.service.impl;
 
 import com.summerproject2026.DentalWave.dto.AvailabilityDto;
+import com.summerproject2026.DentalWave.dto.CreateEmployeeDto;
+import com.summerproject2026.DentalWave.dto.RegisterDto;
 import com.summerproject2026.DentalWave.dto.EmployeeDto;
 import com.summerproject2026.DentalWave.entity.Availability;
 import com.summerproject2026.DentalWave.entity.Employee;
@@ -109,29 +111,12 @@ class EmployeeServiceImplTest {
         when(employeeRepository.save(employee)).thenReturn(employee);
         when(employeeMapper.mapToEmployeeDto(employee)).thenReturn(employeeDto);
 
-        EmployeeDto result = employeeService.createEmployee(employeeDto);
+        EmployeeDto result = employeeService.createEmployee(buildCreateEmployeeDto(employeeDto));
 
         assertThat(result).isEqualTo(employeeDto);
         verify(employeeRepository).save(employee);
         verify(userRepository).findById(1L);
         verify(officeRepository).findById(10L);
-    }
-
-    /**
-     * Verifies that createEmployee throws ResourceNotFoundException
-     * when the referenced user does not exist.
-     */
-    @Test
-    @DisplayName("createEmployee — throws ResourceNotFoundException when user not found")
-    void createEmployee_userNotFound_throws() {
-        when(employeeMapper.mapToEmployee(employeeDto)).thenReturn(employee);
-        when(userRepository.findById(1L)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> employeeService.createEmployee(employeeDto))
-                .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessageContaining("User not found with id: 1");
-
-        verify(employeeRepository, never()).save(any());
     }
 
     /**
@@ -142,10 +127,9 @@ class EmployeeServiceImplTest {
     @DisplayName("createEmployee — throws ResourceNotFoundException when office not found")
     void createEmployee_officeNotFound_throws() {
         when(employeeMapper.mapToEmployee(employeeDto)).thenReturn(employee);
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(officeRepository.findById(10L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> employeeService.createEmployee(employeeDto))
+        assertThatThrownBy(() -> employeeService.createEmployee(buildCreateEmployeeDto(employeeDto)))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("Office not found with id: 10");
 
@@ -165,7 +149,7 @@ class EmployeeServiceImplTest {
         when(employeeRepository.save(employee)).thenReturn(employee);
         when(employeeMapper.mapToEmployeeDto(employee)).thenReturn(employeeDto);
 
-        EmployeeDto result = employeeService.createEmployee(employeeDto);
+        EmployeeDto result = employeeService.createEmployee(buildCreateEmployeeDto(employeeDto));
 
         assertThat(result).isNotNull();
         verify(officeRepository, never()).findById(any());
@@ -558,5 +542,23 @@ class EmployeeServiceImplTest {
         assertThatThrownBy(() -> employeeService.deleteAvailability(99L, 200L))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("Employee not found with id: 99");
+    }
+
+
+
+    private CreateEmployeeDto buildCreateEmployeeDto(EmployeeDto employeeDto) {
+        RegisterDto registerDto = new RegisterDto();
+        registerDto.setFirstName(employeeDto.getFirstName());
+        registerDto.setLastName(employeeDto.getLastName());
+        registerDto.setUsername(employeeDto.getEmail());
+        registerDto.setEmail(employeeDto.getEmail());
+        registerDto.setPhoneNumber("555-555-5555");
+        registerDto.setPassword("Password123!");
+
+        CreateEmployeeDto createEmployeeDto = new CreateEmployeeDto();
+        createEmployeeDto.setUser(registerDto);
+        createEmployeeDto.setEmployee(employeeDto);
+
+        return createEmployeeDto;
     }
 }

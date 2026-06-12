@@ -25,16 +25,23 @@ function HREmployeesPage() {
     }
 
     function getEmployeeName(employee) {
-        if (employee.name) {
-            return employee.name
-        }
-
         return `${employee.firstName || ''} ${employee.lastName || ''}`.trim()
     }
 
-    const filteredEmployees = employees.filter((employee) =>
-        getEmployeeName(employee).toLowerCase().includes(searchTerm.toLowerCase())
-    )
+
+    const sortedEmployees = [...employees].sort((a, b) => {
+        const nameA = getEmployeeName(a).toLowerCase()
+        const nameB = getEmployeeName(b).toLowerCase()
+        const search = searchTerm.toLowerCase()
+
+        const aMatches = nameA.includes(search)
+        const bMatches = nameB.includes(search)
+
+        if (aMatches && !bMatches) return -1
+        if (!aMatches && bMatches) return 1
+
+        return nameA.localeCompare(nameB)
+    })
 
     return (
         <div className="hr-page">
@@ -74,33 +81,40 @@ function HREmployeesPage() {
                         </thead>
 
                         <tbody>
-                        {filteredEmployees.map((employee) => (
-                            <tr key={employee.id}>
-                                <td>{getEmployeeName(employee)}</td>
-                                <td>{employee.role}</td>
-                                <td>{employee.status}</td>
-                                <td className="employee-actions">
-                                    <button onClick={() => navigate(`/hr/employees/${employee.id}/edit`)}>
-                                        ✎
-                                    </button>
+                        {sortedEmployees.length > 0 ? (
+                                sortedEmployees.map((employee) => (
+                                <tr key={employee.id}>
+                                    <td>{getEmployeeName(employee)}</td>
+                                    <td>{employee.position}</td>
+                                    <td>{employee.status}</td>
+                                    <td className="employee-actions">
+                                        <button
+                                            type="button"
+                                            className="employee-action-btn"
+                                            onClick={() => navigate(`/hr/employees/${employee.id}`)}
+                                            title="View employee"
+                                        >
+                                            👁
+                                        </button>
 
-                                    <button onClick={() => navigate(`/hr/employees/${employee.id}`)}>
-                                        👁
-                                    </button>
+                                        <button
+                                            type="button"
+                                            className="employee-action-btn"
+                                            onClick={() => navigate(`/hr/employees/${employee.id}/edit`)}
+                                            title="Edit Employee"
+                                        >
+                                            ✏️
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))
+                        ) : (
+                            <tr>
+                                <td colSpan="4" className="empty-table-message">
+                                    No employees found.
                                 </td>
                             </tr>
-                        ))}
-
-                        {Array.from({
-                            length: Math.max(5 - filteredEmployees.length, 0)
-                        }).map((_, index) => (
-                            <tr key={`empty-${index}`}>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                            </tr>
-                        ))}
+                        )}
                         </tbody>
                     </table>
                 </section>

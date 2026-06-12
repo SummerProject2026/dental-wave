@@ -7,6 +7,8 @@ import com.summerproject2026.DentalWave.enums.WorkStatus;
 import com.summerproject2026.DentalWave.entity.Employee;
 import com.summerproject2026.DentalWave.repository.EmployeeRepository;
 import com.summerproject2026.DentalWave.service.EmployeeService;
+import com.summerproject2026.DentalWave.dto.CreateEmployeeDto;
+import com.summerproject2026.DentalWave.dto.RegisterDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -92,17 +94,31 @@ class EmployeeControllerTest {
         @Test
         @DisplayName("returns 201 and the persisted EmployeeDto")
         void createEmployee_returns201() throws Exception {
-            when(employeeService.createEmployee(any(EmployeeDto.class))).thenReturn(employeeDto);
+            RegisterDto registerDto = new RegisterDto();
+            registerDto.setFirstName("Jane");
+            registerDto.setLastName("Doe");
+            registerDto.setUsername("jane.doe@test.com");
+            registerDto.setEmail("jane.doe@test.com");
+            registerDto.setPhoneNumber("555-555-5555");
+            registerDto.setPassword("Password123!");
+
+            CreateEmployeeDto createEmployeeDto = new CreateEmployeeDto();
+            createEmployeeDto.setUser(registerDto);
+            createEmployeeDto.setEmployee(employeeDto);
+
+            when(employeeService.createEmployee(any(CreateEmployeeDto.class)))
+                    .thenReturn(employeeDto);
 
             mockMvc.perform(post("/api/employees")
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(employeeDto)))
+                            .content(objectMapper.writeValueAsString(createEmployeeDto)))
                     .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.id").value(1L))
                     .andExpect(jsonPath("$.firstName").value("Jane"))
                     .andExpect(jsonPath("$.lastName").value("Doe"));
 
-            verify(employeeService, times(1)).createEmployee(any(EmployeeDto.class));
+            verify(employeeService, times(1))
+                    .createEmployee(any(CreateEmployeeDto.class));
         }
     }
 

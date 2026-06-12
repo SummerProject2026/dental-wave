@@ -1,6 +1,7 @@
 package com.summerproject2026.DentalWave.service;
 
 import com.summerproject2026.DentalWave.dto.AvailabilityDto;
+import com.summerproject2026.DentalWave.dto.CreateEmployeeDto;
 import com.summerproject2026.DentalWave.dto.EmployeeDto;
 import com.summerproject2026.DentalWave.enums.WorkStatus;
 
@@ -20,7 +21,7 @@ public interface EmployeeService {
      * Creates and persists a new employee.
      * The linked User must already exist; userId in the DTO is used to resolve it.
      */
-    EmployeeDto createEmployee(EmployeeDto employeeDto);
+    EmployeeDto createEmployee(CreateEmployeeDto createEmployeeDto);
 
     /**
      * Retrieves an employee by primary key.

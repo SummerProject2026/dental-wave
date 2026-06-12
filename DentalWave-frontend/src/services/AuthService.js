@@ -28,8 +28,17 @@ export const registerAPICall = (registerObj) =>
 
 // Stores the JWT token in localStorage.
 // Example token format: Bearer eyJhbGciOiJIUzI1NiJ9...
+// export const storeToken = (token) => {
+//     localStorage.setItem('token', token)
+// }
 export const storeToken = (token) => {
-    localStorage.setItem('token', token)
+    const cleanToken = token.startsWith('Bearer ')
+        ? token.substring(7)
+        : token
+
+    console.log('Saving token:', cleanToken)
+
+    localStorage.setItem('token', cleanToken)
 }
 
 // Gets the JWT token from localStorage.
@@ -105,9 +114,13 @@ export const isAssistantUser = () => {
 // Creates an authorization header for protected API calls.
 // Other service files can use this when calling secured backend endpoints.
 export const getAuthHeader = () => {
+    const token = getToken()
+
+    console.log('Using token:', token)
+
     return {
         headers: {
-            Authorization: getToken()
+            Authorization: `Bearer ${token}`
         }
     }
 }

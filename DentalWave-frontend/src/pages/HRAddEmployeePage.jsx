@@ -7,9 +7,11 @@ import { createEmployee } from '../services/EmployeeService'
 function HRAddEmployeePage() {
     const navigate = useNavigate()
 
+    // Stores all form values for the new user account and employee profile
     const [employee, setEmployee] = useState({
         firstName: '',
         lastName: '',
+        username: '',
         phoneNumber: '',
         email: '',
         temporaryPassword: '',
@@ -17,10 +19,11 @@ function HRAddEmployeePage() {
         hireDate: '',
         responsibilities: '',
         timeOffBalance: '',
-        office: 'RALEIGH',
+        officeIds: ['855'],
         status: 'ACTIVE'
     })
 
+    // Updates normal input/select values
     function handleChange(event) {
         const { name, value } = event.target
 
@@ -30,6 +33,32 @@ function HRAddEmployeePage() {
         })
     }
 
+    // Updates selected offices from the multi-select
+    function handleOfficeChange(event) {
+        const selectedOfficeIds = Array.from(
+            event.target.selectedOptions,
+            option => option.value
+        )
+
+        setEmployee({
+            ...employee,
+            officeIds: selectedOfficeIds
+        })
+    }
+
+    // Adds or removes an office from the selected office list
+    function toggleOffice(officeId) {
+        const officeSelected = employee.officeIds.includes(officeId)
+
+        setEmployee({
+            ...employee,
+            officeIds: officeSelected
+                ? employee.officeIds.filter(id => id !== officeId)
+                : [...employee.officeIds, officeId]
+        })
+    }
+
+    // Builds the CreateEmployeeDto expected by the backend
     function handleSubmit(event) {
         event.preventDefault()
 
@@ -37,24 +66,36 @@ function HRAddEmployeePage() {
             user: {
                 firstName: employee.firstName,
                 lastName: employee.lastName,
-                username: employee.email,
+                username: employee.username,
                 email: employee.email,
                 phoneNumber: employee.phoneNumber,
-                roles: [employee.role],
-                enabled: true
+                password: employee.temporaryPassword
             },
             employee: {
+                firstName: employee.firstName,
+                lastName: employee.lastName,
+                email: employee.email,
                 position: employee.role,
                 hireDate: employee.hireDate,
-                timeOff: Number(employee.timeOffBalance),
+                timeOff: employee.timeOffBalance === ''
+                    ? 0.0
+                    : Number(employee.timeOffBalance),
                 status: employee.status,
-                responsibilities: employee.responsibilities
-                    .split(',')
-                    .map(item => item.trim())
-                    .filter(item => item !== ''),
-                offices: [
-                    { id: Number(employee.officeId) }
-                ]
+
+                // Converts comma-separated responsibilities into a list
+                responsibilities: employee.responsibilities === ''
+                    ? []
+                    : employee.responsibilities
+                        .split(',')
+                        .map(item => item.trim())
+                        .filter(item => item !== ''),
+
+                // Converts selected office IDs into OfficeDto stubs
+                offices: employee.officeIds.map(id => ({
+                    id: Number(id)
+                })),
+
+                availabilities: []
             }
         }
 
@@ -88,7 +129,12 @@ function HRAddEmployeePage() {
                     </section>
 
                     <section className="form-section">
-                        <h2>Contact</h2>
+                        <h2>Account and Contact</h2>
+
+                        <div className="form-row">
+                            <label>Username</label>
+                            <input name="username" value={employee.username} onChange={handleChange} required />
+                        </div>
 
                         <div className="form-row">
                             <label>Phone Number</label>
@@ -122,21 +168,58 @@ function HRAddEmployeePage() {
 
                             <div className="form-row">
                                 <label>Hire Date</label>
-                                <input type="date" name="hireDate" value={employee.hireDate} onChange={handleChange} />
+                                <input type="date" name="hireDate" value={employee.hireDate} onChange={handleChange} required />
                             </div>
 
-                            <div className="form-row">
+                            <div className="form-row office-row">
                                 <label>Office</label>
-                                <select name="office" value={employee.office} onChange={handleChange}>
-                                    <option value="RALEIGH">Raleigh</option>
-                                    <option value="GARNER">Garner</option>
-                                    <option value="SMITHFIELD">Smithfield</option>
-                                </select>
+
+                                <table className="office-table">
+                                    <tbody>
+                                    <tr>
+                                        <td>
+                                            <input
+                                                type="checkbox"
+                                                checked={employee.officeIds.includes('855')}
+                                                onChange={() => toggleOffice('855')}
+                                            />
+                                        </td>
+                                        <td>Raleigh</td>
+                                    </tr>
+
+                                    <tr>
+                                        <td>
+                                            <input
+                                                type="checkbox"
+                                                checked={employee.officeIds.includes('856')}
+                                                onChange={() => toggleOffice('856')}
+                                            />
+                                        </td>
+                                        <td>Garner</td>
+                                    </tr>
+
+                                    <tr>
+                                        <td>
+                                            <input
+                                                type="checkbox"
+                                                checked={employee.officeIds.includes('857')}
+                                                onChange={() => toggleOffice('857')}
+                                            />
+                                        </td>
+                                        <td>Smithfield</td>
+                                    </tr>
+                                    </tbody>
+                                </table>
                             </div>
 
                             <div className="form-row">
                                 <label>Responsibilities</label>
-                                <input name="responsibilities" value={employee.responsibilities} onChange={handleChange} />
+                                <input
+                                    name="responsibilities"
+                                    value={employee.responsibilities}
+                                    onChange={handleChange}
+                                    placeholder="Scheduling, Sterilization, Front desk"
+                                />
                             </div>
 
                             <div className="form-row">

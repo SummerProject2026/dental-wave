@@ -2,6 +2,7 @@ package com.summerproject2026.DentalWave.controller;
 
 import com.summerproject2026.DentalWave.dto.AvailabilityDto;
 import com.summerproject2026.DentalWave.dto.EmployeeDto;
+import com.summerproject2026.DentalWave.dto.CreateEmployeeDto;
 import com.summerproject2026.DentalWave.enums.WorkStatus;
 import com.summerproject2026.DentalWave.repository.EmployeeRepository;
 import com.summerproject2026.DentalWave.service.EmployeeService;
@@ -9,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -41,10 +43,12 @@ public class EmployeeController {
      *
      * @return 201 Created with the persisted EmployeeDto
      */
+    @PreAuthorize("hasAnyRole('HR', 'ADMIN')")
     @PostMapping
-    public ResponseEntity<EmployeeDto> createEmployee(@RequestBody EmployeeDto employeeDto) {
+    public ResponseEntity<EmployeeDto> createEmployee(@RequestBody CreateEmployeeDto createEmployeeDto) {
+        System.out.println("EMPLOYEE CONTROLLER HIT");
         return ResponseEntity.status(HttpStatus.CREATED)
-                             .body(employeeService.createEmployee(employeeDto));
+                .body(employeeService.createEmployee(createEmployeeDto));
     }
 
     // ------------------------------------------------------------------ //
@@ -52,6 +56,7 @@ public class EmployeeController {
     // ------------------------------------------------------------------ //
 
     /** Returns a single employee by primary key. */
+    @PreAuthorize("hasAnyRole('HR', 'ADMIN', 'MANAGER')")
     @GetMapping("/{id}")
     public ResponseEntity<EmployeeDto> getEmployeeById(@PathVariable Long id) {
         return ResponseEntity.ok(employeeService.getEmployeeById(id));
@@ -62,6 +67,7 @@ public class EmployeeController {
     // ------------------------------------------------------------------ //
 
     /** Returns all employees. */
+    @PreAuthorize("hasAnyRole('HR', 'ADMIN', 'MANAGER')")
     @GetMapping
     public ResponseEntity<List<EmployeeDto>> getAllEmployees() {
         return ResponseEntity.ok(employeeService.getAllEmployees());
@@ -74,7 +80,9 @@ public class EmployeeController {
     /**
      * Updates an existing employee's HR fields.
      * The linked User account is NOT changeable through this endpoint.
+     * Anyone can update the certain parts of an employee, such as email, and password.
      */
+    @PreAuthorize("hasAnyRole('ASSISTANT', 'MANAGER', 'HR', 'ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<EmployeeDto> updateEmployee(@PathVariable Long id,
                                                        @RequestBody EmployeeDto employeeDto) {
@@ -85,7 +93,12 @@ public class EmployeeController {
     // DELETE /api/employees/{id} — delete
     // ------------------------------------------------------------------ //
 
-    /** Deletes an employee and all cascaded records. */
+    /**
+     * Deletes an employee and all cascaded records.
+     * This should only be ablt to be used by HR or Admin.
+     *
+     */
+    @PreAuthorize("hasAnyRole('HR', 'ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteEmployee(@PathVariable Long id) {
         employeeService.deleteEmployee(id);
@@ -97,6 +110,7 @@ public class EmployeeController {
     // ------------------------------------------------------------------ //
 
     /** Returns all employees assigned to a specific office. */
+    @PreAuthorize("hasAnyRole('HR', 'ADMIN', 'MANAGER')")
     @GetMapping("/office/{officeId}")
     public ResponseEntity<List<EmployeeDto>> getEmployeesByOffice(@PathVariable Long officeId) {
         return ResponseEntity.ok(employeeService.getEmployeesByOffice(officeId));
@@ -110,6 +124,7 @@ public class EmployeeController {
      * Returns all employees with the given WorkStatus.
      * Example: GET /api/employees/status/ACTIVE
      */
+    @PreAuthorize("hasAnyRole('HR', 'ADMIN', 'MANAGER')")
     @GetMapping("/status/{status}")
     public ResponseEntity<List<EmployeeDto>> getEmployeesByStatus(
             @PathVariable WorkStatus status) {
@@ -129,6 +144,7 @@ public class EmployeeController {
      * The controller delegates to it directly and maps the results via
      * the service's getById to avoid duplicating mapper logic.
      */
+    @PreAuthorize("hasAnyRole('HR', 'ADMIN', 'MANAGER')")
     @GetMapping("/search")
     public ResponseEntity<List<EmployeeDto>> searchEmployees(@RequestParam String keyword) {
         List<EmployeeDto> results = employeeRepository.searchByKeyword(keyword).stream()
@@ -146,6 +162,7 @@ public class EmployeeController {
      *
      * @return 201 Created with the new AvailabilityDto
      */
+    @PreAuthorize("hasAnyRole('HR', 'ADMIN')")
     @PostMapping("/{employeeId}/availability")
     public ResponseEntity<AvailabilityDto> addAvailability(
             @PathVariable Long employeeId,
@@ -162,6 +179,7 @@ public class EmployeeController {
      * Updates an existing availability record belonging to the employee.
      * Returns 404 if the availability doesn't belong to this employee.
      */
+    @PreAuthorize("hasAnyRole('HR', 'ADMIN')")
     @PutMapping("/{employeeId}/availability/{availabilityId}")
     public ResponseEntity<AvailabilityDto> updateAvailability(
             @PathVariable Long employeeId,
@@ -176,6 +194,7 @@ public class EmployeeController {
     // ------------------------------------------------------------------ //
 
     /** Removes an availability record from an employee. */
+    @PreAuthorize("hasAnyRole('HR', 'ADMIN')")
     @DeleteMapping("/{employeeId}/availability/{availabilityId}")
     public ResponseEntity<String> deleteAvailability(
             @PathVariable Long employeeId,

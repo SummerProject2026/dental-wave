@@ -4,6 +4,7 @@ import com.summerproject2026.DentalWave.dto.OfficeDto;
 import com.summerproject2026.DentalWave.service.OfficeService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -48,6 +49,7 @@ public class OfficeController {
      * @return {@code 201 Created} with the created {@link OfficeDto} in the body
      */
     @PostMapping
+    @PreAuthorize("hasAnyRole('HR', 'ADMIN', 'MANAGER')")
     public ResponseEntity<OfficeDto> createOffice(@RequestBody OfficeDto officeDto) {
         OfficeDto createdOffice = officeService.createOffice(officeDto);
         return new ResponseEntity<>(createdOffice, HttpStatus.CREATED);
@@ -65,6 +67,7 @@ public class OfficeController {
      *         or {@code 404 Not Found} if no office exists with the given ID
      */
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('HR', 'ADMIN', 'MANAGER')")
     public ResponseEntity<OfficeDto> getOfficeById(@PathVariable Long id) {
         OfficeDto office = officeService.getOfficeById(id);
         return ResponseEntity.ok(office);
@@ -81,6 +84,7 @@ public class OfficeController {
      *         objects in the body; returns an empty list if none exist
      */
     @GetMapping
+    @PreAuthorize("hasAnyRole('HR', 'ADMIN', 'MANAGER')")
     public ResponseEntity<List<OfficeDto>> getAllOffices() {
         List<OfficeDto> offices = officeService.getAllOffices();
         return ResponseEntity.ok(offices);
@@ -103,6 +107,7 @@ public class OfficeController {
      *         or {@code 404 Not Found} if no office exists with the given ID
      */
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('HR', 'ADMIN', 'MANAGER')")
     public ResponseEntity<OfficeDto> updateOffice(@PathVariable Long id,
                                                   @RequestBody OfficeDto officeDto) {
         OfficeDto updatedOffice = officeService.updateOffice(id, officeDto);
@@ -121,6 +126,7 @@ public class OfficeController {
      *         or {@code 404 Not Found} if no office exists with the given ID
      */
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('HR', 'ADMIN', 'MANAGER')")
     public ResponseEntity<String> deleteOffice(@PathVariable Long id) {
         officeService.deleteOffice(id);
         return ResponseEntity.ok("Office with id " + id + " deleted successfully.");

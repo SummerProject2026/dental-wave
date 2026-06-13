@@ -8,6 +8,11 @@ import EmployeeProfilePage from './pages/EmployeeProfilePage.jsx'
 import EmployeeEditProfilePage from './pages/EmployeeEditProfilePage.jsx'
 import EmployeeMyRequestsPage from './pages/EmployeeMyRequestsPage.jsx'
 import EmployeeRequestViewPage from './pages/EmployeeRequestViewPage.jsx'
+import HREmployeesPage from './pages/HREmployeesPage.jsx'
+import HRAddEmployeePage from './pages/HRAddEmployeePage.jsx'
+import HRViewEmployeePage from './pages/HRViewEmployeePage.jsx'
+import HREditEmployeePage from './pages/HREditEmployeePage.jsx'
+import HRCalendarPage from './pages/HRCalendarPage.jsx'
 
 function App() {
     return (
@@ -19,7 +24,7 @@ function App() {
                 <Route path="/login" element={<LoginPage />} />
 
                 {/* HR */}
-                <Route path="/hr/calendar" element={<h2>HR Calendar</h2>} />
+                <Route path="/hr/calendar" element={<HRCalendarPage />} />
 
                 {/* Manager */}
                 <Route path="/manager/calendar" element={<ManagerCalendarPage />} />
@@ -44,6 +49,18 @@ function App() {
 
                 {/* Single request for employee to review */ }
                 <Route path="/employee/requests/:requestId" element={<EmployeeRequestViewPage />} />
+
+                {/* HR page to manage employees */ }
+                <Route path="/hr/employees" element={<HREmployeesPage />} />
+
+                {/* HR adds a new employee page */}
+                <Route path="/hr/employees/new" element={<HRAddEmployeePage />} />
+
+                {/* HR views aa employee page */}
+                <Route path="/hr/employees/:id" element={<HRViewEmployeePage />} />
+
+                {/* HR edits an employee page */}
+                <Route path="/hr/employees/:id/edit" element={<HREditEmployeePage />} />
 
 
             </Routes>

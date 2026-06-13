@@ -18,6 +18,9 @@ import com.summerproject2026.DentalWave.service.EmployeeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.summerproject2026.DentalWave.dto.CreateEmployeeDto;
+import com.summerproject2026.DentalWave.dto.RegisterDto;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,20 +45,23 @@ public class EmployeeServiceImpl implements EmployeeService {
     private final AvailabilityRepository availabilityRepository;
     private final EmployeeMapper         employeeMapper;
     private final AvailabilityMapper     availabilityMapper;
+    private final PasswordEncoder passwordEncoder;
 
     @Autowired
     public EmployeeServiceImpl(EmployeeRepository employeeRepository,
-                                UserRepository userRepository,
-                                OfficeRepository officeRepository,
-                                AvailabilityRepository availabilityRepository,
-                                EmployeeMapper employeeMapper,
-                                AvailabilityMapper availabilityMapper) {
+                               UserRepository userRepository,
+                               OfficeRepository officeRepository,
+                               AvailabilityRepository availabilityRepository,
+                               EmployeeMapper employeeMapper,
+                               AvailabilityMapper availabilityMapper,
+                               PasswordEncoder passwordEncoder) {
         this.employeeRepository     = employeeRepository;
         this.userRepository         = userRepository;
         this.officeRepository       = officeRepository;
         this.availabilityRepository = availabilityRepository;
         this.employeeMapper         = employeeMapper;
         this.availabilityMapper     = availabilityMapper;
+        this.passwordEncoder        = passwordEncoder;
     }
 
     // ------------------------------------------------------------------ //
@@ -67,21 +73,35 @@ public class EmployeeServiceImpl implements EmployeeService {
      * Fetches managed User and Office entities to replace the mapper's stubs.
      */
     @Override
-    public EmployeeDto createEmployee(EmployeeDto employeeDto) {
+    @Transactional
+    public EmployeeDto createEmployee(CreateEmployeeDto createEmployeeDto) {
+        RegisterDto userDto = createEmployeeDto.getUser();
+        EmployeeDto employeeDto = createEmployeeDto.getEmployee();
+
+        // 1. Create the User first
+        User user = new User();
+        user.setFirstName(userDto.getFirstName());
+        user.setLastName(userDto.getLastName());
+        user.setUsername(userDto.getUsername());
+        user.setEmail(userDto.getEmail());
+        user.setPhoneNumber(userDto.getPhoneNumber());
+        user.setPassword(passwordEncoder.encode(userDto.getPassword()));
+        user.setEnabled(true);
+
+        User savedUser = userRepository.save(user);
+
+        // 2. Create the Employee and link it to the saved User
         Employee employee = employeeMapper.mapToEmployee(employeeDto);
+        employee.setUser(savedUser);
 
-        // Hydrate User stub → managed entity
-        if (employeeDto.getUserId() != null) {
-            User managedUser = userRepository.findById(employeeDto.getUserId())
-                    .orElseThrow(() -> new ResourceNotFoundException(
-                            "User not found with id: " + employeeDto.getUserId()));
-            employee.setUser(managedUser);
-        }
-
-        // Hydrate Office stubs → managed entities
+        // 3. Hydrate Office stubs into real Office entities
         employee.setOffices(resolveOffices(employeeDto));
 
-        return employeeMapper.mapToEmployeeDto(employeeRepository.save(employee));
+        // 4. Save Employee
+        Employee savedEmployee = employeeRepository.save(employee);
+
+        // 5. Return DTO
+        return employeeMapper.mapToEmployeeDto(savedEmployee);
     }
 
     // ------------------------------------------------------------------ //

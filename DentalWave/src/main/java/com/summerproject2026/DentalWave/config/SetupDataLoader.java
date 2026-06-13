@@ -11,6 +11,8 @@ import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import com.summerproject2026.DentalWave.entity.Office;
+import com.summerproject2026.DentalWave.repository.OfficeRepository;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -26,6 +28,7 @@ public class SetupDataLoader implements ApplicationListener<ContextRefreshedEven
     private final RoleRepository roleRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final OfficeRepository officeRepository;
 
     // Admin password loaded from applicationTest.properties
     @Value("${app.admin-user-password}")
@@ -76,6 +79,11 @@ public class SetupDataLoader implements ApplicationListener<ContextRefreshedEven
                 "assistant@dentalwave.com", assistantPassword,
                 new ArrayList<>(Arrays.asList(assistantRole)));
 
+        // ADD OFFICES HERE(that are preset!)
+        createOfficeIfNotFound("Raleigh", "Wake Orthodontics Raleigh", "919-555-1111");
+        createOfficeIfNotFound("Garner", "Wake Orthodontics Garner", "919-555-2222");
+        createOfficeIfNotFound("Smithfield", "Wake Orthodontics Smithfield", "919-555-3333");
+
         alreadySetup = true;
     }
 
@@ -108,5 +116,28 @@ public class SetupDataLoader implements ApplicationListener<ContextRefreshedEven
             user.setRoles(roles);
             userRepository.save(user);
         }
+    }
+
+    /**
+     * Helper method to set office when the application is run
+     * @param name of the office
+     * @param address of the office
+     * @param phoneNumber of the office
+     * @return office
+     */
+    @Transactional
+    public Office createOfficeIfNotFound(String name, String address, String phoneNumber) {
+        System.out.println("Checking office: " + name);
+
+        return officeRepository.findByName(name)
+                .orElseGet(() -> {
+                    System.out.println("Creating office: " + name);
+
+                    Office office = new Office();
+                    office.setName(name);
+                    office.setAddress(address);
+                    office.setPhoneNumber(phoneNumber);
+                    return officeRepository.save(office);
+                });
     }
 }

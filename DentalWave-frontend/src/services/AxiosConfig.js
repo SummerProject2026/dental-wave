@@ -35,7 +35,7 @@ axios.interceptors.request.use(
         // Only attach the Authorization header
         // if a token exists
         if (token) {
-            config.headers['Authorization'] = token
+            config.headers['Authorization'] = `Bearer ${token}`
         }
 
         return config

@@ -1,9 +1,9 @@
 import '../App.css'
 import logo from '../pictures/wake-logo.png'
-import EmployeeHeader from '../components/EmployeeHeader'
+import ManagerHeader from '../components/ManagerHeader'
 import { useState } from 'react'
 
-function EmployeeProfilePage() {
+function ManagerProfilePage() {
 
     const [isEditing, setIsEditing] = useState(false)
     const [form, setForm] = useState({
@@ -12,6 +12,7 @@ function EmployeeProfilePage() {
         email: '',
         phone: '',
         password: '',
+        repeatPassword: '',
         status: '',
         hireDate: '',
         pto: ''
@@ -29,7 +30,7 @@ function EmployeeProfilePage() {
     return (
         <div className="profile-page">
 
-            <EmployeeHeader />
+            <ManagerHeader />
 
             <main className="profile-layout">
 
@@ -82,7 +83,7 @@ function EmployeeProfilePage() {
                                 />
                             </div>
                             <div className="profile-row">
-                                <span>Phone Number:</span>
+                                <span>Phone number:</span>
                                 <input
                                     name="phone"
                                     value={form.phone}
@@ -100,6 +101,17 @@ function EmployeeProfilePage() {
                                     readOnly={!isEditing}
                                 />
                             </div>
+                            {isEditing && (
+                                <div className="profile-row">
+                                    <span>Repeat Password:</span>
+                                    <input
+                                        name="repeatPassword"
+                                        type="password"
+                                        value={form.repeatPassword}
+                                        onChange={handleChange}
+                                    />
+                                </div>
+                            )}
                         </div>
 
                         <div className="profile-column">
@@ -162,4 +174,4 @@ function EmployeeProfilePage() {
     )
 }
 
-export default EmployeeProfilePage
+export default ManagerProfilePage

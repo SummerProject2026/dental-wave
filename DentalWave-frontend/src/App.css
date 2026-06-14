@@ -1137,29 +1137,34 @@ body {
 
 .add-employee-content {
   flex: 1;
-  padding: 10px 45px 20px;
+  padding: 20px 50px;
   box-sizing: border-box;
 }
 
 .add-employee-card {
-  background-color: #f7f7f7;
-  min-height: 620px;
-  padding: 18px 35px;
+  background-color: rgba(255, 255, 255, 0.3);
+  border-radius: 14px;
+  padding: 24px 35px;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 }
 
 .form-section {
   width: 100%;
-  max-width: 700px;
-  margin-bottom: 25px;
+  max-width: 750px;
+  margin-bottom: 24px;
 }
 
 .form-section h2 {
-  color: black;
-  font-size: 20px;
-  margin: 0 0 20px 0;
+  color: #2444d8;
+  font-size: 18px;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-weight: bold;
+  margin: 0 0 12px 0;
   text-align: left;
-  border-bottom: 2px solid black;
+  border-bottom: 2px solid #2444d8;
   padding-bottom: 4px;
 }
 
@@ -1167,81 +1172,105 @@ body {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  margin-bottom: 14px;
-  color: black;
+  margin-bottom: 12px;
+  color: #1a1a2e;
   font-weight: bold;
 }
 
 .form-row label {
   font-size: 13px;
   margin-bottom: 4px;
+  color: #1a1a2e;
 }
 
 .form-row input,
 .form-row select {
   width: 190px;
-  height: 28px;
-  border: 1px solid #999;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
   background-color: white;
-  color: black;
+  color: #333;
   font-size: 14px;
+  padding: 0 8px;
+  box-sizing: border-box;
+}
+
+.form-row input:focus,
+.form-row select:focus {
+  outline: 2px solid #443066;
 }
 
 .details-grid {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
-  column-gap: 70px;
-  row-gap: 18px;
+  column-gap: 50px;
+  row-gap: 16px;
+}
+
+/* Office checkbox table */
+.office-table {
+  border-collapse: collapse;
+}
+
+.office-table td {
+  padding: 4px 8px;
+  font-size: 14px;
+  font-weight: normal;
+  color: #1a1a2e;
+  border: none;
+  background: transparent;
+  height: auto;
+}
+
+.office-table input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #443066;
+  cursor: pointer;
 }
 
 .add-employee-buttons {
   display: flex;
   justify-content: flex-end;
-  gap: 100px;
-  margin-top: 45px;
-  padding-right: 170px;
-}
-
-.cancel-employee-btn,
-.save-employee-btn {
-  width: 130px;
-  height: 28px;
-  border: none;
-  border-radius: 14px;
-  font-weight: bold;
-  cursor: pointer;
+  gap: 20px;
+  margin-top: 30px;
+  width: 100%;
+  max-width: 750px;
 }
 
 .cancel-employee-btn {
-  background-color: #dddddd;
-  color: black;
+  width: 110px;
+  height: 36px;
+  border: none;
+  border-radius: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  background-color: #ddd;
+  color: #333;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+
+.cancel-employee-btn:hover {
+  background-color: #ccc;
 }
 
 .save-employee-btn {
+  width: 110px;
+  height: 36px;
+  border: none;
+  border-radius: 20px;
+  font-weight: bold;
+  cursor: pointer;
   background-color: #12b85f;
-  color: black;
+  color: white;
+  font-size: 14px;
+  transition: background 0.2s;
 }
 
-.add-employee-card {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
-
-.office-selection-table table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.office-selection-table th,
-.office-selection-table td {
-  padding: 10px;
-  border: 1px solid #ddd;
-  text-align: left;
-}
-
-.office-selection-table th {
-  background-color: #f5f5f5;
+.save-employee-btn:hover {
+  background-color: #0ea350;
 }
 
 /* ---------- Header Page ---------- */
@@ -1454,4 +1483,138 @@ body {
   flex: 1;
   display: flex;
   flex-direction: column;
+}
+
+/* ---------- HR Requests Page ---------- */
+
+.hr-requests-content {
+  flex: 1;
+  padding: 30px 70px;
+  box-sizing: border-box;
+}
+
+.hr-requests-search-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.hr-requests-search-row label {
+  font-size: 20px;
+  font-weight: bold;
+  color: #1a1a2e;
+}
+
+.hr-requests-search-row input {
+  height: 42px;
+  width: 220px;
+  border: none;
+  border-radius: 8px;
+  padding: 0 14px;
+  font-size: 16px;
+  background-color: white;
+  color: black;
+  outline: none;
+}
+
+.hr-requests-search-row select {
+  height: 42px;
+  width: 180px;
+  border: none;
+  border-radius: 8px;
+  padding: 0 14px;
+  font-size: 16px;
+  background-color: white;
+  color: black;
+  outline: none;
+  cursor: pointer;
+}
+
+.hr-requests-table-section {
+  width: 80%;
+  margin: 0 auto;
+}
+
+/* ---------- Edit Schedule Button ---------- */
+
+.edit-schedule-btn {
+  background-color: #443066;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 7px 14px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.edit-schedule-btn:hover {
+  background-color: #33244d;
+}
+
+/* ---------- Manager Employees Page ---------- */
+
+.manager-employee-tabs {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.manager-tab-btn {
+  padding: 10px 28px;
+  border: none;
+  border-radius: 10px;
+  font-size: 17px;
+  font-weight: bold;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.2s, transform 0.1s;
+}
+
+.manager-tab-btn.active {
+  opacity: 1;
+  transform: scale(1.04);
+}
+
+.tab-employee {
+  background-color: #b0b8ff;
+  color: #1a1a2e;
+}
+
+.tab-new {
+  background-color: #6ee7b7;
+  color: #1a1a2e;
+}
+
+.tab-removed {
+  background-color: #fca5a5;
+  color: #1a1a2e;
+}
+
+.manager-employee-search {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.manager-employee-search label {
+  font-size: 20px;
+  font-weight: bold;
+  color: #1a1a2e;
+}
+
+.manager-employee-search input {
+  height: 38px;
+  width: 220px;
+  border: none;
+  border-radius: 8px;
+  padding: 0 14px;
+  font-size: 16px;
+  background-color: white;
+  color: black;
+  outline: none;
 }

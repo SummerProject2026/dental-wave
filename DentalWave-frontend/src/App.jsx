@@ -14,7 +14,10 @@ import HRViewEmployeePage from './pages/HRViewEmployeePage.jsx'
 import HREditEmployeePage from './pages/HREditEmployeePage.jsx'
 import HRCalendarPage from './pages/HRCalendarPage.jsx'
 import ManagerProfilePage from "./pages/ManagerProfilePage.jsx"
-
+import HRProfilePage from './pages/HRProfilePage'
+import HRRequestsPage from './pages/HRRequestsPage'
+import ManagerRequestsPage from './pages/ManagerRequestsPage'
+import ManagerEmployeesPage from './pages/ManagerEmployeesPage'
 
 function App() {
     return (
@@ -64,10 +67,23 @@ function App() {
                 {/* HR edits an employee page */}
                 <Route path="/hr/employees/:id/edit" element={<HREditEmployeePage />} />
 
+                {/* HR info page */}
+                <Route path="/hr/profile" element={<HRProfilePage />} />
+
                 {/* Manager Profile page */}
                 <Route path="/manager/profile" element={<ManagerProfilePage />} />
 
+                {/* Employee Request time off page */}
                 <Route path="/employee/requests/new" element={<EmployeeRequestTimeOffPage />} />
+
+                {/* HR Requests page */}
+                <Route path="/hr/requests" element={<HRRequestsPage />} />
+
+                {/* Manager Approved Requests page */}
+                <Route path="/manager/requests" element={<ManagerRequestsPage />} />
+
+                {/* Manager Employees page */}
+                <Route path="/manager/employees" element={<ManagerEmployeesPage />} />
 
 
             </Routes>

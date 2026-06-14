@@ -1,6 +1,7 @@
 import '../App.css'
 import EmployeeHeader from '../components/EmployeeHeader'
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 // Placeholder schedule data - replace with API call later
 const mockSchedule = {
@@ -21,6 +22,7 @@ function EmployeeCalendarPage() {
     const today = new Date()
     const [currentDate, setCurrentDate] = useState(new Date(today.getFullYear(), today.getMonth(), 1))
     const [selectedDay, setSelectedDay] = useState(null)
+    const navigate = useNavigate()
 
     function prevMonth() {
         setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))

@@ -1,7 +1,36 @@
 import '../App.css'
+import { useState } from 'react'
 import HRHeader from '../components/HRHeader'
 
 function HRCalendarPage() {
+
+    const today = new Date()
+    const [currentDate, setCurrentDate] = useState(new Date(today.getFullYear(), today.getMonth(), 1))
+
+    function prevMonth() {
+        setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))
+    }
+
+    function nextMonth() {
+        setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))
+    }
+
+    const monthName = currentDate.toLocaleString('default', { month: 'long' })
+    const year = currentDate.getFullYear()
+
+    const firstDayOfWeek = currentDate.getDay()
+    const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate()
+
+    const cells = []
+    for (let i = 0; i < firstDayOfWeek; i++) cells.push(null)
+    for (let d = 1; d <= daysInMonth; d++) cells.push(d)
+    while (cells.length % 7 !== 0) cells.push(null)
+
+    const isToday = (day) =>
+        day === today.getDate() &&
+        currentDate.getMonth() === today.getMonth() &&
+        currentDate.getFullYear() === today.getFullYear()
+
     return (
         <div className="calendar-page">
 
@@ -9,33 +38,30 @@ function HRCalendarPage() {
 
             <main className="calendar-content">
 
-                <h1>Universal Calendar</h1>
+                <h1 className="calendar-content h1">Universal Calendar</h1>
 
                 <div className="calendar-controls">
-                    <button>&lt;</button>
-                    <h2>June 2026</h2>
-                    <button>&gt;</button>
+                    <button onClick={prevMonth}>&lt;</button>
+                    <h2>{monthName} {year}</h2>
+                    <button onClick={nextMonth}>&gt;</button>
                 </div>
 
                 <div className="calendar-grid">
-
-                    <div className="calendar-day-header">Sun</div>
-                    <div className="calendar-day-header">Mon</div>
-                    <div className="calendar-day-header">Tue</div>
-                    <div className="calendar-day-header">Wed</div>
-                    <div className="calendar-day-header">Thu</div>
-                    <div className="calendar-day-header">Fri</div>
-                    <div className="calendar-day-header">Sat</div>
-
-                    {Array.from({ length: 35 }, (_, index) => (
+                    {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
+                        <div key={d} className="calendar-day-header">{d}</div>
+                    ))}
+                    {cells.map((day, i) => (
                         <div
-                            key={index}
-                            className="calendar-day"
+                            key={i}
+                            className={[
+                                'calendar-day',
+                                isToday(day) ? 'calendar-day-today' : '',
+                                !day ? 'calendar-day-empty' : ''
+                            ].join(' ')}
                         >
-                            {index + 1 <= 30 ? index + 1 : ''}
+                            {day || ''}
                         </div>
                     ))}
-
                 </div>
 
             </main>

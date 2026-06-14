@@ -9,6 +9,7 @@ function HREmployeesPage() {
 
     const [employees, setEmployees] = useState([])
     const [searchTerm, setSearchTerm] = useState('')
+    const [filterBy, setFilterBy] = useState('name')
 
     useEffect(() => {
         loadEmployees()
@@ -29,19 +30,14 @@ function HREmployeesPage() {
     }
 
 
-    const sortedEmployees = [...employees].sort((a, b) => {
-        const nameA = getEmployeeName(a).toLowerCase()
-        const nameB = getEmployeeName(b).toLowerCase()
+    const sortedEmployees = [...employees].filter((employee) => {
         const search = searchTerm.toLowerCase()
-
-        const aMatches = nameA.includes(search)
-        const bMatches = nameB.includes(search)
-
-        if (aMatches && !bMatches) return -1
-        if (!aMatches && bMatches) return 1
-
-        return nameA.localeCompare(nameB)
-    })
+        if (!search) return true
+        if (filterBy === 'name') return getEmployeeName(employee).toLowerCase().includes(search)
+        if (filterBy === 'role') return (employee.position || '').toLowerCase().includes(search)
+        if (filterBy === 'status') return (employee.status || '').toLowerCase().includes(search)
+        return true
+    }).sort((a, b) => getEmployeeName(a).localeCompare(getEmployeeName(b)))
 
     return (
         <div className="hr-page">
@@ -51,10 +47,18 @@ function HREmployeesPage() {
                 <h1 className="hr-page-title">Employees</h1>
 
                 <div className="employee-search-row">
-                    <label>Search:</label>
+                    <select
+                        className="employee-filter-select"
+                        value={filterBy}
+                        onChange={(e) => setFilterBy(e.target.value)}
+                    >
+                        <option value="name">Employee</option>
+                        <option value="role">Role</option>
+                        <option value="status">Status</option>
+                    </select>
                     <input
                         type="text"
-                        placeholder="Name"
+                        placeholder={`Search by ${filterBy}...`}
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />

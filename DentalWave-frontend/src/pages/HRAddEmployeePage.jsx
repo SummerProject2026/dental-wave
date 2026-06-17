@@ -61,7 +61,6 @@ function HRAddEmployeePage() {
     // Builds the CreateEmployeeDto expected by the backend
     function handleSubmit(event) {
         event.preventDefault()
-
         const employeeToCreate = {
             user: {
                 firstName: employee.firstName,
@@ -71,6 +70,9 @@ function HRAddEmployeePage() {
                 phoneNumber: employee.phoneNumber,
                 password: employee.temporaryPassword
             },
+
+            role: `ROLE_${employee.role}`,
+
             employee: {
                 firstName: employee.firstName,
                 lastName: employee.lastName,
@@ -82,7 +84,6 @@ function HRAddEmployeePage() {
                     : Number(employee.timeOffBalance),
                 status: employee.status,
 
-                // Converts comma-separated responsibilities into a list
                 responsibilities: employee.responsibilities === ''
                     ? []
                     : employee.responsibilities
@@ -90,7 +91,6 @@ function HRAddEmployeePage() {
                         .map(item => item.trim())
                         .filter(item => item !== ''),
 
-                // Converts selected office IDs into OfficeDto stubs
                 offices: employee.officeIds.map(id => ({
                     id: Number(id)
                 })),

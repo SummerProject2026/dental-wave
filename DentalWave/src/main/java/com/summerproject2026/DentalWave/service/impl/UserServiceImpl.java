@@ -104,8 +104,6 @@ public class UserServiceImpl implements UserService {
         // Persist — JPA assigns the generated primary key
         User savedUser = userRepository.save(user);
 
-        log.debug("User persisted with id: {}", savedUser.getId());
-
         // Convert saved entity → DTO and hand back to the caller
         return userMapper.toDto(savedUser);
     }

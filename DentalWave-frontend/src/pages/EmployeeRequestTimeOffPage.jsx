@@ -1,11 +1,20 @@
 import '../App.css'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import EmployeeHeader from '../components/EmployeeHeader'
+import {
+    getTimeOffRequestsByEmployee,
+    getAllTimeOffRequests,
+    createTimeOffRequest,
+    deleteTimeOffRequest
+} from '../services/TimeOffRequestService'
 
 function EmployeeRequestTimeOffPage() {
     const navigate = useNavigate()
     const today = new Date()
+
+    // TODO: replace with real logged-in employee id (from auth context/storage)
+    const employeeId = Number(sessionStorage.getItem('employeeId'))
 
     const [requestType, setRequestType] = useState('timeoff')
     const [fromDate, setFromDate] = useState('')
@@ -16,6 +25,13 @@ function EmployeeRequestTimeOffPage() {
     const [calDate, setCalDate] = useState(new Date(today.getFullYear(), today.getMonth(), 1))
     const [selectedDay, setSelectedDay] = useState(null)
 
+    const [allRequests, setAllRequests] = useState([])
+    const [myRequests, setMyRequests] = useState([])
+
+    const [errorMessage, setErrorMessage] = useState('')
+    const [conflict, setConflict] = useState(null) // { date, request }
+    const [pendingDate, setPendingDate] = useState(null)
+
     const monthName = calDate.toLocaleString('default', { month: 'long' })
     const year = calDate.getFullYear()
     const firstDay = calDate.getDay()
@@ -25,6 +41,21 @@ function EmployeeRequestTimeOffPage() {
     for (let i = 0; i < firstDay; i++) cells.push(null)
     for (let d = 1; d <= daysInMonth; d++) cells.push(d)
     while (cells.length % 7 !== 0) cells.push(null)
+
+    // -------------------------------------------------------------------
+    // Load existing requests
+    // -------------------------------------------------------------------
+    useEffect(() => {
+        if (employeeId) {
+            getTimeOffRequestsByEmployee(employeeId)
+                .then(res => setMyRequests(res.data || []))
+                .catch(err => console.error('Failed to load own requests', err))
+        }
+
+        getAllTimeOffRequests()
+            .then(res => setAllRequests(res.data || []))
+            .catch(err => console.error('Failed to load all requests', err))
+    }, [employeeId])
 
     function prevMonth() {
         setCalDate(new Date(calDate.getFullYear(), calDate.getMonth() - 1, 1))
@@ -42,9 +73,206 @@ function EmployeeRequestTimeOffPage() {
             calDate.getFullYear() === today.getFullYear()
     }
 
-    function handleSubmit() {
-        // TODO: call API
-        navigate('/employee/requests')
+    // -------------------------------------------------------------------
+    // Date helpers
+    // -------------------------------------------------------------------
+
+    // Format a JS Date as YYYY-MM-DD (matches <input type="date"> and LocalDate JSON)
+    function formatDateForInput(date) {
+        const y = date.getFullYear()
+        const m = String(date.getMonth() + 1).padStart(2, '0')
+        const d = String(date.getDate()).padStart(2, '0')
+        return `${y}-${m}-${d}`
+    }
+
+    // Is dateStr within [request.startDate, request.endDate] (inclusive)?
+    function dateInRequestRange(dateStr, request) {
+        const start = request.startDate
+        const end = request.endDate || request.startDate
+        return dateStr >= start && dateStr <= end
+    }
+
+    // Active = not denied (PENDING or APPROVED both block the date)
+    function isActive(request) {
+        return request.status === 'PENDING' || request.status === 'APPROVED'
+    }
+
+    // Does THIS employee already have a request covering this date?
+    function findOwnRequestForDate(dateStr) {
+        return myRequests.find(req => isActive(req) && dateInRequestRange(dateStr, req))
+    }
+
+    // Does ANOTHER employee already have a request covering this date?
+    function findOtherRequestForDate(dateStr) {
+        return allRequests.find(req =>
+            req.employeeId !== employeeId &&
+            isActive(req) &&
+            dateInRequestRange(dateStr, req)
+        )
+    }
+
+    // -------------------------------------------------------------------
+    // Calendar day click handler
+    // -------------------------------------------------------------------
+    function handleDayClick(day) {
+        if (!day) return
+
+        const clickedDate = new Date(calDate.getFullYear(), calDate.getMonth(), day)
+        const dateStr = formatDateForInput(clickedDate)
+
+        setErrorMessage('')
+        setConflict(null)
+
+        // 1. Already requested by this employee?
+        const ownConflict = findOwnRequestForDate(dateStr)
+        if (ownConflict) {
+            setErrorMessage('Request has already been made for this date.')
+            return
+        }
+
+        // 2. Requested by someone else?
+        const otherConflict = findOtherRequestForDate(dateStr)
+        if (otherConflict) {
+            setConflict({ date: dateStr, request: otherConflict })
+            setPendingDate(dateStr)
+            return
+        }
+
+        // 3. No conflicts
+        selectDate(dateStr)
+    }
+
+    function selectDate(dateStr) {
+        setFromDate(dateStr)
+        const [y, m, d] = dateStr.split('-').map(Number)
+        if (y === calDate.getFullYear() && (m - 1) === calDate.getMonth()) {
+            setSelectedDay(d)
+        }
+    }
+
+    // -------------------------------------------------------------------
+    // Manual date input
+    // -------------------------------------------------------------------
+    function handleFromDateChange(e) {
+        const dateStr = e.target.value
+        setFromDate(dateStr)
+        setErrorMessage('')
+        setConflict(null)
+
+        if (!dateStr) {
+            setSelectedDay(null)
+            return
+        }
+
+        const ownConflict = findOwnRequestForDate(dateStr)
+        if (ownConflict) {
+            setErrorMessage('Request has already been made for this date.')
+        }
+
+        const otherConflict = findOtherRequestForDate(dateStr)
+        if (otherConflict) {
+            setConflict({ date: dateStr, request: otherConflict })
+            setPendingDate(dateStr)
+        }
+
+        const [y, m, d] = dateStr.split('-').map(Number)
+        if (y === calDate.getFullYear() && (m - 1) === calDate.getMonth()) {
+            setSelectedDay(d)
+        } else {
+            setSelectedDay(null)
+        }
+    }
+
+    // -------------------------------------------------------------------
+    // Conflict modal actions
+    // -------------------------------------------------------------------
+
+    // Cancel own conflicting request, then proceed with the date
+    async function handleCancelConflictingRequest() {
+        if (!conflict) return
+
+        // Find this employee's own request that overlaps the same date,
+        // since the conflict shown is the OTHER employee's request.
+        const ownConflict = findOwnRequestForDate(conflict.date)
+        if (!ownConflict) {
+            // Nothing of ours to cancel — just proceed
+            selectDate(pendingDate)
+            setConflict(null)
+            setPendingDate(null)
+            return
+        }
+
+        try {
+            await deleteTimeOffRequest(ownConflict.id)
+            setMyRequests(prev => prev.filter(r => r.id !== ownConflict.id))
+            setAllRequests(prev => prev.filter(r => r.id !== ownConflict.id))
+            selectDate(pendingDate)
+        } catch (err) {
+            console.error('Failed to cancel conflicting request', err)
+            setErrorMessage('Failed to cancel your existing request. Please try again.')
+        } finally {
+            setConflict(null)
+            setPendingDate(null)
+        }
+    }
+
+    function handleContinueAnyway() {
+        if (pendingDate) selectDate(pendingDate)
+        setConflict(null)
+        setPendingDate(null)
+    }
+
+    function handleDismissConflict() {
+        setConflict(null)
+        setPendingDate(null)
+    }
+
+    // -------------------------------------------------------------------
+    // Submit
+    // -------------------------------------------------------------------
+    async function handleSubmit() {
+        setErrorMessage('')
+
+        if (!fromDate) {
+            setErrorMessage('Please select or enter a date.')
+            return
+        }
+
+        // Final duplicate check before submitting
+        const ownConflict = findOwnRequestForDate(fromDate)
+        if (ownConflict) {
+            setErrorMessage('Request has already been made for this date.')
+            return
+        }
+
+        const payload = {
+            employeeId,
+            startDate: fromDate,
+            endDate: toDate || fromDate,
+            startTime: fromTime || null,
+            endTime: toTime || null,
+            reason,
+            status: 'PENDING',
+            emergency: requestType === 'emergency'
+        }
+
+
+        try {
+
+            console.log('Submitting time off request for employeeId:', employeeId)
+            console.log('Payload:', payload)
+            const res = await createTimeOffRequest(payload)
+            setMyRequests(prev => [...prev, res.data])
+            setAllRequests(prev => [...prev, res.data])
+            navigate('/employee/requests')
+        } catch (err) {
+            console.error('Failed to submit time off request', err)
+            if (err.response?.status === 409) {
+                setErrorMessage(err.response.data || 'Request has already been made for this date.')
+            } else {
+                setErrorMessage('Failed to submit request. Please try again.')
+            }
+        }
     }
 
     return (
@@ -54,6 +282,12 @@ function EmployeeRequestTimeOffPage() {
             <main className="request-timeoff-content">
                 <h1 className="request-timeoff-title">Request Time Off</h1>
                 <hr className="request-timeoff-divider" />
+
+                {errorMessage && (
+                    <div className="request-error-banner">
+                        {errorMessage}
+                    </div>
+                )}
 
                 <div className="request-timeoff-body">
 
@@ -83,7 +317,7 @@ function EmployeeRequestTimeOffPage() {
                                     className="time-input"
                                     type="date"
                                     value={fromDate}
-                                    onChange={(e) => setFromDate(e.target.value)}
+                                    onChange={handleFromDateChange}
                                 />
                                 <input
                                     className="time-input"
@@ -139,7 +373,7 @@ function EmployeeRequestTimeOffPage() {
                                 {cells.map((day, i) => (
                                     <div
                                         key={i}
-                                        onClick={() => day && setSelectedDay(day)}
+                                        onClick={() => handleDayClick(day)}
                                         className={[
                                             'mini-cal-day',
                                             !day ? 'empty' : '',
@@ -167,6 +401,25 @@ function EmployeeRequestTimeOffPage() {
                 </div>
 
             </main>
+
+            {conflict && (
+                <div className="modal-overlay">
+                    <div className="modal-box">
+                        <h2>Date Already Requested</h2>
+                        <p>
+                            {conflict.date} has already been requested off by {conflict.request.employeeName || 'another employee'}.
+                            You can cancel your own conflicting request (if any) or continue anyway.
+                        </p>
+                        <div className="modal-actions">
+                            <button onClick={handleContinueAnyway}>Continue Anyway</button>
+                            <button onClick={handleCancelConflictingRequest}>
+                                Cancel My Existing Request &amp; Proceed
+                            </button>
+                            <button onClick={handleDismissConflict}>Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <footer className="page-footer">© All Rights Reserved</footer>
         </div>

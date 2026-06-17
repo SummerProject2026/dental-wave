@@ -9,6 +9,8 @@ function HREditEmployeePage() {
     const navigate = useNavigate()
 
     const [employee, setEmployee] = useState({
+        id: '',
+        userId: '',
         firstName: '',
         lastName: '',
         username: '',
@@ -23,11 +25,16 @@ function HREditEmployeePage() {
     })
 
     useEffect(() => {
+
         getEmployeeById(id)
             .then((response) => {
+                console.log('Employee loaded:', response.data)
+
                 const data = response.data
 
                 setEmployee({
+                    id: data.id || '',
+                    userId: data.userId || '',
                     firstName: data.firstName || '',
                     lastName: data.lastName || '',
                     username: data.username || '',
@@ -38,7 +45,7 @@ function HREditEmployeePage() {
                     responsibilities: data.responsibilities
                         ? data.responsibilities.join(', ')
                         : '',
-                    timeOff: data.timeOff || '',
+                    timeOff: data.timeOff ?? '',
                     officeIds: data.offices
                         ? data.offices.map(office => String(office.id))
                         : [],
@@ -70,19 +77,19 @@ function HREditEmployeePage() {
         })
     }
 
-    function handleSubmit(event) {
-        event.preventDefault()
-
-        const updatedEmployee = {
+    function buildUpdatedEmployee(statusOverride = null) {
+        return {
+            id: employee.id,
+            userId: employee.userId,
             firstName: employee.firstName,
             lastName: employee.lastName,
             username: employee.username,
-            email: employee.email,
             phoneNumber: employee.phoneNumber,
+            email: employee.email,
             position: employee.position,
             hireDate: employee.hireDate,
             timeOff: employee.timeOff === '' ? 0.0 : Number(employee.timeOff),
-            status: employee.status,
+            status: statusOverride || employee.status,
             responsibilities: employee.responsibilities === ''
                 ? []
                 : employee.responsibilities
@@ -94,6 +101,12 @@ function HREditEmployeePage() {
             })),
             availabilities: []
         }
+    }
+
+    function handleSubmit(event) {
+        event.preventDefault()
+
+        const updatedEmployee = buildUpdatedEmployee()
 
         updateEmployee(id, updatedEmployee)
             .then(() => {
@@ -109,21 +122,7 @@ function HREditEmployeePage() {
             ? 'INACTIVE'
             : 'ACTIVE'
 
-        const updatedEmployee = {
-            ...employee,
-            status: newStatus,
-            timeOff: employee.timeOff === '' ? 0.0 : Number(employee.timeOff),
-            responsibilities: employee.responsibilities === ''
-                ? []
-                : employee.responsibilities
-                    .split(',')
-                    .map(item => item.trim())
-                    .filter(item => item !== ''),
-            offices: employee.officeIds.map(officeId => ({
-                id: Number(officeId)
-            })),
-            availabilities: []
-        }
+        const updatedEmployee = buildUpdatedEmployee(newStatus)
 
         updateEmployee(id, updatedEmployee)
             .then(() => {

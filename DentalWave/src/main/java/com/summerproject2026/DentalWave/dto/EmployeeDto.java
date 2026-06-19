@@ -52,10 +52,13 @@ public class EmployeeDto {
     /** Weekly availability windows */
     private List<AvailabilityDto> availabilities = new ArrayList<>();
 
+    /** Pulled from User.phoneNumber */
+    private String phoneNumber;
+
     public EmployeeDto() {}
 
     public EmployeeDto(Long id, Long userId, String firstName, String lastName,
-                       String username, String email, String position,
+                       String username, String email, String phoneNumber, String position,
                        List<OfficeDto> offices,
                        List<String> responsibilities, LocalDate hireDate,
                        Double timeOff, WorkStatus status,
@@ -66,6 +69,7 @@ public class EmployeeDto {
         this.lastName = lastName;
         this.username = username;
         this.email = email;
+        this.phoneNumber = phoneNumber;
         this.position = position;
         this.offices = offices != null ? offices : new ArrayList<>();
         this.responsibilities = responsibilities != null ? responsibilities : new ArrayList<>();
@@ -119,4 +123,7 @@ public class EmployeeDto {
     public void setAvailabilities(List<AvailabilityDto> availabilities) {
         this.availabilities = availabilities != null ? availabilities : new ArrayList<>();
     }
+
+    public String getPhoneNumber() { return phoneNumber; }
+    public void setPhoneNumber(String phoneNumber) { this.phoneNumber = phoneNumber; }
 }

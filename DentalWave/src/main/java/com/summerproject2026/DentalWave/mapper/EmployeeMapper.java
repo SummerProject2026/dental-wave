@@ -14,32 +14,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Converts an Employee entity into an EmployeeDto.
+ * Converts between Employee entities and EmployeeDto objects.
  *
- * <p>This method flattens selected fields from the associated
- * {@link User} entity so the frontend does not need to navigate
- * nested objects to access common employee information.</p>
- *
- * <p>Mapped User fields:
- * <ul>
- *     <li>id → userId</li>
- *     <li>firstName → firstName</li>
- *     <li>lastName → lastName</li>
- *     <li>username → username</li>
- *     <li>email → email</li>
- * </ul>
- * </p>
- *
- * <p>Also maps:
- * <ul>
- *     <li>Office entities → OfficeDto list</li>
- *     <li>Availability entities → AvailabilityDto list</li>
- *     <li>Responsibilities collection</li>
- * </ul>
- * </p>
- *
- * @param employee Employee entity to convert
- * @return populated EmployeeDto, or null if employee is null
+ * The mapper flattens selected User fields into EmployeeDto
+ * so the frontend can display and edit employee information
+ * without needing to navigate nested User objects.
  */
 @Component
 public class EmployeeMapper {
@@ -52,44 +31,37 @@ public class EmployeeMapper {
     }
 
     /**
-     * Converts between Employee entities and EmployeeDto objects.
+     * Converts an Employee entity into an EmployeeDto.
      *
-     * Key mapping decisions:
+     * User fields mapped:
+     * - id -> userId
+     * - firstName -> firstName
+     * - lastName -> lastName
+     * - username -> username
+     * - phoneNumber -> phoneNumber
+     * - email -> email
      *
-     * User
-     *  - userId
-     *  - firstName
-     *  - lastName
-     *  - username
-     *  - email
-     *
-     * Office
-     *  - Office → OfficeDto
-     *
-     * Availability
-     *  - Availability → AvailabilityDto
-     *
-     * The mapper intentionally flattens User information into the
-     * EmployeeDto so the frontend can easily display employee
-     * information without traversing nested objects.
+     * @param employee Employee entity to convert
+     * @return populated EmployeeDto, or null if employee is null
      */
     public EmployeeDto mapToEmployeeDto(Employee employee) {
         if (employee == null) return null;
 
-        // Flatten User fields into scalar DTO values
         Long userId = null;
         String firstName = null;
         String lastName = null;
         String username = null;
+        String phoneNumber = null;
         String email = null;
 
         if (employee.getUser() != null) {
-            // Copy User information into EmployeeDto fields
             User user = employee.getUser();
+
             userId = user.getId();
             firstName = user.getFirstName();
             lastName = user.getLastName();
             username = user.getUsername();
+            phoneNumber = user.getPhoneNumber();
             email = user.getEmail();
         }
 
@@ -112,6 +84,7 @@ public class EmployeeMapper {
                 lastName,
                 username,
                 email,
+                phoneNumber,
                 employee.getPosition(),
                 officeDtos,
                 employee.getResponsibilities() != null
@@ -127,14 +100,9 @@ public class EmployeeMapper {
     /**
      * Converts an EmployeeDto into an Employee entity.
      *
-     * <p>For related entities (User and Office), only ID values
-     * are mapped. These become temporary stub objects that must
-     * later be replaced with managed JPA entities by the service
-     * layer before persistence.</p>
-     *
-     * <p>This prevents detached entity issues and ensures all
-     * relationships are attached to the current persistence
-     * context before saving.</p>
+     * For related entities like User and Office, this mapper only creates
+     * temporary ID-based stub objects. The service layer should replace
+     * them with managed JPA entities before saving.
      *
      * @param dto EmployeeDto to convert
      * @return populated Employee entity, or null if dto is null
@@ -143,11 +111,13 @@ public class EmployeeMapper {
         if (dto == null) return null;
 
         Employee employee = new Employee();
+
         employee.setId(dto.getId());
         employee.setPosition(dto.getPosition());
         employee.setHireDate(dto.getHireDate());
         employee.setTimeOff(dto.getTimeOff() != null ? dto.getTimeOff() : 0.0);
         employee.setStatus(dto.getStatus());
+
         employee.setResponsibilities(
                 dto.getResponsibilities() != null
                         ? new ArrayList<>(dto.getResponsibilities())
@@ -156,7 +126,14 @@ public class EmployeeMapper {
 
         if (dto.getUserId() != null) {
             User userStub = new User();
+
             userStub.setId(dto.getUserId());
+            userStub.setFirstName(dto.getFirstName());
+            userStub.setLastName(dto.getLastName());
+            userStub.setUsername(dto.getUsername());
+            userStub.setPhoneNumber(dto.getPhoneNumber());
+            userStub.setEmail(dto.getEmail());
+
             employee.setUser(userStub);
         }
 
@@ -181,6 +158,12 @@ public class EmployeeMapper {
         return employee;
     }
 
+    /**
+     * Converts an Office entity into an OfficeDto.
+     *
+     * @param office Office entity to convert
+     * @return populated OfficeDto, or null if office is null
+     */
     private OfficeDto toOfficeDto(Office office) {
         if (office == null) return null;
 

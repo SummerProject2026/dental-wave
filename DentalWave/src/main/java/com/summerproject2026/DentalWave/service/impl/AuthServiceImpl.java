@@ -23,6 +23,9 @@ import com.summerproject2026.DentalWave.repository.RoleRepository;
 import com.summerproject2026.DentalWave.repository.UserRepository;
 import com.summerproject2026.DentalWave.security.JwtTokenProvider;
 import com.summerproject2026.DentalWave.service.AuthService;
+import com.summerproject2026.DentalWave.entity.Employee;
+import com.summerproject2026.DentalWave.repository.EmployeeRepository;
+import java.util.Optional;
 
 import lombok.RequiredArgsConstructor;
 
@@ -55,6 +58,9 @@ public class AuthServiceImpl implements AuthService {
 
     /** JWT token provider used to generate tokens after authentication. */
     private final JwtTokenProvider jwtTokenProvider;
+
+    /** Repository for Employee persistence and lookup operations. */
+    private final EmployeeRepository employeeRepository;
 
     /** Mapper used to convert User entities into UserDto objects. */
     //private final UserMapper userMapper;
@@ -97,7 +103,13 @@ public class AuthServiceImpl implements AuthService {
         jwtAuthResponse.setRole(role);
         jwtAuthResponse.setEmail(user.getEmail());
         jwtAuthResponse.setUsername(user.getUsername());
-        jwtAuthResponse.setId(user.getId());
+        jwtAuthResponse.setUserId(user.getId());
+
+        Optional<Employee> employee = employeeRepository.findByUserId(user.getId());
+
+        employee.ifPresent(value ->
+                jwtAuthResponse.setEmployeeId(value.getId())
+        );
 
         return jwtAuthResponse;
     }

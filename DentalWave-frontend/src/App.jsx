@@ -18,6 +18,7 @@ import HRProfilePage from './pages/HRProfilePage'
 import HRRequestsPage from './pages/HRRequestsPage'
 import ManagerRequestsPage from './pages/ManagerRequestsPage'
 import ManagerEmployeesPage from './pages/ManagerEmployeesPage'
+import EmployeeRequestTimeOffEditPage from './pages/EmployeeRequestTimeOffEditPage'
 
 function App() {
     return (
@@ -52,9 +53,6 @@ function App() {
                 {/* Employee Request list */}
                 <Route path="/employee/requests" element={<EmployeeMyRequestsPage />} />
 
-                {/* Single request for employee to review */ }
-                <Route path="/employee/requests/:requestId" element={<EmployeeRequestTimeOffPage />} />
-
                 {/* HR page to manage employees */ }
                 <Route path="/hr/employees" element={<HREmployeesPage />} />
 
@@ -85,6 +83,8 @@ function App() {
                 {/* Manager Employees page */}
                 <Route path="/manager/employees" element={<ManagerEmployeesPage />} />
 
+                {/* Edit the Request page */}
+                <Route path="/employee/requests/:id" element={<EmployeeRequestTimeOffEditPage />} />
 
             </Routes>
         </BrowserRouter>

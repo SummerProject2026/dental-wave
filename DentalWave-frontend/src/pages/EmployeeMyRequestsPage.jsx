@@ -8,7 +8,10 @@ function EmployeeMyRequestsPage() {
     const navigate = useNavigate()
     const [requests, setRequests] = useState([])
     const [error, setError] = useState('')
-    const employeeId = 1
+
+
+    // TODO: replace with real logged-in employee id (from auth context/storage)
+    const employeeId = Number(sessionStorage.getItem('employeeId'))
 
     useEffect(() => { loadRequests() }, [])
 
@@ -19,6 +22,14 @@ function EmployeeMyRequestsPage() {
                 console.error(error)
                 setError('Unable to load time off requests.')
             })
+    }
+
+    // Format LocalDateTime ("2026-06-15T10:23:00") -> "6/15/2026"
+    function formatSubmitted(dateTimeStr) {
+        if (!dateTimeStr) return ''
+        const date = new Date(dateTimeStr)
+        if (isNaN(date.getTime())) return dateTimeStr
+        return date.toLocaleDateString()
     }
 
     return (
@@ -56,7 +67,7 @@ function EmployeeMyRequestsPage() {
                                 onClick={() => navigate(`/employee/requests/${request.id}`)}
                             >
                                 <td>{request.startDate} – {request.endDate}</td>
-                                <td>{request.submittedDate}</td>
+                                <td>{formatSubmitted(request.submittedAt)}</td>
                                 <td>{request.status}</td>
                                 <td>{request.emergency ? 'YES' : 'NO'}</td>
                             </tr>

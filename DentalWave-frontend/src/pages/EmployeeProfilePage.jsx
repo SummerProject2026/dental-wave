@@ -1,30 +1,66 @@
 import '../App.css'
 import logo from '../pictures/wake-logo.png'
 import EmployeeHeader from '../components/EmployeeHeader'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { getEmployeeById } from '../services/EmployeeService'
 
+/**
+ * EmployeeProfilePage
+ *
+ * Displays the currently logged-in employee's profile information.
+ * Information is loaded from the backend and displayed in read-only fields.
+ *
+ * Employees may navigate to the edit page to update their profile.
+ */
 function EmployeeProfilePage() {
 
-    const [isEditing, setIsEditing] = useState(false)
-    const [form, setForm] = useState({
-        name: '',
-        username: '',
-        email: '',
-        phone: '',
-        password: '',
-        status: '',
-        hireDate: '',
-        pto: ''
-    })
+    const navigate = useNavigate()
 
-    function handleChange(e) {
-        setForm({ ...form, [e.target.name]: e.target.value })
+    /** Stores employee profile data loaded from the backend */
+    const [employee, setEmployee] = useState(null)
+
+    /** Error message displayed if profile loading fails */
+    const [error, setError] = useState('')
+
+    /**
+     * Temporary employee id.
+     *
+     * TODO:
+     * Replace with employeeId stored during login:
+     *
+     * const employeeId =
+     *     Number(sessionStorage.getItem('employeeId'))
+     */
+    const employeeId = Number(sessionStorage.getItem('employeeId'))
+
+    /**
+     * Load employee information when page first renders.
+     */
+    useEffect(() => {
+        loadEmployeeProfile()
+    }, [])
+
+    /**
+     * Retrieves employee information from the backend.
+     */
+    function loadEmployeeProfile() {
+        getEmployeeById(employeeId)
+            .then((response) => {
+                setEmployee(response.data)
+            })
+            .catch((error) => {
+                console.error('Unable to load employee profile:', error)
+                setError('Unable to load employee profile.')
+            })
     }
 
-    function handleSave() {
-        setIsEditing(false)
-        // TODO: call API to save changes
-    }
+    /**
+     * Builds employee full name from first and last name.
+     */
+    const fullName = employee
+        ? `${employee.firstName || ''} ${employee.lastName || ''}`.trim()
+        : ''
 
     return (
         <div className="profile-page">
@@ -33,6 +69,7 @@ function EmployeeProfilePage() {
 
             <main className="profile-layout">
 
+                {/* Practice logo section */}
                 <aside className="profile-sidebar">
                     <img
                         src={logo}
@@ -43,109 +80,106 @@ function EmployeeProfilePage() {
 
                 <section className="profile-content">
 
+                    {/* Employee profile header */}
                     <div className="profile-top">
                         <div className="tooth-icon">🦷</div>
+
                         <div>
-                            <h3>{form.name || 'Your Name'}</h3>
-                            <p>{form.username || 'username'}</p>
+                            <h3>{fullName || 'Your Name'}</h3>
+                            <p>{employee?.username || 'username'}</p>
                         </div>
                     </div>
 
+                    {/* Error message */}
+                    {error && (
+                        <p className="error-message">
+                            {error}
+                        </p>
+                    )}
+
                     <div className="profile-form">
 
+                        {/* Left column */}
                         <div className="profile-column">
+
                             <div className="profile-row">
                                 <span>Name:</span>
                                 <input
-                                    name="name"
-                                    value={form.name}
-                                    onChange={handleChange}
-                                    readOnly={!isEditing}
+                                    value={fullName}
+                                    readOnly
                                 />
                             </div>
+
                             <div className="profile-row">
                                 <span>User Name:</span>
                                 <input
-                                    name="username"
-                                    value={form.username}
-                                    onChange={handleChange}
-                                    readOnly={!isEditing}
+                                    value={employee?.username || ''}
+                                    readOnly
                                 />
                             </div>
+
                             <div className="profile-row">
                                 <span>Email:</span>
                                 <input
-                                    name="email"
-                                    value={form.email}
-                                    onChange={handleChange}
-                                    readOnly={!isEditing}
+                                    value={employee?.email || ''}
+                                    readOnly
                                 />
                             </div>
+
                             <div className="profile-row">
                                 <span>Phone Number:</span>
                                 <input
-                                    name="phone"
-                                    value={form.phone}
-                                    onChange={handleChange}
-                                    readOnly={!isEditing}
+                                    value={employee?.phoneNumber || ''}
+                                    readOnly
                                 />
                             </div>
+
                             <div className="profile-row">
                                 <span>Password:</span>
                                 <input
-                                    name="password"
                                     type="password"
-                                    value={form.password}
-                                    onChange={handleChange}
-                                    readOnly={!isEditing}
+                                    value="********"
+                                    readOnly
                                 />
                             </div>
+
                         </div>
 
+                        {/* Right column */}
                         <div className="profile-column">
+
                             <div className="profile-row">
                                 <span>Status:</span>
                                 <input
-                                    name="status"
-                                    value={form.status}
-                                    onChange={handleChange}
-                                    readOnly={!isEditing}
-                                />
-                            </div>
-                            <div className="profile-row">
-                                <span>Hire Date:</span>
-                                <input
-                                    name="hireDate"
-                                    value={form.hireDate}
-                                    onChange={handleChange}
-                                    readOnly={!isEditing}
-                                />
-                            </div>
-                            <div className="profile-row">
-                                <span>PTO:</span>
-                                <input
-                                    name="pto"
-                                    value={form.pto}
-                                    onChange={handleChange}
-                                    readOnly={!isEditing}
+                                    value={employee?.status || ''}
+                                    readOnly
                                 />
                             </div>
 
-                            {isEditing ? (
-                                <button
-                                    className="save-profile-button"
-                                    onClick={handleSave}
-                                >
-                                    Save
-                                </button>
-                            ) : (
-                                <button
-                                    className="edit-profile-button"
-                                    onClick={() => setIsEditing(true)}
-                                >
-                                    ✏️
-                                </button>
-                            )}
+                            <div className="profile-row">
+                                <span>Hire Date:</span>
+                                <input
+                                    value={employee?.hireDate || ''}
+                                    readOnly
+                                />
+                            </div>
+
+                            <div className="profile-row">
+                                <span>PTO:</span>
+                                <input
+                                    value={employee?.timeOff ?? ''}
+                                    readOnly
+                                />
+                            </div>
+
+                            {/* Navigate to profile edit page */}
+                            <button
+                                className="edit-profile-button"
+                                onClick={() => navigate('/employee/profile/edit')}
+                            >
+                                ✏️
+                            </button>
+
                         </div>
 
                     </div>

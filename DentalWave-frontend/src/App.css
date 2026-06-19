@@ -1618,3 +1618,33 @@ body {
   color: black;
   outline: none;
 }
+
+/* ---------- Employee Edit Request Page ---------- */
+
+.request-primary-actions {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  align-items: center;
+}
+
+.back-request-btn {
+  background-color: #3f51b5;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 14px 36px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.delete-request-btn {
+  display: block;
+  margin: 18px auto 0;
+  background-color: #b00020;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 28px;
+  cursor: pointer;
+}

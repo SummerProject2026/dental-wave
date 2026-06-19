@@ -1,14 +1,20 @@
 import '../App.css'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import logo from '../pictures/wake-logo.png'
 import EmployeeHeader from '../components/EmployeeHeader'
+import { getEmployeeById, updateEmployee } from '../services/EmployeeService'
 
 function EmployeeEditProfilePage() {
     const navigate = useNavigate()
 
+    const employeeId = Number(sessionStorage.getItem('employeeId'))
+
+    const [originalEmployee, setOriginalEmployee] = useState(null)
+
     const [formData, setFormData] = useState({
-        name: '',
+        firstName: '',
+        lastName: '',
         username: '',
         email: '',
         phoneNumber: '',
@@ -16,8 +22,36 @@ function EmployeeEditProfilePage() {
         repeatPassword: '',
         status: '',
         hireDate: '',
-        pto: ''
+        timeOff: ''
     })
+
+    const [error, setError] = useState('')
+
+    useEffect(() => {
+        getEmployeeById(employeeId)
+            .then((response) => {
+                const employee = response.data
+
+                setOriginalEmployee(employee)
+
+                setFormData({
+                    firstName: employee.firstName || '',
+                    lastName: employee.lastName || '',
+                    username: employee.username || '',
+                    email: employee.email || '',
+                    phoneNumber: employee.phoneNumber || '',
+                    password: '',
+                    repeatPassword: '',
+                    status: employee.status || '',
+                    hireDate: employee.hireDate || '',
+                    timeOff: employee.timeOff ?? ''
+                })
+            })
+            .catch((error) => {
+                console.error('Unable to load employee profile:', error)
+                setError('Unable to load employee profile.')
+            })
+    }, [employeeId])
 
     function handleChange(event) {
         const { name, value } = event.target
@@ -30,19 +64,53 @@ function EmployeeEditProfilePage() {
 
     function handleSubmit(event) {
         event.preventDefault()
+        setError('')
 
-        console.log('Updated profile:', formData)
+        if (!originalEmployee) {
+            setError('Employee profile has not finished loading.')
+            return
+        }
 
-        navigate('/employee/profile')
+        if (formData.password !== formData.repeatPassword) {
+            setError('Passwords do not match.')
+            return
+        }
+
+        const updatedEmployee = {
+            ...originalEmployee,
+
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            username: formData.username,
+            email: formData.email,
+            phoneNumber: formData.phoneNumber,
+
+            status: originalEmployee.status,
+            hireDate: originalEmployee.hireDate,
+            timeOff: originalEmployee.timeOff,
+            position: originalEmployee.position,
+            responsibilities: originalEmployee.responsibilities || [],
+            offices: originalEmployee.offices || [],
+            availabilities: originalEmployee.availabilities || []
+        }
+
+        updateEmployee(employeeId, updatedEmployee)
+            .then(() => {
+                navigate('/employee/profile')
+            })
+            .catch((error) => {
+                console.error('Unable to update employee profile:', error)
+                setError('Unable to update employee profile.')
+            })
     }
+
+    const fullName = `${formData.firstName} ${formData.lastName}`.trim()
 
     return (
         <div className="profile-page">
-
             <EmployeeHeader />
 
             <main className="profile-layout">
-
                 <aside className="profile-sidebar">
                     <img
                         src={logo}
@@ -52,24 +120,33 @@ function EmployeeEditProfilePage() {
                 </aside>
 
                 <section className="profile-content">
-
                     <div className="profile-top">
                         <div className="tooth-icon">🦷</div>
 
                         <div>
-                            <h3>{formData.name || 'Your Name'}</h3>
+                            <h3>{fullName || 'Your Name'}</h3>
                             <p>{formData.username || 'username'}</p>
                         </div>
                     </div>
 
-                    <form className="profile-form" onSubmit={handleSubmit}>
+                    {error && <p className="error-message">{error}</p>}
 
+                    <form className="profile-form" onSubmit={handleSubmit}>
                         <div className="profile-column">
                             <div className="profile-row">
-                                <span>Name:</span>
+                                <span>First Name:</span>
                                 <input
-                                    name="name"
-                                    value={formData.name}
+                                    name="firstName"
+                                    value={formData.firstName}
+                                    onChange={handleChange}
+                                />
+                            </div>
+
+                            <div className="profile-row">
+                                <span>Last Name:</span>
+                                <input
+                                    name="lastName"
+                                    value={formData.lastName}
                                     onChange={handleChange}
                                 />
                             </div>
@@ -87,6 +164,7 @@ function EmployeeEditProfilePage() {
                                 <span>Email:</span>
                                 <input
                                     name="email"
+                                    type="email"
                                     value={formData.email}
                                     onChange={handleChange}
                                 />
@@ -108,6 +186,7 @@ function EmployeeEditProfilePage() {
                                     type="password"
                                     value={formData.password}
                                     onChange={handleChange}
+                                    placeholder="Leave blank to keep current password"
                                 />
                             </div>
 
@@ -125,34 +204,30 @@ function EmployeeEditProfilePage() {
                         <div className="profile-column">
                             <div className="profile-row">
                                 <span>Status:</span>
-                                <input readOnly value={formData.status} />
+                                <input value={formData.status} readOnly />
                             </div>
 
                             <div className="profile-row">
                                 <span>Hire Date:</span>
-                                <input readOnly value={formData.hireDate} />
+                                <input value={formData.hireDate} readOnly />
                             </div>
 
                             <div className="profile-row">
                                 <span>PTO:</span>
-                                <input readOnly value={formData.pto} />
+                                <input value={formData.timeOff} readOnly />
                             </div>
 
                             <button type="submit" className="save-profile-button">
                                 Save
                             </button>
                         </div>
-
                     </form>
-
                 </section>
-
             </main>
 
             <footer className="calendar-footer">
                 © All Rights Reserved
             </footer>
-
         </div>
     )
 }

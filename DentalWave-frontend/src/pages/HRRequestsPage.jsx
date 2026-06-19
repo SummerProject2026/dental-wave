@@ -1,37 +1,52 @@
 import '../App.css'
 import { useState, useEffect } from 'react'
 import HRHeader from '../components/HRHeader'
+import { getAllTimeOffRequests } from '../services/TimeOffRequestService'
 
 function HRRequestsPage() {
-
     const [requests, setRequests] = useState([])
     const [searchTerm, setSearchTerm] = useState('')
     const [filterBy, setFilterBy] = useState('all')
+    const [error, setError] = useState('')
 
-    // TODO: replace with API call
-    // useEffect(() => {
-    //     getAllTimeOffRequests().then(r => setRequests(r.data))
-    // }, [])
+    useEffect(() => {
+        getAllTimeOffRequests()
+            .then((response) => {
+                setRequests(response.data || [])
+            })
+            .catch((error) => {
+                console.error('Unable to load time off requests:', error)
+                setError('Unable to load time off requests.')
+            })
+    }, [])
+
+    function formatSubmitted(dateTimeStr) {
+        if (!dateTimeStr) return ''
+        const date = new Date(dateTimeStr)
+        if (isNaN(date.getTime())) return dateTimeStr
+        return date.toLocaleDateString()
+    }
 
     const filteredRequests = requests.filter((req) => {
-        const name = `${req.firstName || ''} ${req.lastName || ''}`.toLowerCase()
+        const name = `${req.employeeFirstName || req.firstName || ''} ${req.employeeLastName || req.lastName || ''}`.toLowerCase()
+
         const matchesSearch = name.includes(searchTerm.toLowerCase())
+
         const matchesFilter =
             filterBy === 'all' ||
             (filterBy === 'pending' && req.status?.toLowerCase() === 'pending') ||
             (filterBy === 'approved' && req.status?.toLowerCase() === 'approved') ||
             (filterBy === 'denied' && req.status?.toLowerCase() === 'denied') ||
             (filterBy === 'emergency' && req.emergency)
+
         return matchesSearch && matchesFilter
     })
 
     return (
         <div className="hr-page">
-
             <HRHeader />
 
             <main className="hr-requests-content">
-
                 <div className="hr-requests-search-row">
                     <label>Search:</label>
                     <input
@@ -54,6 +69,8 @@ function HRRequestsPage() {
                     </select>
                 </div>
 
+                {error && <p className="error-message">{error}</p>}
+
                 <section className="hr-requests-table-section">
                     <table className="employee-table">
                         <thead>
@@ -65,17 +82,24 @@ function HRRequestsPage() {
                             <th>Submitted</th>
                         </tr>
                         </thead>
+
                         <tbody>
                         {filteredRequests.length > 0 ? (
-                            filteredRequests.map((req) => (
-                                <tr key={req.id} className="request-row">
-                                    <td>{req.firstName} {req.lastName}</td>
-                                    <td>{req.startDate} – {req.endDate}</td>
-                                    <td>{req.status}</td>
-                                    <td>{req.emergency ? 'YES' : 'NO'}</td>
-                                    <td>{req.submittedDate}</td>
-                                </tr>
-                            ))
+                            filteredRequests.map((req) => {
+                                const firstName = req.employeeFirstName || req.firstName || ''
+                                const lastName = req.employeeLastName || req.lastName || ''
+                                const employeeName = `${firstName} ${lastName}`.trim()
+
+                                return (
+                                    <tr key={req.id} className="request-row">
+                                        <td>{employeeName || req.employeeName || 'Unknown Employee'}</td>
+                                        <td>{req.startDate} – {req.endDate}</td>
+                                        <td>{req.status}</td>
+                                        <td>{req.emergency ? 'YES' : 'NO'}</td>
+                                        <td>{formatSubmitted(req.submittedAt || req.submittedDate)}</td>
+                                    </tr>
+                                )
+                            })
                         ) : (
                             <tr>
                                 <td colSpan="5" className="empty-table-message">
@@ -86,11 +110,9 @@ function HRRequestsPage() {
                         </tbody>
                     </table>
                 </section>
-
             </main>
 
             <footer className="page-footer">© All Rights Reserved</footer>
-
         </div>
     )
 }

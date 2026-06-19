@@ -21,6 +21,9 @@ import org.springframework.transaction.annotation.Transactional;
 import com.summerproject2026.DentalWave.dto.CreateEmployeeDto;
 import com.summerproject2026.DentalWave.dto.RegisterDto;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import com.summerproject2026.DentalWave.entity.Role;
+import com.summerproject2026.DentalWave.repository.RoleRepository;
+import java.util.Set;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,6 +49,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     private final EmployeeMapper         employeeMapper;
     private final AvailabilityMapper     availabilityMapper;
     private final PasswordEncoder passwordEncoder;
+    private final RoleRepository roleRepository;
 
     @Autowired
     public EmployeeServiceImpl(EmployeeRepository employeeRepository,
@@ -54,7 +58,8 @@ public class EmployeeServiceImpl implements EmployeeService {
                                AvailabilityRepository availabilityRepository,
                                EmployeeMapper employeeMapper,
                                AvailabilityMapper availabilityMapper,
-                               PasswordEncoder passwordEncoder) {
+                               PasswordEncoder passwordEncoder,
+                               RoleRepository roleRepository) {
         this.employeeRepository     = employeeRepository;
         this.userRepository         = userRepository;
         this.officeRepository       = officeRepository;
@@ -62,6 +67,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         this.employeeMapper         = employeeMapper;
         this.availabilityMapper     = availabilityMapper;
         this.passwordEncoder        = passwordEncoder;
+        this.roleRepository         = roleRepository;
     }
 
     // ------------------------------------------------------------------ //
@@ -87,6 +93,16 @@ public class EmployeeServiceImpl implements EmployeeService {
         user.setPhoneNumber(userDto.getPhoneNumber());
         user.setPassword(passwordEncoder.encode(userDto.getPassword()));
         user.setEnabled(true);
+
+        // Assign the security role to the new User.
+        // This creates the matching row in the user_roles join table.
+        String roleName = createEmployeeDto.getRole();
+
+        Role role = roleRepository.findByName(roleName)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Role not found: " + roleName));
+
+        user.setRoles(Set.of(role));
 
         User savedUser = userRepository.save(user);
 
@@ -153,18 +169,38 @@ public class EmployeeServiceImpl implements EmployeeService {
     public EmployeeDto updateEmployee(Long id, EmployeeDto employeeDto) {
         Employee existing = findEmployeeOrThrow(id);
 
+        User user = existing.getUser();
+
+        if (user != null) {
+            user.setFirstName(employeeDto.getFirstName());
+            user.setLastName(employeeDto.getLastName());
+            user.setUsername(employeeDto.getUsername());
+            user.setEmail(employeeDto.getEmail());
+            user.setPhoneNumber(employeeDto.getPhoneNumber());
+
+            userRepository.save(user);
+        }
+
         existing.setPosition(employeeDto.getPosition());
         existing.setHireDate(employeeDto.getHireDate());
-        if (employeeDto.getTimeOff() != null) existing.setTimeOff(employeeDto.getTimeOff());
-        if (employeeDto.getStatus()  != null) existing.setStatus(employeeDto.getStatus());
+
+        if (employeeDto.getTimeOff() != null) {
+            existing.setTimeOff(employeeDto.getTimeOff());
+        }
+
+        if (employeeDto.getStatus() != null) {
+            existing.setStatus(employeeDto.getStatus());
+        }
+
         if (employeeDto.getResponsibilities() != null) {
             existing.setResponsibilities(new ArrayList<>(employeeDto.getResponsibilities()));
         }
 
-        // Fully replace office assignments
         existing.setOffices(resolveOffices(employeeDto));
 
-        return employeeMapper.mapToEmployeeDto(employeeRepository.save(existing));
+        Employee savedEmployee = employeeRepository.save(existing);
+
+        return employeeMapper.mapToEmployeeDto(savedEmployee);
     }
 
     // ------------------------------------------------------------------ //

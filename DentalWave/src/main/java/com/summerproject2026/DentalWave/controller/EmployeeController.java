@@ -55,10 +55,12 @@ public class EmployeeController {
     // GET /api/employees/{id} — read one
     // ------------------------------------------------------------------ //
 
+
     /** Returns a single employee by primary key. */
-    @PreAuthorize("hasAnyRole('HR', 'ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('HR', 'ADMIN', 'MANAGER', 'ASSISTANT')")
     @GetMapping("/{id}")
     public ResponseEntity<EmployeeDto> getEmployeeById(@PathVariable Long id) {
+        System.out.println("GET EMPLOYEE HIT: " + id);
         return ResponseEntity.ok(employeeService.getEmployeeById(id));
     }
 

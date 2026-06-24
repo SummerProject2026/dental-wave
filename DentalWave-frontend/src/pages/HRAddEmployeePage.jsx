@@ -19,7 +19,7 @@ function HRAddEmployeePage() {
         hireDate: '',
         responsibilities: '',
         timeOffBalance: '',
-        officeIds: ['855'],
+        officeIds: ['1'],
         status: 'ACTIVE'
     })
 
@@ -180,8 +180,8 @@ function HRAddEmployeePage() {
                                         <td>
                                             <input
                                                 type="checkbox"
-                                                checked={employee.officeIds.includes('855')}
-                                                onChange={() => toggleOffice('855')}
+                                                checked={employee.officeIds.includes('1')}
+                                                onChange={() => toggleOffice('1')}
                                             />
                                         </td>
                                         <td>Raleigh</td>
@@ -191,8 +191,8 @@ function HRAddEmployeePage() {
                                         <td>
                                             <input
                                                 type="checkbox"
-                                                checked={employee.officeIds.includes('856')}
-                                                onChange={() => toggleOffice('856')}
+                                                checked={employee.officeIds.includes('2')}
+                                                onChange={() => toggleOffice('2')}
                                             />
                                         </td>
                                         <td>Garner</td>
@@ -202,8 +202,8 @@ function HRAddEmployeePage() {
                                         <td>
                                             <input
                                                 type="checkbox"
-                                                checked={employee.officeIds.includes('857')}
-                                                onChange={() => toggleOffice('857')}
+                                                checked={employee.officeIds.includes('3')}
+                                                onChange={() => toggleOffice('3')}
                                             />
                                         </td>
                                         <td>Smithfield</td>

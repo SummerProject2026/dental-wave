@@ -19,6 +19,7 @@ import HRRequestsPage from './pages/HRRequestsPage'
 import ManagerRequestsPage from './pages/ManagerRequestsPage'
 import ManagerEmployeesPage from './pages/ManagerEmployeesPage'
 import EmployeeRequestTimeOffEditPage from './pages/EmployeeRequestTimeOffEditPage'
+import HRRequestDetailPage from './pages/HRRequestDetailPage.jsx'
 
 function App() {
     return (
@@ -85,6 +86,8 @@ function App() {
 
                 {/* Edit the Request page */}
                 <Route path="/employee/requests/:id" element={<EmployeeRequestTimeOffEditPage />} />
+
+                <Route path="/hr/requests/:id" element={<HRRequestDetailPage />} />
 
             </Routes>
         </BrowserRouter>

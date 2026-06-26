@@ -1,3 +1,4 @@
+
 import './App.css'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 
@@ -20,6 +21,7 @@ import ManagerRequestsPage from './pages/ManagerRequestsPage'
 import ManagerEmployeesPage from './pages/ManagerEmployeesPage'
 import EmployeeRequestTimeOffEditPage from './pages/EmployeeRequestTimeOffEditPage'
 import HRRequestDetailPage from './pages/HRRequestDetailPage.jsx'
+import ManagerEditCalendarPage from './pages/ManagerEditCalendarPage.jsx'
 
 function App() {
     return (
@@ -88,6 +90,9 @@ function App() {
                 <Route path="/employee/requests/:id" element={<EmployeeRequestTimeOffEditPage />} />
 
                 <Route path="/hr/requests/:id" element={<HRRequestDetailPage />} />
+
+                {/* Manager creates/edits a calendar for a selected office */}
+                <Route path="/manager/calendar/new" element={<ManagerEditCalendarPage />} />
 
             </Routes>
         </BrowserRouter>

@@ -30,4 +30,19 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
      */
     @Query("SELECT DISTINCT s FROM Schedule s JOIN s.teams t JOIN t.employees e WHERE e.id = :employeeId AND s.published = true")
     List<Schedule> findPublishedSchedulesByEmployeeId(@Param("employeeId") Long employeeId);
+
+    /**
+     * Returns all published schedules assigned to a given employee
+     * within a specific date range.
+     * Used by UC8 — HR Notifies Manager of Schedule Change,
+     * to determine if an approved time-off request affects
+     * any existing published schedule.
+     */
+    @Query("SELECT DISTINCT s FROM Schedule s JOIN s.teams t JOIN t.employees e " +
+            "WHERE e.id = :employeeId AND s.published = true " +
+            "AND s.date BETWEEN :startDate AND :endDate")
+    List<Schedule> findPublishedSchedulesByEmployeeIdAndDateRange(
+            @Param("employeeId") Long employeeId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate);
 }

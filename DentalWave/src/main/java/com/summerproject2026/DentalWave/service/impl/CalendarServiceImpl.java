@@ -6,9 +6,11 @@ import com.summerproject2026.DentalWave.exception.ResourceNotFoundException;
 import com.summerproject2026.DentalWave.mapper.CalendarMapper;
 import com.summerproject2026.DentalWave.mapper.ScheduleMapper;
 import com.summerproject2026.DentalWave.entity.Calendar;
+import com.summerproject2026.DentalWave.entity.Office;
 import com.summerproject2026.DentalWave.entity.Schedule;
 import com.summerproject2026.DentalWave.entity.User;
 import com.summerproject2026.DentalWave.repository.CalendarRepository;
+import com.summerproject2026.DentalWave.repository.OfficeRepository;
 import com.summerproject2026.DentalWave.repository.ScheduleRepository;
 import com.summerproject2026.DentalWave.repository.UserRepository;
 import com.summerproject2026.DentalWave.service.CalendarService;
@@ -32,6 +34,7 @@ public class CalendarServiceImpl implements CalendarService {
     private final CalendarRepository calendarRepository;
     private final ScheduleRepository scheduleRepository;
     private final UserRepository userRepository;
+    private final OfficeRepository officeRepository;
     private final CalendarMapper calendarMapper;
     private final ScheduleMapper scheduleMapper;
 
@@ -39,11 +42,13 @@ public class CalendarServiceImpl implements CalendarService {
     public CalendarServiceImpl(CalendarRepository calendarRepository,
                                ScheduleRepository scheduleRepository,
                                UserRepository userRepository,
+                               OfficeRepository officeRepository,
                                CalendarMapper calendarMapper,
                                ScheduleMapper scheduleMapper) {
         this.calendarRepository = calendarRepository;
         this.scheduleRepository = scheduleRepository;
         this.userRepository = userRepository;
+        this.officeRepository = officeRepository;
         this.calendarMapper = calendarMapper;
         this.scheduleMapper = scheduleMapper;
     }
@@ -54,11 +59,12 @@ public class CalendarServiceImpl implements CalendarService {
 
     /**
      * Creates and persists a new calendar.
-     * Resolves the createdBy User from the database using the DTO's createdById.
+     * Resolves the createdBy User and office from the database using
+     * the DTO's createdById and officeId.
      */
     @Override
     public CalendarDto createCalendar(CalendarDto calendarDto) {
-        // Map DTO → entity (createdBy will be a stub at this point)
+        // Map DTO → entity (createdBy and office will be stubs at this point)
         Calendar calendar = calendarMapper.mapToCalendar(calendarDto);
 
         // Replace stub createdBy with a fully managed User entity
@@ -67,6 +73,14 @@ public class CalendarServiceImpl implements CalendarService {
                     .orElseThrow(() -> new ResourceNotFoundException(
                             "User not found with id: " + calendarDto.getCreatedById()));
             calendar.setCreatedBy(creator);
+        }
+
+        // Replace stub office with a fully managed Office entity
+        if (calendarDto.getOfficeId() != null) {
+            Office office = officeRepository.findById(calendarDto.getOfficeId())
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Office not found with id: " + calendarDto.getOfficeId()));
+            calendar.setOffice(office);
         }
 
         Calendar saved = calendarRepository.save(calendar);
@@ -139,6 +153,14 @@ public class CalendarServiceImpl implements CalendarService {
                     .orElseThrow(() -> new ResourceNotFoundException(
                             "User not found with id: " + calendarDto.getCreatedById()));
             existing.setCreatedBy(creator);
+        }
+
+        // Update office if a new one is provided
+        if (calendarDto.getOfficeId() != null) {
+            Office office = officeRepository.findById(calendarDto.getOfficeId())
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Office not found with id: " + calendarDto.getOfficeId()));
+            existing.setOffice(office);
         }
 
         Calendar updated = calendarRepository.save(existing);

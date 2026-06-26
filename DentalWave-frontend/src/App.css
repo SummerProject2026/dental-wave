@@ -1790,3 +1790,227 @@ body {
   display: inline-block;
   text-align: center;
 }
+.notification-bell-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.notification-bell-btn {
+  background: none;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+  position: relative;
+  padding: 4px 8px;
+}
+
+.bell-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  padding: 1px 5px;
+  font-size: 10px;
+}
+
+.notification-dropdown {
+  position: absolute;
+  top: 110%;
+  right: 0;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  width: 280px;
+  max-height: 320px;
+  overflow-y: auto;
+  z-index: 100;
+}
+
+.notification-item {
+  padding: 12px 16px;
+  border-bottom: 1px solid #eee;
+  font-size: 14px;
+  color: #1a1a2e;
+  cursor: pointer;
+}
+
+.notification-item:hover {
+  background-color: #f5f5f5;
+}
+
+.notification-item:last-child {
+  border-bottom: none;
+}
+
+.notification-item-empty {
+  padding: 16px;
+  font-size: 14px;
+  color: #888;
+  text-align: center;
+}
+.new-calendar-btn {
+  margin-left: auto;
+  background-color: #2e1a47;
+  color: white;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.new-calendar-btn:hover {
+  opacity: 0.9;
+}
+.manager-new-calendar-content {
+  display: flex;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+.manager-new-calendar-card {
+  background-color: white;
+  border-radius: 12px;
+  padding: 24px 32px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.new-calendar-top-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 16px;
+}
+
+.add-calendar-link {
+  background: none;
+  border: none;
+  color: #2e1a47;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: default;
+}
+
+.new-calendar-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.new-calendar-location select,
+.new-calendar-date-picker select {
+  width: 100%;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+.new-calendar-location label {
+  font-weight: 600;
+  font-size: 14px;
+  color: #2e1a47;
+}
+
+.new-calendar-date-picker {
+  display: flex;
+  gap: 8px;
+}
+
+.new-calendar-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.save-draft-btn,
+.publish-btn {
+  border: none;
+  border-radius: 20px;
+  padding: 10px 24px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.save-draft-btn {
+  background-color: #d9d9d9;
+  color: #1a1a2e;
+}
+
+.publish-btn {
+  background-color: #2e1a47;
+  color: white;
+}
+
+.save-draft-btn:hover,
+.publish-btn:hover {
+  opacity: 0.9;
+}
+
+.calendar-day-has-schedule {
+  cursor: pointer;
+  background-color: #f0f0ff;
+}
+
+.calendar-day-schedule-marker {
+  color: #2e1a47;
+  font-size: 10px;
+  margin-top: 4px;
+}
+
+.calendar-day {
+  cursor: pointer;
+}
+
+.new-calendar-btn {
+  margin-left: auto;
+  background-color: #2e1a47;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.new-calendar-btn:hover {
+  opacity: 0.9;
+}
+
+.edit-pencil-btn {
+  margin-left: auto;
+  background: none;
+  border: 1px solid #2e1a47;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 14px;
+  cursor: pointer;
+  color: #2e1a47;
+}
+
+.edit-pencil-btn:hover {
+  background-color: #f0f0ff;
+}
+
+.calendar-day-editable {
+  cursor: pointer;
+}
+
+.calendar-day-editable:hover {
+  background-color: #f5f5ff;
+}
+
+.calendar-published-badge {
+  display: inline-block;
+  background-color: #4caf50;
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 10px;
+  border-radius: 12px;
+  margin-bottom: 8px;
+}

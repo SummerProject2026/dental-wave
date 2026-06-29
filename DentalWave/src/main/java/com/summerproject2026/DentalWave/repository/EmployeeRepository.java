@@ -54,4 +54,17 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
            "   OR LOWER(e.user.email)     LIKE LOWER(CONCAT('%', :keyword, '%')) " +
            "   OR LOWER(e.position)       LIKE LOWER(CONCAT('%', :keyword, '%'))")
     List<Employee> searchByKeyword(@Param("keyword") String keyword);
+
+
+    /**
+     * Returns all employees assigned to a specific office with a specific position.
+     * Used by the calendar auto-generation feature to find Doctors, TCs, and
+     * Assistants available for a given office when building draft schedules.
+     *
+     * @param officeId the office to filter by
+     * @param position the job title/position to filter by e.g. "Doctor", "TC", "Assistant"
+     * @return list of matching employees
+     */
+    @Query("SELECT e FROM Employee e JOIN e.offices o WHERE o.id = :officeId AND e.position = :position")
+    List<Employee> findByOfficeIdAndPosition(@Param("officeId") Long officeId, @Param("position") String position);
 }

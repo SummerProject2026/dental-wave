@@ -204,4 +204,24 @@ public class CalendarController {
         calendarService.removeSchedule(calendarId, scheduleId);
         return ResponseEntity.ok("Schedule " + scheduleId + " removed from calendar " + calendarId + ".");
     }
+
+    // -------------------------------------------------------------------------
+// POST /api/calendars/generate — auto-generate a draft calendar
+// -------------------------------------------------------------------------
+
+    /**
+     * Auto-generates a draft calendar for the given office and month.
+     * Creates one schedule per weekday (Monday-Friday) in the date range,
+     * and automatically assigns employees to teams based on role:
+     * each team gets 1 Doctor + 1 TC, with Assistants distributed
+     * as evenly as possible across the teams created.
+     *
+     * @param calendarDto the office, month, date range, and creator info
+     * @return 201 Created with the fully populated CalendarDto
+     */
+    @PostMapping("/generate")
+    public ResponseEntity<CalendarDto> generateCalendar(@RequestBody CalendarDto calendarDto) {
+        CalendarDto generated = calendarService.generateCalendar(calendarDto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(generated);
+    }
 }

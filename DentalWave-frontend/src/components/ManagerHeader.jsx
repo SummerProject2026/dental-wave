@@ -16,7 +16,7 @@ function ManagerHeader() {
             </Link>
 
             <nav>
-                <Link to="/manager/calendar">Calendar</Link>
+                <Link to="/manager/calendar/build">Calendar</Link>
                 <Link to="/manager/requests">Approved Request</Link>
                 <Link to="/manager/employees">Employees</Link>
             </nav>

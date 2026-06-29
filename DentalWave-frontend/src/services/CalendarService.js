@@ -105,3 +105,13 @@ export const addScheduleToCalendar = (calendarId, schedule) =>
  */
 export const removeScheduleFromCalendar = (calendarId, scheduleId) =>
     axios.delete(`${CALENDAR_REST_API_BASE_URL}/${calendarId}/schedules/${scheduleId}`, getAuthHeader())
+/**
+ * Auto-generates a draft calendar for the given office and month.
+ * Creates one schedule per weekday with employees automatically
+ * assigned to teams based on role (Doctor + TC + Assistants).
+ *
+ * @param calendar the office, month, date range, and creator info
+ * @returns {Promise<axios.AxiosResponse<any>>}
+ */
+export const generateCalendar = (calendar) =>
+    axios.post(`${CALENDAR_REST_API_BASE_URL}/generate`, calendar, getAuthHeader())

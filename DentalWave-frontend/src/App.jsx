@@ -1,9 +1,9 @@
-
 import './App.css'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 
 import LoginPage from './pages/LoginPage'
 import ManagerCalendarPage from './pages/ManagerCalendarPage'
+import ManagerCalendarOverviewPage from './pages/ManagerCalendarOverviewPage.jsx'
 import EmployeeCalendarPage from './pages/EmployeeCalendarPage'
 import EmployeeProfilePage from './pages/EmployeeProfilePage.jsx'
 import EmployeeEditProfilePage from './pages/EmployeeEditProfilePage.jsx'
@@ -21,7 +21,6 @@ import ManagerRequestsPage from './pages/ManagerRequestsPage'
 import ManagerEmployeesPage from './pages/ManagerEmployeesPage'
 import EmployeeRequestTimeOffEditPage from './pages/EmployeeRequestTimeOffEditPage'
 import HRRequestDetailPage from './pages/HRRequestDetailPage.jsx'
-import ManagerEditCalendarPage from './pages/ManagerEditCalendarPage.jsx'
 
 function App() {
     return (
@@ -36,7 +35,8 @@ function App() {
                 <Route path="/hr/calendar" element={<HRCalendarPage />} />
 
                 {/* Manager */}
-                <Route path="/manager/calendar" element={<ManagerCalendarPage />} />
+                <Route path="/manager/calendar" element={<ManagerCalendarOverviewPage />} />
+                <Route path="/manager/calendar/build" element={<ManagerCalendarPage />} />
 
                 {/* Assistant / Employee */}
                 <Route path="/employee/calendar" element={<EmployeeCalendarPage />} />
@@ -90,9 +90,6 @@ function App() {
                 <Route path="/employee/requests/:id" element={<EmployeeRequestTimeOffEditPage />} />
 
                 <Route path="/hr/requests/:id" element={<HRRequestDetailPage />} />
-
-                {/* Manager creates/edits a calendar for a selected office */}
-                <Route path="/manager/calendar/new" element={<ManagerEditCalendarPage />} />
 
             </Routes>
         </BrowserRouter>

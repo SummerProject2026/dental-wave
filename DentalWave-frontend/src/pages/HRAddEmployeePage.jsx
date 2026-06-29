@@ -16,6 +16,7 @@ function HRAddEmployeePage() {
         email: '',
         temporaryPassword: '',
         role: 'ASSISTANT',
+        position: 'Assistant',
         hireDate: '',
         responsibilities: '',
         timeOffBalance: '',
@@ -77,7 +78,7 @@ function HRAddEmployeePage() {
                 firstName: employee.firstName,
                 lastName: employee.lastName,
                 email: employee.email,
-                position: employee.role,
+                position: employee.position,
                 hireDate: employee.hireDate,
                 timeOff: employee.timeOffBalance === ''
                     ? 0.0
@@ -163,6 +164,15 @@ function HRAddEmployeePage() {
                                     <option value="MANAGER">Manager</option>
                                     <option value="HR">HR</option>
                                     <option value="ADMIN">Admin</option>
+                                </select>
+                            </div>
+
+                            <div className="form-row">
+                                <label>Position</label>
+                                <select name="position" value={employee.position} onChange={handleChange}>
+                                    <option value="Doctor">Doctor</option>
+                                    <option value="TC">TC</option>
+                                    <option value="Assistant">Assistant</option>
                                 </select>
                             </div>
 

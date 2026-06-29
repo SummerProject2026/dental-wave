@@ -90,31 +90,31 @@ export const getSchedulesByEmployeeName = (employeeName) =>
     axios.get(`${SCHEDULE_REST_API_BASE_URL}/employee/name/${employeeName}`, getAuthHeader())
 
 /**
- * Assigns an employee to a team lead's team on a schedule.
+ * Assigns an employee to a specific team within a schedule.
  *
- * @param scheduleId the schedule id
- * @param userId the team lead (User) id
- * @param employeeId the employee id to assign
+ * @param scheduleId the schedule the team belongs to
+ * @param teamId the id of the team to add the employee to
+ * @param employeeId the employee to add
  * @returns {Promise<axios.AxiosResponse<any>>}
  */
-export const assignEmployeeToTeam = (scheduleId, userId, employeeId) =>
+export const assignEmployeeToTeam = (scheduleId, teamId, employeeId) =>
     axios.post(
-        `${SCHEDULE_REST_API_BASE_URL}/${scheduleId}/teams/${userId}/employees/${employeeId}`,
+        `${SCHEDULE_REST_API_BASE_URL}/${scheduleId}/teams/${teamId}/employees/${employeeId}`,
         null,
         getAuthHeader()
     )
 
 /**
- * Removes an employee from a team lead's team on a schedule.
+ * Removes an employee from a specific team within a schedule.
  *
- * @param scheduleId the schedule id
- * @param userId the team lead (User) id
- * @param employeeId the employee id to remove
+ * @param scheduleId the schedule the team belongs to
+ * @param teamId the id of the team to remove the employee from
+ * @param employeeId the employee to remove
  * @returns {Promise<axios.AxiosResponse<any>>}
  */
-export const removeEmployeeFromTeam = (scheduleId, userId, employeeId) =>
+export const removeEmployeeFromTeam = (scheduleId, teamId, employeeId) =>
     axios.delete(
-        `${SCHEDULE_REST_API_BASE_URL}/${scheduleId}/teams/${userId}/employees/${employeeId}`,
+        `${SCHEDULE_REST_API_BASE_URL}/${scheduleId}/teams/${teamId}/employees/${employeeId}`,
         getAuthHeader()
     )
 

@@ -26,14 +26,16 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
 /**
  * Implementation of CalendarService.
  * Handles all calendar business logic including creation, updates,
- * publish/unpublish lifecycle, nested schedule management, and
- * auto-generation of draft calendars with role-based team assignment.
+ * publish/unpublish lifecycle, nested schedule management,
+ * auto-generation of draft calendars with role-based team assignment,
+ * and bulk scheduling/unscheduling an employee across an entire calendar.
  */
 @Service
 @Transactional
@@ -68,11 +70,6 @@ public class CalendarServiceImpl implements CalendarService {
     // Create
     // -------------------------------------------------------------------------
 
-    /**
-     * Creates and persists a new calendar.
-     * Resolves the createdBy User and office from the database using
-     * the DTO's createdById and officeId.
-     */
     @Override
     public CalendarDto createCalendar(CalendarDto calendarDto) {
         Calendar calendar = calendarMapper.mapToCalendar(calendarDto);
@@ -236,19 +233,31 @@ public class CalendarServiceImpl implements CalendarService {
      * are grouped by position: Doctors are paired 1:1 with TCs to form
      * teams, and any remaining Assistants are distributed as evenly as
      * possible across the teams created that day.</p>
+     *
+     * <p>Throws {@link IllegalStateException} if a calendar already
+     * exists for the same office and month, to prevent duplicates.</p>
      */
     @Override
     public CalendarDto generateCalendar(CalendarDto calendarDto) {
-        // Resolve the office and creator
         Office office = officeRepository.findById(calendarDto.getOfficeId())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Office not found with id: " + calendarDto.getOfficeId()));
+
+        // Prevent duplicate calendars for the same office and month
+        boolean alreadyExists = calendarRepository.findByMonth(calendarDto.getMonth()).stream()
+                .anyMatch(cal -> cal.getOffice() != null
+                        && cal.getOffice().getId().equals(office.getId()));
+
+        if (alreadyExists) {
+            throw new IllegalStateException(
+                    "A calendar already exists for " + office.getName()
+                            + " in " + calendarDto.getMonth() + ".");
+        }
 
         User creator = userRepository.findById(calendarDto.getCreatedById())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "User not found with id: " + calendarDto.getCreatedById()));
 
-        // Create the draft calendar shell
         Calendar calendar = new Calendar();
         calendar.setMonth(calendarDto.getMonth());
         calendar.setStartCalendarDate(calendarDto.getStartCalendarDate());
@@ -257,7 +266,6 @@ public class CalendarServiceImpl implements CalendarService {
         calendar.setCreatedBy(creator);
         calendar.setOffice(office);
 
-        // Fetch this office's employees grouped by role
         List<Employee> doctors = employeeRepository
                 .findByOfficeIdAndPosition(office.getId(), "Doctor");
         List<Employee> tcs = employeeRepository
@@ -265,7 +273,6 @@ public class CalendarServiceImpl implements CalendarService {
         List<Employee> assistants = employeeRepository
                 .findByOfficeIdAndPosition(office.getId(), "Assistant");
 
-        // Build one schedule per weekday (Monday-Friday) in the date range
         LocalDate current = calendarDto.getStartCalendarDate();
         LocalDate end = calendarDto.getEndCalendarDate();
 
@@ -306,7 +313,6 @@ public class CalendarServiceImpl implements CalendarService {
         schedule.setEndTime(LocalTime.of(17, 0));
         schedule.setPublished(false);
 
-        // Determine how many teams we can form: one per Doctor/TC pair
         int teamCount = Math.min(doctors.size(), tcs.size());
 
         List<ScheduleTeam> teams = new ArrayList<>();
@@ -323,7 +329,6 @@ public class CalendarServiceImpl implements CalendarService {
             teams.add(team);
         }
 
-        // Distribute assistants as evenly as possible across the teams created
         if (!teams.isEmpty()) {
             for (int i = 0; i < assistants.size(); i++) {
                 ScheduleTeam team = teams.get(i % teams.size());
@@ -333,6 +338,75 @@ public class CalendarServiceImpl implements CalendarService {
 
         schedule.setTeams(teams);
         return schedule;
+    }
+
+    // -------------------------------------------------------------------------
+    // Bulk scheduling / unscheduling an employee across a calendar
+    // -------------------------------------------------------------------------
+
+    /**
+     * {@inheritDoc}
+     *
+     * <p>For each day's schedule in the calendar, finds the team with
+     * the fewest members and adds the employee to it, balancing team
+     * sizes across the month. If a schedule has no teams at all, it is
+     * skipped (there is nothing to balance against).</p>
+     */
+    @Override
+    public CalendarDto scheduleEmployeeAcrossCalendar(Long calendarId, Long employeeId) {
+        Calendar calendar = findCalendarOrThrow(calendarId);
+
+        Employee employee = employeeRepository.findById(employeeId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Employee not found with id: " + employeeId));
+
+        for (Schedule schedule : calendar.getSchedules()) {
+            List<ScheduleTeam> teams = schedule.getTeams();
+            if (teams == null || teams.isEmpty()) {
+                continue;
+            }
+
+            boolean alreadyAssigned = teams.stream()
+                    .anyMatch(team -> team.getEmployees().stream()
+                            .anyMatch(e -> e.getId().equals(employeeId)));
+            if (alreadyAssigned) {
+                continue;
+            }
+
+            ScheduleTeam smallestTeam = teams.stream()
+                    .min(Comparator.comparingInt(team -> team.getEmployees().size()))
+                    .orElse(null);
+
+            if (smallestTeam != null) {
+                smallestTeam.getEmployees().add(employee);
+            }
+        }
+
+        Calendar saved = calendarRepository.save(calendar);
+        return calendarMapper.mapToCalendarDto(saved);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * <p>Removes the employee from every team on every day in the
+     * calendar, regardless of which team they were on.</p>
+     */
+    @Override
+    public CalendarDto removeEmployeeFromCalendar(Long calendarId, Long employeeId) {
+        Calendar calendar = findCalendarOrThrow(calendarId);
+
+        for (Schedule schedule : calendar.getSchedules()) {
+            if (schedule.getTeams() == null) {
+                continue;
+            }
+            for (ScheduleTeam team : schedule.getTeams()) {
+                team.getEmployees().removeIf(e -> e.getId().equals(employeeId));
+            }
+        }
+
+        Calendar saved = calendarRepository.save(calendar);
+        return calendarMapper.mapToCalendarDto(saved);
     }
 
     // -------------------------------------------------------------------------

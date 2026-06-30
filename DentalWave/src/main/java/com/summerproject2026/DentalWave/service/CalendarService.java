@@ -116,4 +116,28 @@ public interface CalendarService {
      * @throws com.dentalwave.exception.ResourceNotFoundException if office or creator not found
      */
     CalendarDto generateCalendar(CalendarDto calendarDto);
+
+    /**
+     * Schedules an employee across every day in the given calendar.
+     * For each day's schedule, the employee is added to whichever
+     * team currently has the fewest members, balancing team sizes
+     * across the month.
+     *
+     * @param calendarId the calendar to schedule the employee into
+     * @param employeeId the employee to schedule
+     * @return the updated CalendarDto with the employee added to each day's smallest team
+     * @throws com.dentalwave.exception.ResourceNotFoundException if calendar or employee not found
+     */
+    CalendarDto scheduleEmployeeAcrossCalendar(Long calendarId, Long employeeId);
+
+    /**
+     * Removes an employee from every team across every day in the
+     * given calendar.
+     *
+     * @param calendarId the calendar to remove the employee from
+     * @param employeeId the employee to remove
+     * @return the updated CalendarDto with the employee removed from every team
+     * @throws com.dentalwave.exception.ResourceNotFoundException if calendar not found
+     */
+    CalendarDto removeEmployeeFromCalendar(Long calendarId, Long employeeId);
 }

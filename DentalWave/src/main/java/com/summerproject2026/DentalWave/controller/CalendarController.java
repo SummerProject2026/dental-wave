@@ -20,6 +20,8 @@ import java.util.List;
  *  - Publish / unpublish lifecycle
  *  - Filtering by month or published state
  *  - Adding and removing nested schedules
+ *  - Auto-generating draft calendars with role-based team assignment
+ *  - Bulk scheduling/unscheduling an employee across an entire calendar
  */
 @RestController
 @RequestMapping("/api/calendars")
@@ -30,6 +32,19 @@ public class CalendarController {
     @Autowired
     public CalendarController(CalendarService calendarService) {
         this.calendarService = calendarService;
+    }
+
+    /**
+     * Handles IllegalStateException — returned when an action would
+     * create an invalid or conflicting state, such as generating a
+     * duplicate calendar for the same office and month.
+     *
+     * @param ex the exception thrown
+     * @return 409 Conflict with the exception message
+     */
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<String> handleIllegalStateException(IllegalStateException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
     }
 
     // -------------------------------------------------------------------------
@@ -90,7 +105,7 @@ public class CalendarController {
      */
     @PutMapping("/{id}")
     public ResponseEntity<CalendarDto> updateCalendar(@PathVariable Long id,
-                                                       @RequestBody CalendarDto calendarDto) {
+                                                      @RequestBody CalendarDto calendarDto) {
         return ResponseEntity.ok(calendarService.updateCalendar(id, calendarDto));
     }
 
@@ -182,7 +197,7 @@ public class CalendarController {
      */
     @PostMapping("/{calendarId}/schedules")
     public ResponseEntity<ScheduleDto> addSchedule(@PathVariable Long calendarId,
-                                                    @RequestBody ScheduleDto scheduleDto) {
+                                                   @RequestBody ScheduleDto scheduleDto) {
         ScheduleDto created = calendarService.addSchedule(calendarId, scheduleDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
@@ -200,14 +215,14 @@ public class CalendarController {
      */
     @DeleteMapping("/{calendarId}/schedules/{scheduleId}")
     public ResponseEntity<String> removeSchedule(@PathVariable Long calendarId,
-                                                  @PathVariable Long scheduleId) {
+                                                 @PathVariable Long scheduleId) {
         calendarService.removeSchedule(calendarId, scheduleId);
         return ResponseEntity.ok("Schedule " + scheduleId + " removed from calendar " + calendarId + ".");
     }
 
     // -------------------------------------------------------------------------
-// POST /api/calendars/generate — auto-generate a draft calendar
-// -------------------------------------------------------------------------
+    // POST /api/calendars/generate — auto-generate a draft calendar
+    // -------------------------------------------------------------------------
 
     /**
      * Auto-generates a draft calendar for the given office and month.
@@ -216,6 +231,9 @@ public class CalendarController {
      * each team gets 1 Doctor + 1 TC, with Assistants distributed
      * as evenly as possible across the teams created.
      *
+     * <p>Throws a 409 Conflict if a calendar already exists for the
+     * given office and month.</p>
+     *
      * @param calendarDto the office, month, date range, and creator info
      * @return 201 Created with the fully populated CalendarDto
      */
@@ -223,5 +241,48 @@ public class CalendarController {
     public ResponseEntity<CalendarDto> generateCalendar(@RequestBody CalendarDto calendarDto) {
         CalendarDto generated = calendarService.generateCalendar(calendarDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(generated);
+    }
+
+    // -------------------------------------------------------------------------
+    // POST /api/calendars/{calendarId}/employees/{employeeId}/schedule-all
+    // -------------------------------------------------------------------------
+
+    /**
+     * Schedules an employee across every day in the given calendar.
+     * For each day's schedule, the employee is added to whichever
+     * team currently has the fewest members, balancing team sizes.
+     * Used by Manager "New Employee" tab — "Schedule" action.
+     *
+     * @param calendarId the calendar to schedule the employee into
+     * @param employeeId the employee to schedule
+     * @return 200 OK with the updated CalendarDto
+     */
+    @PostMapping("/{calendarId}/employees/{employeeId}/schedule-all")
+    public ResponseEntity<CalendarDto> scheduleEmployeeAcrossCalendar(
+            @PathVariable Long calendarId,
+            @PathVariable Long employeeId) {
+        return ResponseEntity.ok(
+                calendarService.scheduleEmployeeAcrossCalendar(calendarId, employeeId));
+    }
+
+    // -------------------------------------------------------------------------
+    // DELETE /api/calendars/{calendarId}/employees/{employeeId}/schedule-all
+    // -------------------------------------------------------------------------
+
+    /**
+     * Removes an employee from every team across every day in the
+     * given calendar. Used by Manager "Removed Employee" tab —
+     * "Remove from Schedule" action.
+     *
+     * @param calendarId the calendar to remove the employee from
+     * @param employeeId the employee to remove
+     * @return 200 OK with the updated CalendarDto
+     */
+    @DeleteMapping("/{calendarId}/employees/{employeeId}/schedule-all")
+    public ResponseEntity<CalendarDto> removeEmployeeFromCalendar(
+            @PathVariable Long calendarId,
+            @PathVariable Long employeeId) {
+        return ResponseEntity.ok(
+                calendarService.removeEmployeeFromCalendar(calendarId, employeeId));
     }
 }

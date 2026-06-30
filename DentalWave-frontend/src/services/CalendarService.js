@@ -115,3 +115,31 @@ export const removeScheduleFromCalendar = (calendarId, scheduleId) =>
  */
 export const generateCalendar = (calendar) =>
     axios.post(`${CALENDAR_REST_API_BASE_URL}/generate`, calendar, getAuthHeader())
+
+/**
+ * Schedules an employee across every day in the given calendar.
+ * The employee is added to the smallest team on each day.
+ *
+ * @param calendarId the calendar to schedule the employee into
+ * @param employeeId the employee to schedule
+ * @returns {Promise<axios.AxiosResponse<any>>}
+ */
+export const scheduleEmployeeAcrossCalendar = (calendarId, employeeId) =>
+    axios.post(
+        `${CALENDAR_REST_API_BASE_URL}/${calendarId}/employees/${employeeId}/schedule-all`,
+        null,
+        getAuthHeader()
+    )
+
+/**
+ * Removes an employee from every team across every day in the calendar.
+ *
+ * @param calendarId the calendar to remove the employee from
+ * @param employeeId the employee to remove
+ * @returns {Promise<axios.AxiosResponse<any>>}
+ */
+export const removeEmployeeFromCalendar = (calendarId, employeeId) =>
+    axios.delete(
+        `${CALENDAR_REST_API_BASE_URL}/${calendarId}/employees/${employeeId}/schedule-all`,
+        getAuthHeader()
+    )

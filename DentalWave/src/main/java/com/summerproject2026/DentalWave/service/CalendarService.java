@@ -102,4 +102,18 @@ public interface CalendarService {
      * @throws com.dentalwave.exception.ResourceNotFoundException if either is not found
      */
     void removeSchedule(Long calendarId, Long scheduleId);
+
+    /**
+     * Auto-generates a draft calendar for the given office and month.
+     * Creates one schedule per weekday (Monday-Friday) within the date range,
+     * and automatically assigns employees to teams based on role:
+     * each team gets 1 Doctor + 1 TC, with Assistants distributed
+     * as evenly as possible across the teams created.
+     *
+     * @param calendarDto the office, month, date range, and creator info
+     *                    (id and schedules fields are ignored)
+     * @return the fully populated CalendarDto, unpublished (draft state)
+     * @throws com.dentalwave.exception.ResourceNotFoundException if office or creator not found
+     */
+    CalendarDto generateCalendar(CalendarDto calendarDto);
 }

@@ -16,10 +16,11 @@ function HRAddEmployeePage() {
         email: '',
         temporaryPassword: '',
         role: 'ASSISTANT',
+        position: 'Assistant',
         hireDate: '',
         responsibilities: '',
         timeOffBalance: '',
-        officeIds: ['855'],
+        officeIds: ['1'],
         status: 'ACTIVE'
     })
 
@@ -77,7 +78,7 @@ function HRAddEmployeePage() {
                 firstName: employee.firstName,
                 lastName: employee.lastName,
                 email: employee.email,
-                position: employee.role,
+                position: employee.position,
                 hireDate: employee.hireDate,
                 timeOff: employee.timeOffBalance === ''
                     ? 0.0
@@ -167,6 +168,15 @@ function HRAddEmployeePage() {
                             </div>
 
                             <div className="form-row">
+                                <label>Position</label>
+                                <select name="position" value={employee.position} onChange={handleChange}>
+                                    <option value="Doctor">Doctor</option>
+                                    <option value="TC">TC</option>
+                                    <option value="Assistant">Assistant</option>
+                                </select>
+                            </div>
+
+                            <div className="form-row">
                                 <label>Hire Date</label>
                                 <input type="date" name="hireDate" value={employee.hireDate} onChange={handleChange} required />
                             </div>
@@ -180,8 +190,8 @@ function HRAddEmployeePage() {
                                         <td>
                                             <input
                                                 type="checkbox"
-                                                checked={employee.officeIds.includes('855')}
-                                                onChange={() => toggleOffice('855')}
+                                                checked={employee.officeIds.includes('1')}
+                                                onChange={() => toggleOffice('1')}
                                             />
                                         </td>
                                         <td>Raleigh</td>
@@ -191,8 +201,8 @@ function HRAddEmployeePage() {
                                         <td>
                                             <input
                                                 type="checkbox"
-                                                checked={employee.officeIds.includes('856')}
-                                                onChange={() => toggleOffice('856')}
+                                                checked={employee.officeIds.includes('2')}
+                                                onChange={() => toggleOffice('2')}
                                             />
                                         </td>
                                         <td>Garner</td>
@@ -202,8 +212,8 @@ function HRAddEmployeePage() {
                                         <td>
                                             <input
                                                 type="checkbox"
-                                                checked={employee.officeIds.includes('857')}
-                                                onChange={() => toggleOffice('857')}
+                                                checked={employee.officeIds.includes('3')}
+                                                onChange={() => toggleOffice('3')}
                                             />
                                         </td>
                                         <td>Smithfield</td>

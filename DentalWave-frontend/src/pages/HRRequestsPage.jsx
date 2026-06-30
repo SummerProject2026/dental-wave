@@ -1,9 +1,11 @@
 import '../App.css'
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import HRHeader from '../components/HRHeader'
 import { getAllTimeOffRequests } from '../services/TimeOffRequestService'
 
 function HRRequestsPage() {
+    const navigate = useNavigate()
     const [requests, setRequests] = useState([])
     const [searchTerm, setSearchTerm] = useState('')
     const [filterBy, setFilterBy] = useState('all')
@@ -80,6 +82,7 @@ function HRRequestsPage() {
                             <th>Status</th>
                             <th>Emergency</th>
                             <th>Submitted</th>
+                            <th>Action</th>
                         </tr>
                         </thead>
 
@@ -97,12 +100,20 @@ function HRRequestsPage() {
                                         <td>{req.status}</td>
                                         <td>{req.emergency ? 'YES' : 'NO'}</td>
                                         <td>{formatSubmitted(req.submittedAt || req.submittedDate)}</td>
+                                        <td>
+                                            <button
+                                                className="view-request-btn"
+                                                onClick={() => navigate(`/hr/requests/${req.id}`)}
+                                            >
+                                                Review
+                                            </button>
+                                        </td>
                                     </tr>
                                 )
                             })
                         ) : (
                             <tr>
-                                <td colSpan="5" className="empty-table-message">
+                                <td colSpan="6" className="empty-table-message">
                                     No requests found.
                                 </td>
                             </tr>

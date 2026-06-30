@@ -111,7 +111,7 @@ public class SpringSecurityConfig {
 
         // Allow common HTTP methods used by the frontend
         configuration.setAllowedMethods(
-                List.of("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
         );
 
         // Allow all request headers

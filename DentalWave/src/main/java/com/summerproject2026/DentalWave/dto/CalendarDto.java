@@ -1,3 +1,4 @@
+
 package com.summerproject2026.DentalWave.dto;
 
 import java.time.LocalDate;
@@ -7,8 +8,8 @@ import java.util.List;
 /**
  * Data Transfer Object for Calendar.
  * Used to expose calendar data to the API layer without leaking
- * JPA-managed entities. Replaces the User reference with flat
- * createdById / createdByName fields for simplicity.
+ * JPA-managed entities. Replaces the User and Office references
+ * with flat id/name fields for simplicity.
  */
 public class CalendarDto {
 
@@ -32,6 +33,12 @@ public class CalendarDto {
     /** Display name of the user who created the calendar */
     private String createdByName;
 
+    /** ID of the office/location this calendar belongs to */
+    private Long officeId;
+
+    /** Display name of the office/location this calendar belongs to */
+    private String officeName;
+
     /** Nested schedule DTOs belonging to this calendar */
     private List<ScheduleDto> schedules = new ArrayList<>();
 
@@ -46,6 +53,7 @@ public class CalendarDto {
     public CalendarDto(Long id, String month, LocalDate startCalendarDate,
                        LocalDate endCalendarDate, Boolean published,
                        Long createdById, String createdByName,
+                       Long officeId, String officeName,
                        List<ScheduleDto> schedules) {
         this.id = id;
         this.month = month;
@@ -54,6 +62,8 @@ public class CalendarDto {
         this.published = published;
         this.createdById = createdById;
         this.createdByName = createdByName;
+        this.officeId = officeId;
+        this.officeName = officeName;
         this.schedules = schedules != null ? schedules : new ArrayList<>();
     }
 
@@ -81,6 +91,12 @@ public class CalendarDto {
 
     public String getCreatedByName() { return createdByName; }
     public void setCreatedByName(String createdByName) { this.createdByName = createdByName; }
+
+    public Long getOfficeId() { return officeId; }
+    public void setOfficeId(Long officeId) { this.officeId = officeId; }
+
+    public String getOfficeName() { return officeName; }
+    public void setOfficeName(String officeName) { this.officeName = officeName; }
 
     public List<ScheduleDto> getSchedules() { return schedules; }
     public void setSchedules(List<ScheduleDto> schedules) { this.schedules = schedules; }

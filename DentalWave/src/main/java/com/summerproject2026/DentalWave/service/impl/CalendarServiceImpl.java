@@ -6,9 +6,14 @@ import com.summerproject2026.DentalWave.exception.ResourceNotFoundException;
 import com.summerproject2026.DentalWave.mapper.CalendarMapper;
 import com.summerproject2026.DentalWave.mapper.ScheduleMapper;
 import com.summerproject2026.DentalWave.entity.Calendar;
+import com.summerproject2026.DentalWave.entity.Employee;
+import com.summerproject2026.DentalWave.entity.Office;
 import com.summerproject2026.DentalWave.entity.Schedule;
+import com.summerproject2026.DentalWave.entity.ScheduleTeam;
 import com.summerproject2026.DentalWave.entity.User;
 import com.summerproject2026.DentalWave.repository.CalendarRepository;
+import com.summerproject2026.DentalWave.repository.EmployeeRepository;
+import com.summerproject2026.DentalWave.repository.OfficeRepository;
 import com.summerproject2026.DentalWave.repository.ScheduleRepository;
 import com.summerproject2026.DentalWave.repository.UserRepository;
 import com.summerproject2026.DentalWave.service.CalendarService;
@@ -17,13 +22,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 /**
  * Implementation of CalendarService.
  * Handles all calendar business logic including creation, updates,
- * publish/unpublish lifecycle, and nested schedule management.
+ * publish/unpublish lifecycle, nested schedule management, and
+ * auto-generation of draft calendars with role-based team assignment.
  */
 @Service
 @Transactional
@@ -32,6 +42,8 @@ public class CalendarServiceImpl implements CalendarService {
     private final CalendarRepository calendarRepository;
     private final ScheduleRepository scheduleRepository;
     private final UserRepository userRepository;
+    private final OfficeRepository officeRepository;
+    private final EmployeeRepository employeeRepository;
     private final CalendarMapper calendarMapper;
     private final ScheduleMapper scheduleMapper;
 
@@ -39,11 +51,15 @@ public class CalendarServiceImpl implements CalendarService {
     public CalendarServiceImpl(CalendarRepository calendarRepository,
                                ScheduleRepository scheduleRepository,
                                UserRepository userRepository,
+                               OfficeRepository officeRepository,
+                               EmployeeRepository employeeRepository,
                                CalendarMapper calendarMapper,
                                ScheduleMapper scheduleMapper) {
         this.calendarRepository = calendarRepository;
         this.scheduleRepository = scheduleRepository;
         this.userRepository = userRepository;
+        this.officeRepository = officeRepository;
+        this.employeeRepository = employeeRepository;
         this.calendarMapper = calendarMapper;
         this.scheduleMapper = scheduleMapper;
     }
@@ -54,19 +70,25 @@ public class CalendarServiceImpl implements CalendarService {
 
     /**
      * Creates and persists a new calendar.
-     * Resolves the createdBy User from the database using the DTO's createdById.
+     * Resolves the createdBy User and office from the database using
+     * the DTO's createdById and officeId.
      */
     @Override
     public CalendarDto createCalendar(CalendarDto calendarDto) {
-        // Map DTO → entity (createdBy will be a stub at this point)
         Calendar calendar = calendarMapper.mapToCalendar(calendarDto);
 
-        // Replace stub createdBy with a fully managed User entity
         if (calendarDto.getCreatedById() != null) {
             User creator = userRepository.findById(calendarDto.getCreatedById())
                     .orElseThrow(() -> new ResourceNotFoundException(
                             "User not found with id: " + calendarDto.getCreatedById()));
             calendar.setCreatedBy(creator);
+        }
+
+        if (calendarDto.getOfficeId() != null) {
+            Office office = officeRepository.findById(calendarDto.getOfficeId())
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Office not found with id: " + calendarDto.getOfficeId()));
+            calendar.setOffice(office);
         }
 
         Calendar saved = calendarRepository.save(calendar);
@@ -77,7 +99,6 @@ public class CalendarServiceImpl implements CalendarService {
     // Read
     // -------------------------------------------------------------------------
 
-    /** Fetches a single calendar by ID, throwing if absent */
     @Override
     @Transactional(readOnly = true)
     public CalendarDto getCalendarById(Long id) {
@@ -85,7 +106,6 @@ public class CalendarServiceImpl implements CalendarService {
         return calendarMapper.mapToCalendarDto(calendar);
     }
 
-    /** Returns all calendars in the system */
     @Override
     @Transactional(readOnly = true)
     public List<CalendarDto> getAllCalendars() {
@@ -94,7 +114,6 @@ public class CalendarServiceImpl implements CalendarService {
                 .collect(Collectors.toList());
     }
 
-    /** Returns all calendars matching a month label (e.g. "June 2025") */
     @Override
     @Transactional(readOnly = true)
     public List<CalendarDto> getCalendarsByMonth(String month) {
@@ -103,7 +122,6 @@ public class CalendarServiceImpl implements CalendarService {
                 .collect(Collectors.toList());
     }
 
-    /** Returns all published calendars */
     @Override
     @Transactional(readOnly = true)
     public List<CalendarDto> getPublishedCalendars() {
@@ -116,10 +134,6 @@ public class CalendarServiceImpl implements CalendarService {
     // Update
     // -------------------------------------------------------------------------
 
-    /**
-     * Updates the scalar fields of an existing calendar.
-     * Does not replace the schedules list on update (manage via addSchedule/removeSchedule).
-     */
     @Override
     public CalendarDto updateCalendar(Long id, CalendarDto calendarDto) {
         Calendar existing = findCalendarOrThrow(id);
@@ -128,17 +142,22 @@ public class CalendarServiceImpl implements CalendarService {
         existing.setStartCalendarDate(calendarDto.getStartCalendarDate());
         existing.setEndCalendarDate(calendarDto.getEndCalendarDate());
 
-        // Only update published flag if explicitly provided
         if (calendarDto.getPublished() != null) {
             existing.setPublished(calendarDto.getPublished());
         }
 
-        // Update creator if a new one is provided
         if (calendarDto.getCreatedById() != null) {
             User creator = userRepository.findById(calendarDto.getCreatedById())
                     .orElseThrow(() -> new ResourceNotFoundException(
                             "User not found with id: " + calendarDto.getCreatedById()));
             existing.setCreatedBy(creator);
+        }
+
+        if (calendarDto.getOfficeId() != null) {
+            Office office = officeRepository.findById(calendarDto.getOfficeId())
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Office not found with id: " + calendarDto.getOfficeId()));
+            existing.setOffice(office);
         }
 
         Calendar updated = calendarRepository.save(existing);
@@ -149,7 +168,6 @@ public class CalendarServiceImpl implements CalendarService {
     // Delete
     // -------------------------------------------------------------------------
 
-    /** Deletes a calendar and its cascaded schedules */
     @Override
     public void deleteCalendar(Long id) {
         Calendar calendar = findCalendarOrThrow(id);
@@ -160,7 +178,6 @@ public class CalendarServiceImpl implements CalendarService {
     // Publish / Unpublish lifecycle
     // -------------------------------------------------------------------------
 
-    /** Marks the calendar as published */
     @Override
     public CalendarDto publishCalendar(Long id) {
         Calendar calendar = findCalendarOrThrow(id);
@@ -168,7 +185,6 @@ public class CalendarServiceImpl implements CalendarService {
         return calendarMapper.mapToCalendarDto(calendarRepository.save(calendar));
     }
 
-    /** Reverts the calendar to draft (unpublished) */
     @Override
     public CalendarDto unpublishCalendar(Long id) {
         Calendar calendar = findCalendarOrThrow(id);
@@ -180,29 +196,18 @@ public class CalendarServiceImpl implements CalendarService {
     // Nested schedule management
     // -------------------------------------------------------------------------
 
-    /**
-     * Creates a new schedule and links it to the specified calendar.
-     * Uses Calendar#addSchedule to keep the bidirectional relationship consistent.
-     */
     @Override
     public ScheduleDto addSchedule(Long calendarId, ScheduleDto scheduleDto) {
         Calendar calendar = findCalendarOrThrow(calendarId);
 
-        // Map DTO → entity; calendar reference will be set via addSchedule()
         Schedule schedule = scheduleMapper.mapToSchedule(scheduleDto);
         calendar.addSchedule(schedule);
 
-        // Save the calendar so the cascade persists the new schedule
         calendarRepository.save(calendar);
 
-        // Return the newly persisted schedule (it now has a generated ID)
         return scheduleMapper.mapToScheduleDto(schedule);
     }
 
-    /**
-     * Removes a schedule from a calendar and deletes it.
-     * Validates that the schedule actually belongs to the given calendar.
-     */
     @Override
     public void removeSchedule(Long calendarId, Long scheduleId) {
         Calendar calendar = findCalendarOrThrow(calendarId);
@@ -210,7 +215,6 @@ public class CalendarServiceImpl implements CalendarService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Schedule not found with id: " + scheduleId));
 
-        // Guard: ensure the schedule belongs to this calendar
         if (!schedule.getCalendar().getId().equals(calendarId)) {
             throw new IllegalArgumentException(
                     "Schedule " + scheduleId + " does not belong to calendar " + calendarId);
@@ -221,10 +225,120 @@ public class CalendarServiceImpl implements CalendarService {
     }
 
     // -------------------------------------------------------------------------
+    // Auto-generation with role-based team assignment
+    // -------------------------------------------------------------------------
+
+    /**
+     * {@inheritDoc}
+     *
+     * <p>Builds a draft calendar covering every Monday-Friday in the
+     * requested date range. For each day, employees at the given office
+     * are grouped by position: Doctors are paired 1:1 with TCs to form
+     * teams, and any remaining Assistants are distributed as evenly as
+     * possible across the teams created that day.</p>
+     */
+    @Override
+    public CalendarDto generateCalendar(CalendarDto calendarDto) {
+        // Resolve the office and creator
+        Office office = officeRepository.findById(calendarDto.getOfficeId())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Office not found with id: " + calendarDto.getOfficeId()));
+
+        User creator = userRepository.findById(calendarDto.getCreatedById())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "User not found with id: " + calendarDto.getCreatedById()));
+
+        // Create the draft calendar shell
+        Calendar calendar = new Calendar();
+        calendar.setMonth(calendarDto.getMonth());
+        calendar.setStartCalendarDate(calendarDto.getStartCalendarDate());
+        calendar.setEndCalendarDate(calendarDto.getEndCalendarDate());
+        calendar.setPublished(false);
+        calendar.setCreatedBy(creator);
+        calendar.setOffice(office);
+
+        // Fetch this office's employees grouped by role
+        List<Employee> doctors = employeeRepository
+                .findByOfficeIdAndPosition(office.getId(), "Doctor");
+        List<Employee> tcs = employeeRepository
+                .findByOfficeIdAndPosition(office.getId(), "TC");
+        List<Employee> assistants = employeeRepository
+                .findByOfficeIdAndPosition(office.getId(), "Assistant");
+
+        // Build one schedule per weekday (Monday-Friday) in the date range
+        LocalDate current = calendarDto.getStartCalendarDate();
+        LocalDate end = calendarDto.getEndCalendarDate();
+
+        while (!current.isAfter(end)) {
+            DayOfWeek dayOfWeek = current.getDayOfWeek();
+
+            if (dayOfWeek != DayOfWeek.SATURDAY && dayOfWeek != DayOfWeek.SUNDAY) {
+                Schedule schedule = buildScheduleForDay(current, doctors, tcs, assistants);
+                calendar.addSchedule(schedule);
+            }
+
+            current = current.plusDays(1);
+        }
+
+        Calendar saved = calendarRepository.save(calendar);
+        return calendarMapper.mapToCalendarDto(saved);
+    }
+
+    /**
+     * Builds a single day's schedule with teams assigned based on role.
+     * Pairs each Doctor 1:1 with a TC to form a team, then distributes
+     * Assistants as evenly as possible across the teams created.
+     *
+     * @param date       the date this schedule covers
+     * @param doctors    all Doctors available at this office
+     * @param tcs        all TCs available at this office
+     * @param assistants all Assistants available at this office
+     * @return the built Schedule entity (not yet persisted independently;
+     *         it is added to the calendar via addSchedule)
+     */
+    private Schedule buildScheduleForDay(LocalDate date,
+                                         List<Employee> doctors,
+                                         List<Employee> tcs,
+                                         List<Employee> assistants) {
+        Schedule schedule = new Schedule();
+        schedule.setDate(date);
+        schedule.setStartTime(LocalTime.of(8, 0));
+        schedule.setEndTime(LocalTime.of(17, 0));
+        schedule.setPublished(false);
+
+        // Determine how many teams we can form: one per Doctor/TC pair
+        int teamCount = Math.min(doctors.size(), tcs.size());
+
+        List<ScheduleTeam> teams = new ArrayList<>();
+        for (int i = 0; i < teamCount; i++) {
+            ScheduleTeam team = new ScheduleTeam();
+            team.setName("Team " + (i + 1));
+            team.setSchedule(schedule);
+
+            List<Employee> teamEmployees = new ArrayList<>();
+            teamEmployees.add(doctors.get(i));
+            teamEmployees.add(tcs.get(i));
+            team.setEmployees(teamEmployees);
+
+            teams.add(team);
+        }
+
+        // Distribute assistants as evenly as possible across the teams created
+        if (!teams.isEmpty()) {
+            for (int i = 0; i < assistants.size(); i++) {
+                ScheduleTeam team = teams.get(i % teams.size());
+                team.getEmployees().add(assistants.get(i));
+            }
+        }
+
+        schedule.setTeams(teams);
+        return schedule;
+    }
+
+    // -------------------------------------------------------------------------
     // Private helpers
     // -------------------------------------------------------------------------
 
-    /** Convenience method — fetches a calendar or throws ResourceNotFoundException */
     private Calendar findCalendarOrThrow(Long id) {
         return calendarRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(

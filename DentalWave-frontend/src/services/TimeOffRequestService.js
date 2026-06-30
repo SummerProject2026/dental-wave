@@ -60,3 +60,41 @@ export const createTimeOffRequest = (request) =>
  */
 export const updateTimeOffRequest = (requestId, request) =>
     axios.put(`${TIME_OFF_REQUEST_REST_API_BASE_URL}/${requestId}`, request, getAuthHeader())
+
+/**
+ * Approves a pending time off request.
+ * Used by HR on the Request Detail page (UC6).
+ *
+ * @param requestId Time off request id
+ * @param reviewedById Id of the HR user approving the request
+ * @param reviewComment Optional comment from the reviewer
+ * @returns Updated TimeOffRequestDto with status APPROVED
+ */
+export const approveTimeOffRequest = (requestId, reviewedById, reviewComment) =>
+    axios.patch(
+        `${TIME_OFF_REQUEST_REST_API_BASE_URL}/${requestId}/approve`,
+        null,
+        {
+            ...getAuthHeader(),
+            params: { reviewedById, reviewComment }
+        }
+    )
+
+/**
+ * Denies a pending time off request.
+ * Used by HR on the Request Detail page (UC6).
+ *
+ * @param requestId Time off request id
+ * @param reviewedById Id of the HR user denying the request
+ * @param reviewComment Optional comment from the reviewer
+ * @returns Updated TimeOffRequestDto with status DENIED
+ */
+export const denyTimeOffRequest = (requestId, reviewedById, reviewComment) =>
+    axios.patch(
+        `${TIME_OFF_REQUEST_REST_API_BASE_URL}/${requestId}/deny`,
+        null,
+        {
+            ...getAuthHeader(),
+            params: { reviewedById, reviewComment }
+        }
+    )

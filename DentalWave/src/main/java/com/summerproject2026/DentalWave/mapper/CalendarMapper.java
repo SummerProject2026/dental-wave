@@ -1,8 +1,10 @@
+
 package com.summerproject2026.DentalWave.mapper;
 
 import com.summerproject2026.DentalWave.dto.CalendarDto;
 import com.summerproject2026.DentalWave.dto.ScheduleDto;
 import com.summerproject2026.DentalWave.entity.Calendar;
+import com.summerproject2026.DentalWave.entity.Office;
 import com.summerproject2026.DentalWave.entity.Schedule;
 import com.summerproject2026.DentalWave.entity.User;
 
@@ -33,7 +35,7 @@ public class CalendarMapper {
 
     /**
      * Converts a Calendar entity to a CalendarDto.
-     * Flattens the createdBy User into id and name fields.
+     * Flattens the createdBy User and office into id and name fields.
      * Recursively maps all nested schedules.
      *
      * @param calendar the entity to convert
@@ -51,12 +53,21 @@ public class CalendarMapper {
             createdByName = creator.getFirstName() + " " + creator.getLastName();
         }
 
+        // Flatten the Office reference into two scalar fields
+        Long officeId = null;
+        String officeName = null;
+        if (calendar.getOffice() != null) {
+            Office office = calendar.getOffice();
+            officeId = office.getId();
+            officeName = office.getName();
+        }
+
         // Map nested schedules
         List<ScheduleDto> scheduleDtos = calendar.getSchedules() == null
                 ? new ArrayList<>()
                 : calendar.getSchedules().stream()
-                          .map(scheduleMapper::mapToScheduleDto)
-                          .collect(Collectors.toList());
+                .map(scheduleMapper::mapToScheduleDto)
+                .collect(Collectors.toList());
 
         return new CalendarDto(
                 calendar.getId(),
@@ -66,6 +77,8 @@ public class CalendarMapper {
                 calendar.getPublished(),
                 createdById,
                 createdByName,
+                officeId,
+                officeName,
                 scheduleDtos
         );
     }
@@ -76,8 +89,8 @@ public class CalendarMapper {
 
     /**
      * Converts a CalendarDto back into a Calendar entity.
-     * NOTE: The createdBy User is only partially hydrated (id only).
-     * The service layer must fetch and set the full User from the repository
+     * NOTE: The createdBy User and Office are only partially hydrated (id only).
+     * The service layer must fetch and set the full entities from the repository
      * before persisting to avoid detached-entity issues.
      *
      * @param calendarDto the DTO to convert
@@ -98,6 +111,13 @@ public class CalendarMapper {
             User createdBy = new User();
             createdBy.setId(calendarDto.getCreatedById());
             calendar.setCreatedBy(createdBy);
+        }
+
+        // Stub Office — service must replace this with a managed entity
+        if (calendarDto.getOfficeId() != null) {
+            Office office = new Office();
+            office.setId(calendarDto.getOfficeId());
+            calendar.setOffice(office);
         }
 
         // Map nested schedule DTOs

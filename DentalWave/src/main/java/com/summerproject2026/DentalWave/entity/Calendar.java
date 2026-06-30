@@ -9,6 +9,9 @@ import java.util.List;
  * Represents a scheduling calendar for a given month.
  * A calendar contains multiple schedules and is associated with a creator (User).
  * Calendars can be published to make them visible to staff.
+ *
+ * Each calendar belongs to a single office/location. "Universal" view on the
+ * frontend aggregates schedules across all office calendars for the same month.
  */
 @Entity
 @Table(name = "calendars")
@@ -43,6 +46,15 @@ public class Calendar {
     private User createdBy;
 
     /**
+     * The office/location this calendar belongs to.
+     * Used to group schedules by location (e.g. Raleigh, Garner, Smithfield)
+     * and to support the manager's office-filtered and "Universal" calendar views.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "office_id", nullable = false)
+    private Office office;
+
+    /**
      * The list of daily schedules that belong to this calendar.
      * Cascade all operations so schedules are persisted/removed with the calendar.
      */
@@ -59,13 +71,14 @@ public class Calendar {
     /** Full constructor for programmatic creation */
     public Calendar(Long id, String month, LocalDate startCalendarDate,
                     LocalDate endCalendarDate, Boolean published,
-                    User createdBy, List<Schedule> schedules) {
+                    User createdBy, Office office, List<Schedule> schedules) {
         this.id = id;
         this.month = month;
         this.startCalendarDate = startCalendarDate;
         this.endCalendarDate = endCalendarDate;
         this.published = published;
         this.createdBy = createdBy;
+        this.office = office;
         this.schedules = schedules != null ? schedules : new ArrayList<>();
     }
 
@@ -90,6 +103,9 @@ public class Calendar {
 
     public User getCreatedBy() { return createdBy; }
     public void setCreatedBy(User createdBy) { this.createdBy = createdBy; }
+
+    public Office getOffice() { return office; }
+    public void setOffice(Office office) { this.office = office; }
 
     public List<Schedule> getSchedules() { return schedules; }
     public void setSchedules(List<Schedule> schedules) { this.schedules = schedules; }

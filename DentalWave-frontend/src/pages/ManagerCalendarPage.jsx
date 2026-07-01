@@ -9,6 +9,7 @@ import {
 } from '../services/CalendarService'
 import { assignEmployeeToTeam, removeEmployeeFromTeam } from '../services/ScheduleService'
 import { getEmployeesByOffice } from '../services/EmployeeService'
+import { getAllTimeOffRequests } from '../services/TimeOffRequestService'
 import { getLoggedInUserId } from '../services/AuthService'
 
 const OFFICES = [
@@ -24,6 +25,7 @@ function ManagerCalendarPage() {
     const [selectedOfficeId, setSelectedOfficeId] = useState(OFFICES[0].id)
     const [calendars, setCalendars] = useState([])
     const [officeEmployees, setOfficeEmployees] = useState([])
+    const [approvedTimeOffRequests, setApprovedTimeOffRequests] = useState([])
     const [selectedDay, setSelectedDay] = useState(null)
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
@@ -34,6 +36,7 @@ function ManagerCalendarPage() {
 
     useEffect(() => {
         loadCalendars()
+        loadApprovedTimeOffRequests()
     }, [])
 
     useEffect(() => {
@@ -46,6 +49,17 @@ function ManagerCalendarPage() {
         getAllCalendars()
             .then((response) => setCalendars(response.data || []))
             .catch((err) => console.error('Failed to load calendars', err))
+    }
+
+    function loadApprovedTimeOffRequests() {
+        getAllTimeOffRequests()
+            .then((response) => {
+                const approved = (response.data || []).filter(
+                    (r) => r.status === 'APPROVED'
+                )
+                setApprovedTimeOffRequests(approved)
+            })
+            .catch((err) => console.error('Failed to load time-off requests', err))
     }
 
     function prevMonth() {
@@ -80,6 +94,28 @@ function ManagerCalendarPage() {
         const response = await getAllCalendars()
         setCalendars(response.data || [])
         return response.data || []
+    }
+
+    /**
+     * Returns a Set of employee ids who have approved time-off
+     * overlapping the given date string (YYYY-MM-DD).
+     */
+    function getEmployeeIdsOnTimeOff(dateStr) {
+        if (!dateStr) return new Set()
+        const date = new Date(dateStr)
+        const ids = new Set()
+
+        approvedTimeOffRequests.forEach((request) => {
+            if (!request.startDate || !request.endDate) return
+            const start = new Date(request.startDate)
+            const end = new Date(request.endDate)
+            if (date >= start && date <= end) {
+                // request.employeeId links back to the employee
+                if (request.employeeId) ids.add(request.employeeId)
+            }
+        })
+
+        return ids
     }
 
     async function handleNewCalendar() {
@@ -198,6 +234,13 @@ function ManagerCalendarPage() {
 
     const selectedSchedule = selectedDay ? scheduleByDay[selectedDay] : null
 
+    // Build the selected date string for time-off filtering
+    const selectedDateStr = selectedDay
+        ? `${year}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDay).padStart(2, '0')}`
+        : null
+
+    const employeesOnTimeOff = getEmployeeIdsOnTimeOff(selectedDateStr)
+
     return (
         <div className="calendar-page">
 
@@ -279,8 +322,12 @@ function ManagerCalendarPage() {
                         {selectedSchedule.teams && Object.keys(selectedSchedule.teams).length > 0 ? (
                             Object.entries(selectedSchedule.teams).map(([teamId, employees]) => {
                                 const assignedIds = employees.map((e) => e.id)
+
+                                // Filter out: already assigned + inactive + on approved time-off this day
                                 const availableToAdd = officeEmployees.filter(
                                     (e) => !assignedIds.includes(e.id)
+                                        && e.status !== 'INACTIVE'
+                                        && !employeesOnTimeOff.has(e.id)
                                 )
 
                                 return (

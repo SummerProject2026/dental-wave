@@ -2,6 +2,7 @@ package com.summerproject2026.DentalWave.service.impl;
 
 import com.summerproject2026.DentalWave.dto.CalendarDto;
 import com.summerproject2026.DentalWave.dto.ScheduleDto;
+import com.summerproject2026.DentalWave.enums.NotificationType;
 import com.summerproject2026.DentalWave.exception.ResourceNotFoundException;
 import com.summerproject2026.DentalWave.mapper.CalendarMapper;
 import com.summerproject2026.DentalWave.mapper.ScheduleMapper;
@@ -17,7 +18,9 @@ import com.summerproject2026.DentalWave.repository.OfficeRepository;
 import com.summerproject2026.DentalWave.repository.ScheduleRepository;
 import com.summerproject2026.DentalWave.repository.UserRepository;
 import com.summerproject2026.DentalWave.service.CalendarService;
+import com.summerproject2026.DentalWave.service.NotificationService;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,8 +29,11 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -37,6 +43,7 @@ import java.util.stream.Collectors;
  * auto-generation of draft calendars with role-based team assignment,
  * and bulk scheduling/unscheduling an employee across an entire calendar.
  */
+@Slf4j
 @Service
 @Transactional
 public class CalendarServiceImpl implements CalendarService {
@@ -48,6 +55,7 @@ public class CalendarServiceImpl implements CalendarService {
     private final EmployeeRepository employeeRepository;
     private final CalendarMapper calendarMapper;
     private final ScheduleMapper scheduleMapper;
+    private final NotificationService notificationService;
 
     @Autowired
     public CalendarServiceImpl(CalendarRepository calendarRepository,
@@ -56,7 +64,8 @@ public class CalendarServiceImpl implements CalendarService {
                                OfficeRepository officeRepository,
                                EmployeeRepository employeeRepository,
                                CalendarMapper calendarMapper,
-                               ScheduleMapper scheduleMapper) {
+                               ScheduleMapper scheduleMapper,
+                               NotificationService notificationService) {
         this.calendarRepository = calendarRepository;
         this.scheduleRepository = scheduleRepository;
         this.userRepository = userRepository;
@@ -64,6 +73,7 @@ public class CalendarServiceImpl implements CalendarService {
         this.employeeRepository = employeeRepository;
         this.calendarMapper = calendarMapper;
         this.scheduleMapper = scheduleMapper;
+        this.notificationService = notificationService;
     }
 
     // -------------------------------------------------------------------------
@@ -178,8 +188,21 @@ public class CalendarServiceImpl implements CalendarService {
     @Override
     public CalendarDto publishCalendar(Long id) {
         Calendar calendar = findCalendarOrThrow(id);
+
+        // Track whether this is the first publish so we only send
+        // NEW_SCHEDULE notifications once (UC12 business rule: employees
+        // receive a New Schedule notification when the calendar is
+        // published for the first time each month).
+        boolean wasPublished = Boolean.TRUE.equals(calendar.getPublished());
+
         calendar.setPublished(true);
-        return calendarMapper.mapToCalendarDto(calendarRepository.save(calendar));
+        Calendar saved = calendarRepository.save(calendar);
+
+        if (!wasPublished) {
+            notifyEmployees(saved, collectAssignedEmployees(saved), NotificationType.NEW_SCHEDULE);
+        }
+
+        return calendarMapper.mapToCalendarDto(saved);
     }
 
     @Override
@@ -202,6 +225,12 @@ public class CalendarServiceImpl implements CalendarService {
 
         calendarRepository.save(calendar);
 
+        // UC12: if the calendar is already published, employees on the
+        // newly added day are directly affected by this post-publish edit.
+        if (Boolean.TRUE.equals(calendar.getPublished())) {
+            notifyEmployees(calendar, employeesOnSchedule(schedule), NotificationType.SCHEDULE_UPDATE);
+        }
+
         return scheduleMapper.mapToScheduleDto(schedule);
     }
 
@@ -217,8 +246,15 @@ public class CalendarServiceImpl implements CalendarService {
                     "Schedule " + scheduleId + " does not belong to calendar " + calendarId);
         }
 
+        // Capture affected employees before the day is removed (UC12).
+        Set<Employee> affected = employeesOnSchedule(schedule);
+
         calendar.removeSchedule(schedule);
         calendarRepository.save(calendar);
+
+        if (Boolean.TRUE.equals(calendar.getPublished())) {
+            notifyEmployees(calendar, affected, NotificationType.SCHEDULE_UPDATE);
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -383,6 +419,13 @@ public class CalendarServiceImpl implements CalendarService {
         }
 
         Calendar saved = calendarRepository.save(calendar);
+
+        // UC12: the bulk-scheduled employee is directly affected; notify them
+        // of the schedule change if the calendar is already published.
+        if (Boolean.TRUE.equals(saved.getPublished())) {
+            notifyEmployees(saved, List.of(employee), NotificationType.SCHEDULE_UPDATE);
+        }
+
         return calendarMapper.mapToCalendarDto(saved);
     }
 
@@ -396,6 +439,10 @@ public class CalendarServiceImpl implements CalendarService {
     public CalendarDto removeEmployeeFromCalendar(Long calendarId, Long employeeId) {
         Calendar calendar = findCalendarOrThrow(calendarId);
 
+        Employee employee = employeeRepository.findById(employeeId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Employee not found with id: " + employeeId));
+
         for (Schedule schedule : calendar.getSchedules()) {
             if (schedule.getTeams() == null) {
                 continue;
@@ -406,6 +453,13 @@ public class CalendarServiceImpl implements CalendarService {
         }
 
         Calendar saved = calendarRepository.save(calendar);
+
+        // UC12: the removed employee is directly affected (their assignment
+        // changed); notify them if the calendar is already published.
+        if (Boolean.TRUE.equals(saved.getPublished())) {
+            notifyEmployees(saved, List.of(employee), NotificationType.SCHEDULE_UPDATE);
+        }
+
         return calendarMapper.mapToCalendarDto(saved);
     }
 
@@ -417,5 +471,101 @@ public class CalendarServiceImpl implements CalendarService {
         return calendarRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Calendar not found with id: " + id));
+    }
+
+    // -------------------------------------------------------------------------
+    // UC12 — Employee schedule notifications
+    // -------------------------------------------------------------------------
+
+    /**
+     * Collects the distinct set of employees assigned to any team on any
+     * day of the calendar. Order is preserved for deterministic behaviour.
+     *
+     * @param calendar the calendar to scan
+     * @return distinct employees assigned anywhere in the calendar
+     */
+    private Set<Employee> collectAssignedEmployees(Calendar calendar) {
+        Set<Employee> employees = new LinkedHashSet<>();
+        for (Schedule schedule : calendar.getSchedules()) {
+            employees.addAll(employeesOnSchedule(schedule));
+        }
+        return employees;
+    }
+
+    /**
+     * Collects the distinct employees assigned to any team on a single day.
+     *
+     * @param schedule the day's schedule
+     * @return distinct employees on that day (empty if none)
+     */
+    private Set<Employee> employeesOnSchedule(Schedule schedule) {
+        Set<Employee> employees = new LinkedHashSet<>();
+        if (schedule.getTeams() == null) {
+            return employees;
+        }
+        for (ScheduleTeam team : schedule.getTeams()) {
+            if (team.getEmployees() != null) {
+                employees.addAll(team.getEmployees());
+            }
+        }
+        return employees;
+    }
+
+    /**
+     * Sends a NEW_SCHEDULE or SCHEDULE_UPDATE notification to each affected
+     * employee (UC12). Each delivery is isolated: a failure for one employee
+     * is logged and does not prevent the others from being notified.
+     *
+     * <p>Implements the UC12 "Notification Delivery Failure" alternate flow:
+     * if any deliveries fail, the publishing manager receives a SYSTEM
+     * notification listing the employees who could not be reached.</p>
+     *
+     * @param calendar  the calendar the notification relates to
+     * @param employees the employees to notify
+     * @param type      NEW_SCHEDULE or SCHEDULE_UPDATE
+     */
+    private void notifyEmployees(Calendar calendar,
+                                 Collection<Employee> employees,
+                                 NotificationType type) {
+        if (employees == null || employees.isEmpty()) {
+            return;
+        }
+
+        List<String> failures = new ArrayList<>();
+
+        for (Employee employee : employees) {
+            // An employee must have a backing user account to receive notifications.
+            if (employee.getUser() == null) {
+                continue;
+            }
+            try {
+                notificationService.notifyEmployeeOfSchedule(
+                        employee.getUser().getId(),
+                        type,
+                        calendar.getMonth(),
+                        calendar.getId());
+            } catch (Exception ex) {
+                // UC12: log the failed delivery with the employee and timestamp.
+                log.error("Failed to deliver {} notification to employee {} ({}): {}",
+                        type, employee.getId(), employee.getUser().getUsername(), ex.getMessage());
+                failures.add(employee.getUser().getUsername());
+            }
+        }
+
+        // UC12 alternate flow: alert the publishing manager of any failures.
+        if (!failures.isEmpty() && calendar.getCreatedBy() != null) {
+            try {
+                notificationService.sendNotification(
+                        calendar.getCreatedBy().getId(),
+                        "Schedule notification could not be delivered to one or more "
+                                + "employees: " + String.join(", ", failures),
+                        NotificationType.SYSTEM,
+                        "CALENDAR",
+                        calendar.getId());
+            } catch (Exception ex) {
+                log.error("Failed to alert manager {} of notification delivery failures: {}",
+                        calendar.getCreatedBy().getId(), ex.getMessage());
+            }
+        }
     }
 }

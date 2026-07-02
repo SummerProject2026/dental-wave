@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 
 import '../App.css'
 import logo from '../pictures/wake-logo.png'
@@ -92,9 +92,9 @@ function LoginPage() {
                         onChange={(e) => setUsername(e.target.value)}
                     />
 
-                    <a className="forgot-link" href="#">
+                    <Link className="forgot-link" to="/forgot-username">
                         Forgot Username?
-                    </a>
+                    </Link>
 
                     <label className="login-label">Password:</label>
 
@@ -106,9 +106,9 @@ function LoginPage() {
                         onChange={(e) => setPassword(e.target.value)}
                     />
 
-                    <a className="forgot-link" href="#">
+                    <Link className="forgot-link" to="/forgot-password">
                         Forgot Password?
-                    </a>
+                    </Link>
 
                     {error && (
                         <p className="login-error">

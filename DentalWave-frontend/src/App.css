@@ -2244,3 +2244,31 @@ body {
   border: 1px solid #ccc;
   font-size: 13px;
 }
+.forgot-title {
+  color: #2323c9;
+  margin-bottom: 4px;
+}
+
+.forgot-subtitle {
+  max-width: 420px;
+  text-align: center;
+  font-size: 14px;
+  color: #444;
+  margin-bottom: 16px;
+}
+
+.success-message {
+  color: #1a7a2e;
+  font-size: 14px;
+  text-align: center;
+}
+
+.back-to-login-btn {
+  background: none;
+  border: none;
+  color: #2323c9;
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: 14px;
+  margin-top: 8px;
+}

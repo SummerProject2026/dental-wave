@@ -191,6 +191,12 @@ public class EmployeeServiceImpl implements EmployeeService {
             user.setEmail(employeeDto.getEmail());
             user.setPhoneNumber(employeeDto.getPhoneNumber());
 
+            // Update password only if a new one was provided
+            if (employeeDto.getPassword() != null
+                    && !employeeDto.getPassword().isBlank()) {
+                user.setPassword(passwordEncoder.encode(employeeDto.getPassword()));
+            }
+
             userRepository.save(user);
         }
 

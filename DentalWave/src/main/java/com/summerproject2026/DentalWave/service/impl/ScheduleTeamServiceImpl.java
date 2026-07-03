@@ -1,15 +1,19 @@
 package com.summerproject2026.DentalWave.service.impl;
 
 import com.summerproject2026.DentalWave.dto.ScheduleTeamDto;
+import com.summerproject2026.DentalWave.entity.Calendar;
 import com.summerproject2026.DentalWave.entity.Employee;
 import com.summerproject2026.DentalWave.entity.Schedule;
 import com.summerproject2026.DentalWave.entity.ScheduleTeam;
+import com.summerproject2026.DentalWave.enums.NotificationType;
 import com.summerproject2026.DentalWave.exception.ResourceNotFoundException;
 import com.summerproject2026.DentalWave.mapper.ScheduleTeamMapper;
 import com.summerproject2026.DentalWave.repository.EmployeeRepository;
 import com.summerproject2026.DentalWave.repository.ScheduleRepository;
 import com.summerproject2026.DentalWave.repository.ScheduleTeamRepository;
+import com.summerproject2026.DentalWave.service.NotificationService;
 import com.summerproject2026.DentalWave.service.ScheduleTeamService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +24,7 @@ import java.util.stream.Collectors;
 /**
  * Implementation of ScheduleTeamService.
  */
+@Slf4j
 @Service
 @Transactional
 public class ScheduleTeamServiceImpl implements ScheduleTeamService {
@@ -28,16 +33,19 @@ public class ScheduleTeamServiceImpl implements ScheduleTeamService {
     private final ScheduleRepository scheduleRepository;
     private final EmployeeRepository employeeRepository;
     private final ScheduleTeamMapper scheduleTeamMapper;
+    private final NotificationService notificationService;
 
     @Autowired
     public ScheduleTeamServiceImpl(ScheduleTeamRepository scheduleTeamRepository,
                                    ScheduleRepository scheduleRepository,
                                    EmployeeRepository employeeRepository,
-                                   ScheduleTeamMapper scheduleTeamMapper) {
+                                   ScheduleTeamMapper scheduleTeamMapper,
+                                   NotificationService notificationService) {
         this.scheduleTeamRepository = scheduleTeamRepository;
         this.scheduleRepository = scheduleRepository;
         this.employeeRepository = employeeRepository;
         this.scheduleTeamMapper = scheduleTeamMapper;
+        this.notificationService = notificationService;
     }
 
     /**
@@ -102,8 +110,14 @@ public class ScheduleTeamServiceImpl implements ScheduleTeamService {
             team.getEmployees().add(employee);
         }
 
-        return scheduleTeamMapper.mapToScheduleTeamDto(
+        ScheduleTeamDto result = scheduleTeamMapper.mapToScheduleTeamDto(
                 scheduleTeamRepository.save(team));
+
+        // UC12: a per-day team edit on a published calendar directly affects
+        // this employee — notify them of the schedule update.
+        notifyAffectedEmployee(team, employee);
+
+        return result;
     }
 
     /**
@@ -113,10 +127,50 @@ public class ScheduleTeamServiceImpl implements ScheduleTeamService {
     public ScheduleTeamDto removeEmployeeFromTeam(Long teamId, Long employeeId) {
         ScheduleTeam team = findTeamOrThrow(teamId);
 
+        Employee employee = employeeRepository.findById(employeeId).orElse(null);
+
         team.getEmployees().removeIf(emp -> emp.getId().equals(employeeId));
 
-        return scheduleTeamMapper.mapToScheduleTeamDto(
+        ScheduleTeamDto result = scheduleTeamMapper.mapToScheduleTeamDto(
                 scheduleTeamRepository.save(team));
+
+        // UC12: the removed employee is directly affected by this post-publish edit.
+        if (employee != null) {
+            notifyAffectedEmployee(team, employee);
+        }
+
+        return result;
+    }
+
+    /**
+     * Sends a SCHEDULE_UPDATE notification to an employee affected by a
+     * team edit, but only when the underlying calendar is already published
+     * (UC12 — Schedule Update notifications apply to post-publish edits only).
+     *
+     * @param team     the team that was edited
+     * @param employee the employee added to or removed from the team
+     */
+    private void notifyAffectedEmployee(ScheduleTeam team, Employee employee) {
+        Schedule schedule = team.getSchedule();
+        Calendar calendar = schedule != null ? schedule.getCalendar() : null;
+
+        if (calendar == null || !Boolean.TRUE.equals(calendar.getPublished())) {
+            return;
+        }
+        if (employee.getUser() == null) {
+            return;
+        }
+
+        try {
+            notificationService.notifyEmployeeOfSchedule(
+                    employee.getUser().getId(),
+                    NotificationType.SCHEDULE_UPDATE,
+                    calendar.getMonth(),
+                    calendar.getId());
+        } catch (Exception ex) {
+            log.error("Failed to deliver SCHEDULE_UPDATE notification to employee {}: {}",
+                    employee.getId(), ex.getMessage());
+        }
     }
 
     /**

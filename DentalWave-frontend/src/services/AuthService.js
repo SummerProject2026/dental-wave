@@ -28,9 +28,6 @@ export const registerAPICall = (registerObj) =>
 
 // Stores the JWT token in localStorage.
 // Example token format: Bearer eyJhbGciOiJIUzI1NiJ9...
-// export const storeToken = (token) => {
-//     localStorage.setItem('token', token)
-// }
 export const storeToken = (token) => {
     const cleanToken = token.startsWith('Bearer ')
         ? token.substring(7)
@@ -134,3 +131,23 @@ export const saveLoggedInUserEmail = (email) => {
 export const getLoggedInUserEmail = () => {
     return sessionStorage.getItem('email')
 }
+
+/**
+ * Forgot-password flow: submits first name, last name, and email.
+ * If they match an account, the system emails a temporary password.
+ *
+ * @param details { firstName, lastName, email }
+ * @returns {Promise<axios.AxiosResponse<any>>}
+ */
+export const forgotPassword = (details) =>
+    axios.post(AUTH_REST_API_BASE_URL + '/forgot-password', details)
+
+/**
+ * Forgot-username flow: submits first name, last name, and email.
+ * If they match an account, the system emails the username.
+ *
+ * @param details { firstName, lastName, email }
+ * @returns {Promise<axios.AxiosResponse<any>>}
+ */
+export const forgotUsername = (details) =>
+    axios.post(AUTH_REST_API_BASE_URL + '/forgot-username', details)

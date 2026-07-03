@@ -5,6 +5,7 @@ import com.summerproject2026.DentalWave.dto.EmployeeDto;
 import com.summerproject2026.DentalWave.entity.Availability;
 import com.summerproject2026.DentalWave.entity.Employee;
 import com.summerproject2026.DentalWave.entity.Office;
+import com.summerproject2026.DentalWave.entity.ScheduleTeam;
 import com.summerproject2026.DentalWave.entity.User;
 import com.summerproject2026.DentalWave.enums.WorkStatus;
 import com.summerproject2026.DentalWave.exception.ResourceNotFoundException;
@@ -13,6 +14,7 @@ import com.summerproject2026.DentalWave.mapper.EmployeeMapper;
 import com.summerproject2026.DentalWave.repository.AvailabilityRepository;
 import com.summerproject2026.DentalWave.repository.EmployeeRepository;
 import com.summerproject2026.DentalWave.repository.OfficeRepository;
+import com.summerproject2026.DentalWave.repository.ScheduleTeamRepository;
 import com.summerproject2026.DentalWave.repository.UserRepository;
 import com.summerproject2026.DentalWave.service.EmployeeService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +39,9 @@ import java.util.stream.Collectors;
  *    to prevent JPA detached/transient exceptions.
  *  - Availability is managed through the Employee aggregate root
  *    (addAvailability / removeAvailability) so that orphanRemoval works correctly.
+ *  - When an employee's status changes to INACTIVE, they are automatically
+ *    removed from every team they currently belong to across all schedules,
+ *    so deactivated employees no longer appear on any upcoming schedule.
  */
 @Service
 @Transactional
@@ -46,6 +51,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     private final UserRepository         userRepository;
     private final OfficeRepository       officeRepository;
     private final AvailabilityRepository availabilityRepository;
+    private final ScheduleTeamRepository scheduleTeamRepository;
     private final EmployeeMapper         employeeMapper;
     private final AvailabilityMapper     availabilityMapper;
     private final PasswordEncoder passwordEncoder;
@@ -56,6 +62,7 @@ public class EmployeeServiceImpl implements EmployeeService {
                                UserRepository userRepository,
                                OfficeRepository officeRepository,
                                AvailabilityRepository availabilityRepository,
+                               ScheduleTeamRepository scheduleTeamRepository,
                                EmployeeMapper employeeMapper,
                                AvailabilityMapper availabilityMapper,
                                PasswordEncoder passwordEncoder,
@@ -64,6 +71,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         this.userRepository         = userRepository;
         this.officeRepository       = officeRepository;
         this.availabilityRepository = availabilityRepository;
+        this.scheduleTeamRepository = scheduleTeamRepository;
         this.employeeMapper         = employeeMapper;
         this.availabilityMapper     = availabilityMapper;
         this.passwordEncoder        = passwordEncoder;
@@ -164,10 +172,15 @@ public class EmployeeServiceImpl implements EmployeeService {
      * Updates an existing employee's fields.
      * The linked User account is intentionally NOT changed on update.
      * Office list is fully replaced with freshly resolved managed entities.
+     *
+     * <p>If the status transitions to INACTIVE, the employee is automatically
+     * removed from every team they belong to across all schedules.</p>
      */
     @Override
     public EmployeeDto updateEmployee(Long id, EmployeeDto employeeDto) {
         Employee existing = findEmployeeOrThrow(id);
+
+        WorkStatus previousStatus = existing.getStatus();
 
         User user = existing.getUser();
 
@@ -177,6 +190,12 @@ public class EmployeeServiceImpl implements EmployeeService {
             user.setUsername(employeeDto.getUsername());
             user.setEmail(employeeDto.getEmail());
             user.setPhoneNumber(employeeDto.getPhoneNumber());
+
+            // Update password only if a new one was provided
+            if (employeeDto.getPassword() != null
+                    && !employeeDto.getPassword().isBlank()) {
+                user.setPassword(passwordEncoder.encode(employeeDto.getPassword()));
+            }
 
             userRepository.save(user);
         }
@@ -199,6 +218,15 @@ public class EmployeeServiceImpl implements EmployeeService {
         existing.setOffices(resolveOffices(employeeDto));
 
         Employee savedEmployee = employeeRepository.save(existing);
+
+        // If the employee just became INACTIVE, remove them from every
+        // team they currently belong to across all schedules
+        boolean justDeactivated = previousStatus != WorkStatus.INACTIVE
+                && savedEmployee.getStatus() == WorkStatus.INACTIVE;
+
+        if (justDeactivated) {
+            removeEmployeeFromAllTeams(savedEmployee.getId());
+        }
 
         return employeeMapper.mapToEmployeeDto(savedEmployee);
     }
@@ -241,8 +269,8 @@ public class EmployeeServiceImpl implements EmployeeService {
      */
     @Override
     public AvailabilityDto updateAvailability(Long employeeId,
-                                               Long availabilityId,
-                                               AvailabilityDto availabilityDto) {
+                                              Long availabilityId,
+                                              AvailabilityDto availabilityDto) {
         // Verify employee exists
         findEmployeeOrThrow(employeeId);
 
@@ -309,5 +337,24 @@ public class EmployeeServiceImpl implements EmployeeService {
                         .orElseThrow(() -> new ResourceNotFoundException(
                                 "Office not found with id: " + officeDto.getId())))
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Removes the given employee from every ScheduleTeam they currently
+     * belong to, across all schedules and calendars. Called automatically
+     * when an employee's status transitions to INACTIVE.
+     *
+     * @param employeeId the employee to remove from all team assignments
+     */
+    private void removeEmployeeFromAllTeams(Long employeeId) {
+        List<ScheduleTeam> allTeams = scheduleTeamRepository.findAll();
+
+        for (ScheduleTeam team : allTeams) {
+            boolean removed = team.getEmployees()
+                    .removeIf(e -> e.getId().equals(employeeId));
+            if (removed) {
+                scheduleTeamRepository.save(team);
+            }
+        }
     }
 }

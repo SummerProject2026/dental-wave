@@ -65,6 +65,8 @@ public class SpringSecurityConfig {
                     // Public authentication endpoints
                     authorize.requestMatchers("/api/auth/login").permitAll();
                     authorize.requestMatchers("/api/auth/register").permitAll();
+                    authorize.requestMatchers("/api/auth/forgot-password").permitAll();
+                    authorize.requestMatchers("/api/auth/forgot-username").permitAll();
 
                     // Allow browser preflight OPTIONS requests
                     authorize.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll();

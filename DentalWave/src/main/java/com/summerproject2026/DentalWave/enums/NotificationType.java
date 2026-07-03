@@ -44,6 +44,22 @@ public enum NotificationType {
     EMPLOYEE_PROMOTED,
 
 
+    // CALENDAR TAB NOTIFICATIONS (UC12)
+    // These appear as a badge on the Calendar tab for employees
+
+    /**
+     * Sent to an employee when a calendar covering them is published
+     * for the first time — i.e. a brand-new schedule is available.
+     */
+    NEW_SCHEDULE,
+
+    /**
+     * Sent to an employee when a post-publish edit directly affects
+     * their assignment (added to, removed from, or reassigned on a day).
+     */
+    SCHEDULE_UPDATE,
+
+
     // GENERAL NOTIFICATIONS
 
     /** Sent to manager when an approved time-off affects the schedule */

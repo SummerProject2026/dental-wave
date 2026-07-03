@@ -1,31 +1,110 @@
 import '../App.css'
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
 import ManagerHeader from '../components/ManagerHeader'
+import { getAllTimeOffRequests } from '../services/TimeOffRequestService'
+import { removeEmployeeFromScheduleOnDates } from '../services/CalendarService'
+import { getAllCalendars } from '../services/CalendarService'
 
 function ManagerRequestsPage() {
 
-    const navigate = useNavigate()
     const [requests, setRequests] = useState([])
+    const [calendars, setCalendars] = useState([])
     const [searchTerm, setSearchTerm] = useState('')
-    const [filterBy, setFilterBy] = useState('all')
+    const [filterBy, setFilterBy] = useState('approved')
+    const [error, setError] = useState('')
+    const [loading, setLoading] = useState(false)
+    const [successId, setSuccessId] = useState(null)
 
-    // TODO: replace with API call
-    // useEffect(() => {
-    //     getAllApprovedRequests().then(r => setRequests(r.data))
-    // }, [])
+    useEffect(() => {
+        loadRequests()
+        loadCalendars()
+    }, [])
+
+    function loadRequests() {
+        getAllTimeOffRequests()
+            .then((response) => setRequests(response.data || []))
+            .catch((err) => console.error('Failed to load requests', err))
+    }
+
+    function loadCalendars() {
+        getAllCalendars()
+            .then((response) => setCalendars(response.data || []))
+            .catch((err) => console.error('Failed to load calendars', err))
+    }
+
+    function getEmployeeName(req) {
+        return `${req.employeeFirstName || ''} ${req.employeeLastName || ''}`.trim()
+            || req.employeeName
+            || 'Unknown'
+    }
 
     const filteredRequests = requests.filter((req) => {
-        const name = `${req.firstName || ''} ${req.lastName || ''}`.toLowerCase()
+        const name = getEmployeeName(req).toLowerCase()
         const matchesSearch = name.includes(searchTerm.toLowerCase())
         const matchesFilter =
             filterBy === 'all' ||
-            (filterBy === 'approved' && req.status?.toLowerCase() === 'approved') ||
-            (filterBy === 'pending' && req.status?.toLowerCase() === 'pending') ||
-            (filterBy === 'denied' && req.status?.toLowerCase() === 'denied') ||
+            (filterBy === 'approved' && req.status?.toUpperCase() === 'APPROVED') ||
+            (filterBy === 'pending' && req.status?.toUpperCase() === 'PENDING') ||
+            (filterBy === 'denied' && req.status?.toUpperCase() === 'DENIED') ||
             (filterBy === 'emergency' && req.emergency)
         return matchesSearch && matchesFilter
     })
+
+    /**
+     * Finds the office id for the employee based on their calendar assignments.
+     * Falls back to the first calendar's office if no specific match found.
+     */
+    function findOfficeIdForEmployee(employeeId) {
+        for (const calendar of calendars) {
+            if (!calendar.schedules) continue
+            for (const schedule of calendar.schedules) {
+                if (!schedule.teams) continue
+                const teamValues = Object.values(schedule.teams)
+                for (const teamEmployees of teamValues) {
+                    if (teamEmployees.some((e) => e.id === employeeId)) {
+                        return calendar.officeId
+                    }
+                }
+            }
+        }
+        return null
+    }
+
+    async function handleRemoveFromSchedule(req) {
+        setError('')
+        setSuccessId(null)
+        setLoading(true)
+
+        try {
+            const officeId = findOfficeIdForEmployee(req.employeeId)
+
+            if (!officeId) {
+                setError(`No scheduled shifts found for ${getEmployeeName(req)} during this period.`)
+                setLoading(false)
+                return
+            }
+
+            await removeEmployeeFromScheduleOnDates(
+                officeId,
+                req.employeeId,
+                req.startDate,
+                req.endDate
+            )
+
+            await loadCalendars()
+            setSuccessId(req.id)
+        } catch (err) {
+            console.error('Failed to remove from schedule', err)
+            setError('Failed to remove employee from schedule. Please try again.')
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    function formatDate(dateStr) {
+        if (!dateStr) return ''
+        return new Date(dateStr).toLocaleDateString()
+    }
 
     return (
         <div className="hr-page">
@@ -48,7 +127,7 @@ function ManagerRequestsPage() {
                         value={filterBy}
                         onChange={(e) => setFilterBy(e.target.value)}
                     >
-                        <option value="all">Status</option>
+                        <option value="all">All</option>
                         <option value="approved">Approved</option>
                         <option value="pending">Pending</option>
                         <option value="denied">Denied</option>
@@ -56,15 +135,17 @@ function ManagerRequestsPage() {
                     </select>
                 </div>
 
+                {error && <p className="error-message">{error}</p>}
+
                 <section className="hr-requests-table-section">
                     <table className="employee-table">
                         <thead>
                         <tr>
                             <th>Employee</th>
-                            <th>Role</th>
+                            <th>Dates</th>
                             <th>Status</th>
                             <th>Emergency</th>
-                            <th>Date</th>
+                            <th>Submitted</th>
                             <th>Action</th>
                         </tr>
                         </thead>
@@ -72,18 +153,31 @@ function ManagerRequestsPage() {
                         {filteredRequests.length > 0 ? (
                             filteredRequests.map((req) => (
                                 <tr key={req.id} className="request-row">
-                                    <td>{req.firstName} {req.lastName}</td>
-                                    <td>{req.role}</td>
+                                    <td>{getEmployeeName(req)}</td>
+                                    <td>{req.startDate} – {req.endDate}</td>
                                     <td>{req.status}</td>
                                     <td>{req.emergency ? 'YES' : 'NO'}</td>
-                                    <td>{req.startDate}</td>
+                                    <td>{formatDate(req.submittedAt)}</td>
                                     <td>
-                                        <button
-                                            className="edit-schedule-btn"
-                                            onClick={() => navigate(`/manager/requests/${req.id}/edit`)}
-                                        >
-                                            Edit Schedule
-                                        </button>
+                                        {req.status?.toUpperCase() === 'APPROVED' ? (
+                                            successId === req.id ? (
+                                                <span style={{ color: 'green', fontWeight: 600 }}>
+                                                    ✓ Removed
+                                                </span>
+                                            ) : (
+                                                <button
+                                                    className="deactivate-employee-btn"
+                                                    onClick={() => handleRemoveFromSchedule(req)}
+                                                    disabled={loading}
+                                                >
+                                                    Remove from Schedule
+                                                </button>
+                                            )
+                                        ) : (
+                                            <span style={{ color: '#888', fontSize: 13 }}>
+                                                —
+                                            </span>
+                                        )}
                                     </td>
                                 </tr>
                             ))

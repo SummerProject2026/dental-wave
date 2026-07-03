@@ -84,6 +84,7 @@ function EmployeeEditProfilePage() {
             username: formData.username,
             email: formData.email,
             phoneNumber: formData.phoneNumber,
+            password: formData.password === '' ? null : formData.password,
 
             status: originalEmployee.status,
             hireDate: originalEmployee.hireDate,

@@ -41,6 +41,24 @@ public interface NotificationService {
                           Long referenceId);
 
     /**
+     * Notifies a single employee that a schedule affecting them has been
+     * published or updated (UC12 — Employee Receives Schedule Update Notification).
+     *
+     * <p>The notification targets the CALENDAR tab and uses the calendar id
+     * as its referenceId so the frontend can deep-link to the relevant month.</p>
+     *
+     * @param employeeUserId the User id of the employee to notify
+     * @param type           {@code NEW_SCHEDULE} on first publish, or
+     *                       {@code SCHEDULE_UPDATE} on a post-publish edit
+     * @param month          the month label the schedule covers (e.g. "June 2025")
+     * @param calendarId     the calendar id, stored as the notification referenceId
+     */
+    void notifyEmployeeOfSchedule(Long employeeUserId,
+                                  NotificationType type,
+                                  String month,
+                                  Long calendarId);
+
+    /**
      * Returns all notifications for a specific recipient.
      *
      * @param recipientId the id of the recipient user

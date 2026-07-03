@@ -112,6 +112,30 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     /**
+     * Notifies a single employee that a schedule affecting them has been
+     * published or updated (UC12).
+     *
+     * @param employeeUserId the User id of the employee to notify
+     * @param type           NEW_SCHEDULE or SCHEDULE_UPDATE
+     * @param month          the month label the schedule covers
+     * @param calendarId     the calendar id, stored as the referenceId
+     */
+    @Override
+    @Transactional
+    public void notifyEmployeeOfSchedule(Long employeeUserId,
+                                         NotificationType type,
+                                         String month,
+                                         Long calendarId) {
+        // Build a clear, type-appropriate message
+        String message = (type == NotificationType.SCHEDULE_UPDATE)
+                ? "Your schedule for " + month + " has been updated."
+                : "Your schedule for " + month + " is now available.";
+
+        // Persist as a CALENDAR-tab notification pointing at the calendar
+        sendNotification(employeeUserId, message, type, "CALENDAR", calendarId);
+    }
+
+    /**
      * Returns all notifications for a specific recipient.
      *
      * @param recipientId the id of the recipient user

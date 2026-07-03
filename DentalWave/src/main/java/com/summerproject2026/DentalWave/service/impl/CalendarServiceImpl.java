@@ -11,12 +11,15 @@ import com.summerproject2026.DentalWave.entity.Office;
 import com.summerproject2026.DentalWave.entity.Schedule;
 import com.summerproject2026.DentalWave.entity.ScheduleTeam;
 import com.summerproject2026.DentalWave.entity.User;
+import com.summerproject2026.DentalWave.enums.NotificationType;
 import com.summerproject2026.DentalWave.repository.CalendarRepository;
 import com.summerproject2026.DentalWave.repository.EmployeeRepository;
 import com.summerproject2026.DentalWave.repository.OfficeRepository;
 import com.summerproject2026.DentalWave.repository.ScheduleRepository;
+import com.summerproject2026.DentalWave.repository.ScheduleTeamRepository;
 import com.summerproject2026.DentalWave.repository.UserRepository;
 import com.summerproject2026.DentalWave.service.CalendarService;
+import com.summerproject2026.DentalWave.service.NotificationService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -26,14 +29,18 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
  * Implementation of CalendarService.
  * Handles all calendar business logic including creation, updates,
- * publish/unpublish lifecycle, nested schedule management, and
- * auto-generation of draft calendars with role-based team assignment.
+ * publish/unpublish lifecycle, nested schedule management,
+ * auto-generation of draft calendars with role-based team assignment,
+ * bulk scheduling/unscheduling, and UC12 employee schedule notifications.
  */
 @Service
 @Transactional
@@ -41,38 +48,39 @@ public class CalendarServiceImpl implements CalendarService {
 
     private final CalendarRepository calendarRepository;
     private final ScheduleRepository scheduleRepository;
+    private final ScheduleTeamRepository scheduleTeamRepository;
     private final UserRepository userRepository;
     private final OfficeRepository officeRepository;
     private final EmployeeRepository employeeRepository;
     private final CalendarMapper calendarMapper;
     private final ScheduleMapper scheduleMapper;
+    private final NotificationService notificationService;
 
     @Autowired
     public CalendarServiceImpl(CalendarRepository calendarRepository,
                                ScheduleRepository scheduleRepository,
+                               ScheduleTeamRepository scheduleTeamRepository,
                                UserRepository userRepository,
                                OfficeRepository officeRepository,
                                EmployeeRepository employeeRepository,
                                CalendarMapper calendarMapper,
-                               ScheduleMapper scheduleMapper) {
+                               ScheduleMapper scheduleMapper,
+                               NotificationService notificationService) {
         this.calendarRepository = calendarRepository;
         this.scheduleRepository = scheduleRepository;
+        this.scheduleTeamRepository = scheduleTeamRepository;
         this.userRepository = userRepository;
         this.officeRepository = officeRepository;
         this.employeeRepository = employeeRepository;
         this.calendarMapper = calendarMapper;
         this.scheduleMapper = scheduleMapper;
+        this.notificationService = notificationService;
     }
 
     // -------------------------------------------------------------------------
     // Create
     // -------------------------------------------------------------------------
 
-    /**
-     * Creates and persists a new calendar.
-     * Resolves the createdBy User and office from the database using
-     * the DTO's createdById and officeId.
-     */
     @Override
     public CalendarDto createCalendar(CalendarDto calendarDto) {
         Calendar calendar = calendarMapper.mapToCalendar(calendarDto);
@@ -178,11 +186,20 @@ public class CalendarServiceImpl implements CalendarService {
     // Publish / Unpublish lifecycle
     // -------------------------------------------------------------------------
 
+    /**
+     * Publishes a calendar and sends NEW_SCHEDULE notifications to every
+     * employee assigned to any team in the calendar (UC12).
+     */
     @Override
     public CalendarDto publishCalendar(Long id) {
         Calendar calendar = findCalendarOrThrow(id);
         calendar.setPublished(true);
-        return calendarMapper.mapToCalendarDto(calendarRepository.save(calendar));
+        Calendar saved = calendarRepository.save(calendar);
+
+        // UC12 — notify every assigned employee that their schedule is available
+        notifyAssignedEmployees(saved, NotificationType.NEW_SCHEDULE);
+
+        return calendarMapper.mapToCalendarDto(saved);
     }
 
     @Override
@@ -199,12 +216,9 @@ public class CalendarServiceImpl implements CalendarService {
     @Override
     public ScheduleDto addSchedule(Long calendarId, ScheduleDto scheduleDto) {
         Calendar calendar = findCalendarOrThrow(calendarId);
-
         Schedule schedule = scheduleMapper.mapToSchedule(scheduleDto);
         calendar.addSchedule(schedule);
-
         calendarRepository.save(calendar);
-
         return scheduleMapper.mapToScheduleDto(schedule);
     }
 
@@ -228,27 +242,27 @@ public class CalendarServiceImpl implements CalendarService {
     // Auto-generation with role-based team assignment
     // -------------------------------------------------------------------------
 
-    /**
-     * {@inheritDoc}
-     *
-     * <p>Builds a draft calendar covering every Monday-Friday in the
-     * requested date range. For each day, employees at the given office
-     * are grouped by position: Doctors are paired 1:1 with TCs to form
-     * teams, and any remaining Assistants are distributed as evenly as
-     * possible across the teams created that day.</p>
-     */
     @Override
     public CalendarDto generateCalendar(CalendarDto calendarDto) {
-        // Resolve the office and creator
         Office office = officeRepository.findById(calendarDto.getOfficeId())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Office not found with id: " + calendarDto.getOfficeId()));
+
+        // Prevent duplicate calendars for the same office and month
+        boolean alreadyExists = calendarRepository.findByMonth(calendarDto.getMonth()).stream()
+                .anyMatch(cal -> cal.getOffice() != null
+                        && cal.getOffice().getId().equals(office.getId()));
+
+        if (alreadyExists) {
+            throw new IllegalStateException(
+                    "A calendar already exists for " + office.getName()
+                            + " in " + calendarDto.getMonth() + ".");
+        }
 
         User creator = userRepository.findById(calendarDto.getCreatedById())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "User not found with id: " + calendarDto.getCreatedById()));
 
-        // Create the draft calendar shell
         Calendar calendar = new Calendar();
         calendar.setMonth(calendarDto.getMonth());
         calendar.setStartCalendarDate(calendarDto.getStartCalendarDate());
@@ -257,7 +271,6 @@ public class CalendarServiceImpl implements CalendarService {
         calendar.setCreatedBy(creator);
         calendar.setOffice(office);
 
-        // Fetch this office's employees grouped by role
         List<Employee> doctors = employeeRepository
                 .findByOfficeIdAndPosition(office.getId(), "Doctor");
         List<Employee> tcs = employeeRepository
@@ -265,18 +278,15 @@ public class CalendarServiceImpl implements CalendarService {
         List<Employee> assistants = employeeRepository
                 .findByOfficeIdAndPosition(office.getId(), "Assistant");
 
-        // Build one schedule per weekday (Monday-Friday) in the date range
         LocalDate current = calendarDto.getStartCalendarDate();
         LocalDate end = calendarDto.getEndCalendarDate();
 
         while (!current.isAfter(end)) {
             DayOfWeek dayOfWeek = current.getDayOfWeek();
-
             if (dayOfWeek != DayOfWeek.SATURDAY && dayOfWeek != DayOfWeek.SUNDAY) {
                 Schedule schedule = buildScheduleForDay(current, doctors, tcs, assistants);
                 calendar.addSchedule(schedule);
             }
-
             current = current.plusDays(1);
         }
 
@@ -284,18 +294,6 @@ public class CalendarServiceImpl implements CalendarService {
         return calendarMapper.mapToCalendarDto(saved);
     }
 
-    /**
-     * Builds a single day's schedule with teams assigned based on role.
-     * Pairs each Doctor 1:1 with a TC to form a team, then distributes
-     * Assistants as evenly as possible across the teams created.
-     *
-     * @param date       the date this schedule covers
-     * @param doctors    all Doctors available at this office
-     * @param tcs        all TCs available at this office
-     * @param assistants all Assistants available at this office
-     * @return the built Schedule entity (not yet persisted independently;
-     *         it is added to the calendar via addSchedule)
-     */
     private Schedule buildScheduleForDay(LocalDate date,
                                          List<Employee> doctors,
                                          List<Employee> tcs,
@@ -306,7 +304,6 @@ public class CalendarServiceImpl implements CalendarService {
         schedule.setEndTime(LocalTime.of(17, 0));
         schedule.setPublished(false);
 
-        // Determine how many teams we can form: one per Doctor/TC pair
         int teamCount = Math.min(doctors.size(), tcs.size());
 
         List<ScheduleTeam> teams = new ArrayList<>();
@@ -323,7 +320,6 @@ public class CalendarServiceImpl implements CalendarService {
             teams.add(team);
         }
 
-        // Distribute assistants as evenly as possible across the teams created
         if (!teams.isEmpty()) {
             for (int i = 0; i < assistants.size(); i++) {
                 ScheduleTeam team = teams.get(i % teams.size());
@@ -333,6 +329,176 @@ public class CalendarServiceImpl implements CalendarService {
 
         schedule.setTeams(teams);
         return schedule;
+    }
+
+    // -------------------------------------------------------------------------
+    // Bulk scheduling / unscheduling
+    // -------------------------------------------------------------------------
+
+    @Override
+    public CalendarDto scheduleEmployeeAcrossCalendar(Long calendarId, Long employeeId) {
+        Calendar calendar = findCalendarOrThrow(calendarId);
+
+        Employee employee = employeeRepository.findById(employeeId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Employee not found with id: " + employeeId));
+
+        for (Schedule schedule : calendar.getSchedules()) {
+            List<ScheduleTeam> teams = schedule.getTeams();
+            if (teams == null || teams.isEmpty()) continue;
+
+            boolean alreadyAssigned = teams.stream()
+                    .anyMatch(team -> team.getEmployees().stream()
+                            .anyMatch(e -> e.getId().equals(employeeId)));
+            if (alreadyAssigned) continue;
+
+            ScheduleTeam smallestTeam = teams.stream()
+                    .min(Comparator.comparingInt(team -> team.getEmployees().size()))
+                    .orElse(null);
+
+            if (smallestTeam != null) {
+                smallestTeam.getEmployees().add(employee);
+            }
+        }
+
+        Calendar saved = calendarRepository.save(calendar);
+
+        // If calendar is already published, notify the newly scheduled employee
+        if (Boolean.TRUE.equals(saved.getPublished()) && employee.getUser() != null) {
+            try {
+                notificationService.notifyEmployeeOfSchedule(
+                        employee.getUser().getId(),
+                        NotificationType.SCHEDULE_UPDATE,
+                        saved.getMonth(),
+                        saved.getId());
+            } catch (Exception e) {
+                System.err.println("Failed to notify employee " + employeeId
+                        + " of schedule update: " + e.getMessage());
+            }
+        }
+
+        return calendarMapper.mapToCalendarDto(saved);
+    }
+
+    @Override
+    public CalendarDto removeEmployeeFromCalendar(Long calendarId, Long employeeId) {
+        Calendar calendar = findCalendarOrThrow(calendarId);
+
+        for (Schedule schedule : calendar.getSchedules()) {
+            if (schedule.getTeams() == null) continue;
+            for (ScheduleTeam team : schedule.getTeams()) {
+                team.getEmployees().removeIf(e -> e.getId().equals(employeeId));
+            }
+        }
+
+        Calendar saved = calendarRepository.save(calendar);
+
+        // If calendar is published, notify the removed employee
+        if (Boolean.TRUE.equals(saved.getPublished())) {
+            Employee employee = employeeRepository.findById(employeeId).orElse(null);
+            if (employee != null && employee.getUser() != null) {
+                try {
+                    notificationService.notifyEmployeeOfSchedule(
+                            employee.getUser().getId(),
+                            NotificationType.SCHEDULE_UPDATE,
+                            saved.getMonth(),
+                            saved.getId());
+                } catch (Exception e) {
+                    System.err.println("Failed to notify employee " + employeeId
+                            + " of schedule update: " + e.getMessage());
+                }
+            }
+        }
+
+        return calendarMapper.mapToCalendarDto(saved);
+    }
+
+    // -------------------------------------------------------------------------
+    // Remove employee from schedule on specific date range
+    // -------------------------------------------------------------------------
+
+    @Override
+    public void removeEmployeeFromScheduleOnDates(Long officeId, Long employeeId,
+                                                  LocalDate startDate, LocalDate endDate) {
+        List<Calendar> officeCalendars = calendarRepository.findAll().stream()
+                .filter(cal -> cal.getOffice() != null
+                        && cal.getOffice().getId().equals(officeId))
+                .collect(Collectors.toList());
+
+        for (Calendar calendar : officeCalendars) {
+            boolean modified = false;
+
+            for (Schedule schedule : calendar.getSchedules()) {
+                if (schedule.getDate() == null) continue;
+                if (schedule.getDate().isBefore(startDate)
+                        || schedule.getDate().isAfter(endDate)) continue;
+
+                if (schedule.getTeams() == null) continue;
+                for (ScheduleTeam team : schedule.getTeams()) {
+                    boolean removed = team.getEmployees()
+                            .removeIf(e -> e.getId().equals(employeeId));
+                    if (removed) modified = true;
+                }
+            }
+
+            if (modified) {
+                calendarRepository.save(calendar);
+
+                // Notify the employee if calendar is published
+                if (Boolean.TRUE.equals(calendar.getPublished())) {
+                    Employee employee = employeeRepository.findById(employeeId).orElse(null);
+                    if (employee != null && employee.getUser() != null) {
+                        try {
+                            notificationService.notifyEmployeeOfSchedule(
+                                    employee.getUser().getId(),
+                                    NotificationType.SCHEDULE_UPDATE,
+                                    calendar.getMonth(),
+                                    calendar.getId());
+                        } catch (Exception e) {
+                            System.err.println("Failed to notify employee " + employeeId
+                                    + " of schedule update: " + e.getMessage());
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // UC12 — notify all assigned employees helper
+    // -------------------------------------------------------------------------
+
+    /**
+     * Collects every unique employee assigned to any team in any schedule
+     * of the given calendar, then sends them a schedule notification.
+     *
+     * @param calendar the calendar that was just published or updated
+     * @param type     NEW_SCHEDULE on first publish, SCHEDULE_UPDATE on edit
+     */
+    private void notifyAssignedEmployees(Calendar calendar, NotificationType type) {
+        Set<Long> notifiedUserIds = new HashSet<>();
+
+        for (Schedule schedule : calendar.getSchedules()) {
+            if (schedule.getTeams() == null) continue;
+            for (ScheduleTeam team : schedule.getTeams()) {
+                for (Employee employee : team.getEmployees()) {
+                    if (employee.getUser() == null) continue;
+                    Long userId = employee.getUser().getId();
+                    if (!notifiedUserIds.add(userId)) continue;
+
+                    try {
+                        notificationService.notifyEmployeeOfSchedule(
+                                userId,
+                                type,
+                                calendar.getMonth(),
+                                calendar.getId());
+                    } catch (Exception e) {
+                        System.err.println("Failed to notify employee user "
+                                + userId + ": " + e.getMessage());
+                    }
+                }
+            }
+        }
     }
 
     // -------------------------------------------------------------------------

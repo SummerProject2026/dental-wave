@@ -31,6 +31,13 @@ public class EmployeeDto {
     /** Pulled from User.email */
     private String email;
 
+    /**
+     * Write-only field used when the employee updates their password.
+     * Never populated when reading an employee from the backend —
+     * only consumed by updateEmployee when provided and non-blank.
+     */
+    private String password;
+
     /** Job title within the dental practice */
     private String position;
 
@@ -96,6 +103,9 @@ public class EmployeeDto {
 
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
+
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
 
     public String getPosition() { return position; }
     public void setPosition(String position) { this.position = position; }

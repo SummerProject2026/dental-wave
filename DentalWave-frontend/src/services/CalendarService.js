@@ -104,7 +104,11 @@ export const addScheduleToCalendar = (calendarId, schedule) =>
  * @returns {Promise<axios.AxiosResponse<any>>}
  */
 export const removeScheduleFromCalendar = (calendarId, scheduleId) =>
-    axios.delete(`${CALENDAR_REST_API_BASE_URL}/${calendarId}/schedules/${scheduleId}`, getAuthHeader())
+    axios.delete(
+        `${CALENDAR_REST_API_BASE_URL}/${calendarId}/schedules/${scheduleId}`,
+        getAuthHeader()
+    )
+
 /**
  * Auto-generates a draft calendar for the given office and month.
  * Creates one schedule per weekday with employees automatically
@@ -115,3 +119,47 @@ export const removeScheduleFromCalendar = (calendarId, scheduleId) =>
  */
 export const generateCalendar = (calendar) =>
     axios.post(`${CALENDAR_REST_API_BASE_URL}/generate`, calendar, getAuthHeader())
+
+/**
+ * Schedules an employee across every day in the given calendar.
+ * The employee is added to the smallest team on each day.
+ *
+ * @param calendarId the calendar to schedule the employee into
+ * @param employeeId the employee to schedule
+ * @returns {Promise<axios.AxiosResponse<any>>}
+ */
+export const scheduleEmployeeAcrossCalendar = (calendarId, employeeId) =>
+    axios.post(
+        `${CALENDAR_REST_API_BASE_URL}/${calendarId}/employees/${employeeId}/schedule-all`,
+        null,
+        getAuthHeader()
+    )
+
+/**
+ * Removes an employee from every team across every day in the calendar.
+ *
+ * @param calendarId the calendar to remove the employee from
+ * @param employeeId the employee to remove
+ * @returns {Promise<axios.AxiosResponse<any>>}
+ */
+export const removeEmployeeFromCalendar = (calendarId, employeeId) =>
+    axios.delete(
+        `${CALENDAR_REST_API_BASE_URL}/${calendarId}/employees/${employeeId}/schedule-all`,
+        getAuthHeader()
+    )
+
+/**
+ * Removes an employee from every team on schedules within a date range
+ * for the given office. Used by Manager "Approved Request" page.
+ *
+ * @param officeId the office whose calendars to search
+ * @param employeeId the employee to remove
+ * @param startDate ISO date string e.g. '2026-06-15'
+ * @param endDate ISO date string e.g. '2026-06-20'
+ * @returns {Promise<axios.AxiosResponse<any>>}
+ */
+export const removeEmployeeFromScheduleOnDates = (officeId, employeeId, startDate, endDate) =>
+    axios.delete(
+        `${CALENDAR_REST_API_BASE_URL}/office/${officeId}/employees/${employeeId}/dates?startDate=${startDate}&endDate=${endDate}`,
+        getAuthHeader()
+    )

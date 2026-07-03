@@ -21,6 +21,7 @@ import ManagerRequestsPage from './pages/ManagerRequestsPage'
 import ManagerEmployeesPage from './pages/ManagerEmployeesPage'
 import EmployeeRequestTimeOffEditPage from './pages/EmployeeRequestTimeOffEditPage'
 import HRRequestDetailPage from './pages/HRRequestDetailPage.jsx'
+import ForgotCredentialsPage from './pages/ForgotCredentialsPage'
 
 function App() {
     return (
@@ -91,6 +92,8 @@ function App() {
 
                 <Route path="/hr/requests/:id" element={<HRRequestDetailPage />} />
 
+                <Route path="/forgot-password" element={<ForgotCredentialsPage />} />
+                <Route path="/forgot-username" element={<ForgotCredentialsPage />} />
             </Routes>
         </BrowserRouter>
     )

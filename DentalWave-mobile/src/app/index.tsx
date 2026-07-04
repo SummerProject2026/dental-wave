@@ -5,9 +5,10 @@ import {
   StyleSheet, Image, KeyboardAvoidingView,
   Platform, ScrollView
 } from 'react-native'
+import { setSession } from '@/services/session'
+import { API_BASE_URL } from '@/services/api'
 
 export default function LoginScreen() {
-
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -16,13 +17,20 @@ export default function LoginScreen() {
   async function handleLogin() {
     setError('')
     try {
-      const response = await fetch('http://10.0.2.2:8080/api/auth/login', {
+      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
       })
-      const data = await response.json()
       if (!response.ok) throw new Error('Invalid credentials')
+      const data = await response.json()
+      setSession({
+        accessToken: data.accessToken,
+        userId: data.userId,
+        employeeId: data.employeeId ?? null,
+        username: data.username,
+        role: data.role,
+      })
       router.replace('/calendar')
     } catch (e) {
       setError('Invalid username or password. Please try again.')
@@ -30,56 +38,53 @@ export default function LoginScreen() {
   }
 
   return (
-      <KeyboardAvoidingView
-          style={styles.page}
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
-        <ScrollView contentContainerStyle={styles.content}>
+    <KeyboardAvoidingView
+      style={styles.page}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <ScrollView contentContainerStyle={styles.content}>
 
-          <Image
-              source={require('../../assets/images/wake-logo.png')}
-              style={styles.logo}
-              resizeMode="contain"
-          />
+        <Image
+          source={require('../../assets/images/wake-logo.png')}
+          style={styles.logo}
+          resizeMode="contain"
+        />
 
-          <Text style={styles.label}>Username:</Text>
-          <TextInput
-              style={styles.input}
-              placeholder="username"
-              placeholderTextColor="#7b7b22"
-              value={username}
-              onChangeText={setUsername}
-              autoCapitalize="none"
-          />
+        <Text style={styles.label}>Username:</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="username"
+          placeholderTextColor="#7b7b22"
+          value={username}
+          onChangeText={setUsername}
+          autoCapitalize="none"
+          autoCorrect={false}
+        />
 
-          <TouchableOpacity>
-            <Text style={styles.forgotLink}>Forgot Username?</Text>
-          </TouchableOpacity>
+        <Text style={styles.label}>Password:</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="••••••••••••"
+          placeholderTextColor="#aaa"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+        />
 
-          <Text style={styles.label}>Password:</Text>
-          <TextInput
-              style={styles.input}
-              placeholder="••••••••••••"
-              placeholderTextColor="#aaa"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-          />
+        <TouchableOpacity>
+          <Text style={styles.forgotLink}>Forgot Password?</Text>
+        </TouchableOpacity>
 
-          <TouchableOpacity>
-            <Text style={styles.forgotLink}>Forgot Password?</Text>
-          </TouchableOpacity>
+        {error ? <Text style={styles.error}>{error}</Text> : null}
 
-          {error ? <Text style={styles.error}>{error}</Text> : null}
+        <TouchableOpacity style={styles.button} onPress={handleLogin}>
+          <Text style={styles.buttonText}>Login</Text>
+        </TouchableOpacity>
 
-          <TouchableOpacity style={styles.button} onPress={handleLogin}>
-            <Text style={styles.buttonText}>Login</Text>
-          </TouchableOpacity>
+        <Text style={styles.footer}>© All Rights Reserved</Text>
 
-          <Text style={styles.footer}>© All Rights Reserved</Text>
-
-        </ScrollView>
-      </KeyboardAvoidingView>
+      </ScrollView>
+    </KeyboardAvoidingView>
   )
 }
 

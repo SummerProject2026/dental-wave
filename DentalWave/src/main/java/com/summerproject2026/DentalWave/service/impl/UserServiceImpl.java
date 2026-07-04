@@ -263,6 +263,50 @@ public class UserServiceImpl implements UserService {
         return userMapper.toDto(updatedUser);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public UserDto getCurrentUser(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "User not found with username: " + username));
+
+        return userMapper.toDto(user);
+    }
+
+    @Override
+    @Transactional
+    public UserDto updateCurrentUser(String username, UserDto userDto) {
+        User existingUser = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "User not found with username: " + username));
+
+        if (userDto.getEmail() != null && !userDto.getEmail().equalsIgnoreCase(existingUser.getEmail())) {
+            userRepository.findByEmail(userDto.getEmail())
+                    .filter(user -> !user.getId().equals(existingUser.getId()))
+                    .ifPresent(user -> {
+                        throw new DuplicateResourceException(
+                                "A user with email '" + userDto.getEmail() + "' already exists.");
+                    });
+            existingUser.setEmail(userDto.getEmail());
+        }
+
+        if (userDto.getUsername() != null && !userDto.getUsername().equalsIgnoreCase(existingUser.getUsername())) {
+            userRepository.findByUsername(userDto.getUsername())
+                    .filter(user -> !user.getId().equals(existingUser.getId()))
+                    .ifPresent(user -> {
+                        throw new DuplicateResourceException(
+                                "Username '" + userDto.getUsername() + "' is already taken.");
+                    });
+            existingUser.setUsername(userDto.getUsername());
+        }
+
+        existingUser.setFirstName(userDto.getFirstName());
+        existingUser.setLastName(userDto.getLastName());
+        existingUser.setPhoneNumber(userDto.getPhoneNumber());
+
+        return userMapper.toDto(userRepository.save(existingUser));
+    }
+
 
     // ================================================================
     //  PUBLIC API — DELETE

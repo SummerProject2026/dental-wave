@@ -48,6 +48,23 @@ public interface UserService {
     UserDto updateUser(Long id, UserDto userDto);
 
     /**
+     * Retrieves the authenticated user's profile.
+     *
+     * @param username authenticated username
+     * @return the matching user profile
+     */
+    UserDto getCurrentUser(String username);
+
+    /**
+     * Updates editable profile fields for the authenticated user.
+     *
+     * @param username authenticated username
+     * @param userDto updated profile fields
+     * @return the updated user profile
+     */
+    UserDto updateCurrentUser(String username, UserDto userDto);
+
+    /**
      * Deletes a user from the system.
      *
      * @param id the id of the user to delete

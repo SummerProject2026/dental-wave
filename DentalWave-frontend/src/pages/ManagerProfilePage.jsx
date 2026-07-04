@@ -1,31 +1,105 @@
 import '../App.css'
 import logo from '../pictures/wake-logo.png'
 import ManagerHeader from '../components/ManagerHeader'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { getCurrentUser, updateCurrentUser } from '../services/UserService'
 
 function ManagerProfilePage() {
 
     const [isEditing, setIsEditing] = useState(false)
+    const [error, setError] = useState('')
+    const [success, setSuccess] = useState('')
+    const [loading, setLoading] = useState(false)
     const [form, setForm] = useState({
-        name: '',
+        id: '',
+        firstName: '',
+        lastName: '',
         username: '',
         email: '',
-        phone: '',
-        password: '',
-        repeatPassword: '',
+        phoneNumber: '',
         status: '',
         hireDate: '',
-        pto: ''
+        pto: '',
+        roles: []
     })
+
+    useEffect(() => {
+        loadProfile()
+    }, [])
+
+    function safeValue(value) {
+        return value ?? ''
+    }
+
+    function mapUserToForm(user) {
+        return {
+            id: safeValue(user.id),
+            firstName: safeValue(user.firstName),
+            lastName: safeValue(user.lastName),
+            username: safeValue(user.username),
+            email: safeValue(user.email),
+            phoneNumber: safeValue(user.phoneNumber),
+            status: user.enabled === null || user.enabled === undefined
+                ? ''
+                : user.enabled ? 'Active' : 'Disabled',
+            hireDate: '',
+            pto: '',
+            roles: user.roles || []
+        }
+    }
+
+    function loadProfile() {
+        setLoading(true)
+        setError('')
+
+        getCurrentUser()
+            .then((response) => {
+                setForm(mapUserToForm(response.data || {}))
+            })
+            .catch((err) => {
+                console.error('Unable to load manager profile', err)
+                setError('Unable to load profile information.')
+            })
+            .finally(() => setLoading(false))
+    }
 
     function handleChange(e) {
         setForm({ ...form, [e.target.name]: e.target.value })
     }
 
-    function handleSave() {
+    function handleCancel() {
         setIsEditing(false)
-        // TODO: call API to save changes
+        setSuccess('')
+        loadProfile()
     }
+
+    function handleSave() {
+        setLoading(true)
+        setError('')
+        setSuccess('')
+
+        updateCurrentUser({
+            id: form.id || null,
+            firstName: form.firstName,
+            lastName: form.lastName,
+            username: form.username,
+            email: form.email,
+            phoneNumber: form.phoneNumber,
+            roles: form.roles
+        })
+            .then((response) => {
+                setForm(mapUserToForm(response.data || {}))
+                setIsEditing(false)
+                setSuccess('Profile updated.')
+            })
+            .catch((err) => {
+                console.error('Unable to update manager profile', err)
+                setError('Unable to update profile information.')
+            })
+            .finally(() => setLoading(false))
+    }
+
+    const fullName = `${form.firstName} ${form.lastName}`.trim()
 
     return (
         <div className="profile-page">
@@ -47,19 +121,31 @@ function ManagerProfilePage() {
                     <div className="profile-top">
                         <div className="tooth-icon">🦷</div>
                         <div>
-                            <h3>{form.name || 'Your Name'}</h3>
+                            <h3>{fullName || 'Your Name'}</h3>
                             <p>{form.username || 'username'}</p>
                         </div>
                     </div>
+
+                    {error && <p className="error-message">{error}</p>}
+                    {success && <p className="success-message">{success}</p>}
 
                     <div className="profile-form">
 
                         <div className="profile-column">
                             <div className="profile-row">
-                                <span>Name:</span>
+                                <span>First Name:</span>
                                 <input
-                                    name="name"
-                                    value={form.name}
+                                    name="firstName"
+                                    value={form.firstName}
+                                    onChange={handleChange}
+                                    readOnly={!isEditing}
+                                />
+                            </div>
+                            <div className="profile-row">
+                                <span>Last Name:</span>
+                                <input
+                                    name="lastName"
+                                    value={form.lastName}
                                     onChange={handleChange}
                                     readOnly={!isEditing}
                                 />
@@ -70,7 +156,7 @@ function ManagerProfilePage() {
                                     name="username"
                                     value={form.username}
                                     onChange={handleChange}
-                                    readOnly={!isEditing}
+                                    readOnly
                                 />
                             </div>
                             <div className="profile-row">
@@ -85,8 +171,8 @@ function ManagerProfilePage() {
                             <div className="profile-row">
                                 <span>Phone number:</span>
                                 <input
-                                    name="phone"
-                                    value={form.phone}
+                                    name="phoneNumber"
+                                    value={form.phoneNumber}
                                     onChange={handleChange}
                                     readOnly={!isEditing}
                                 />
@@ -96,22 +182,11 @@ function ManagerProfilePage() {
                                 <input
                                     name="password"
                                     type="password"
-                                    value={form.password}
-                                    onChange={handleChange}
-                                    readOnly={!isEditing}
+                                    value=""
+                                    placeholder="Password is not shown"
+                                    readOnly
                                 />
                             </div>
-                            {isEditing && (
-                                <div className="profile-row">
-                                    <span>Repeat Password:</span>
-                                    <input
-                                        name="repeatPassword"
-                                        type="password"
-                                        value={form.repeatPassword}
-                                        onChange={handleChange}
-                                    />
-                                </div>
-                            )}
                         </div>
 
                         <div className="profile-column">
@@ -120,8 +195,7 @@ function ManagerProfilePage() {
                                 <input
                                     name="status"
                                     value={form.status}
-                                    onChange={handleChange}
-                                    readOnly={!isEditing}
+                                    readOnly
                                 />
                             </div>
                             <div className="profile-row">
@@ -129,8 +203,7 @@ function ManagerProfilePage() {
                                 <input
                                     name="hireDate"
                                     value={form.hireDate}
-                                    onChange={handleChange}
-                                    readOnly={!isEditing}
+                                    readOnly
                                 />
                             </div>
                             <div className="profile-row">
@@ -138,22 +211,36 @@ function ManagerProfilePage() {
                                 <input
                                     name="pto"
                                     value={form.pto}
-                                    onChange={handleChange}
-                                    readOnly={!isEditing}
+                                    readOnly
                                 />
                             </div>
 
                             {isEditing ? (
-                                <button
-                                    className="save-profile-button"
-                                    onClick={handleSave}
-                                >
-                                    Save
-                                </button>
+                                <div className="profile-action-row">
+                                    <button
+                                        className="save-profile-button"
+                                        onClick={handleSave}
+                                        disabled={loading}
+                                    >
+                                        Save
+                                    </button>
+                                    <button
+                                        className="cancel-profile-button"
+                                        onClick={handleCancel}
+                                        disabled={loading}
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
                             ) : (
                                 <button
                                     className="edit-profile-button"
-                                    onClick={() => setIsEditing(true)}
+                                    onClick={() => {
+                                        setSuccess('')
+                                        setError('')
+                                        setIsEditing(true)
+                                    }}
+                                    disabled={loading}
                                 >
                                     ✏️
                                 </button>

@@ -976,6 +976,40 @@ body {
   background-color: #33244d;
 }
 
+.profile-action-row {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 40px;
+}
+
+.profile-action-row .save-profile-button {
+  margin-top: 0;
+}
+
+.cancel-profile-button {
+  background-color: #e5e5e5;
+  color: #1a1a2e;
+  border: none;
+  border-radius: 8px;
+  width: 130px;
+  height: 54px;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.cancel-profile-button:hover {
+  background-color: #d6d6d6;
+}
+
+.save-profile-button:disabled,
+.edit-profile-button:disabled,
+.cancel-profile-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .profile-row input[readonly] {
   background-color: #eeeeee;
   color: #555;

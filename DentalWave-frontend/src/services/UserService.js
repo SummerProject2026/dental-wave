@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { getAuthHeader } from './AuthService'
 
 /**
  * Base URL for User endpoints.
@@ -24,6 +25,14 @@ export const getUserById = (id) =>
     axios.get(`${USER_REST_API_BASE_URL}/${id}`)
 
 /**
+ * Retrieves the currently logged-in user's profile.
+ *
+ * @returns UserDto
+ */
+export const getCurrentUser = () =>
+    axios.get(`${USER_REST_API_BASE_URL}/me`, getAuthHeader())
+
+/**
  * Retrieves all users.
  *
  * @returns List<UserDto>
@@ -40,6 +49,15 @@ export const getAllUsers = () =>
  */
 export const updateUser = (id, user) =>
     axios.put(`${USER_REST_API_BASE_URL}/${id}`, user)
+
+/**
+ * Updates the currently logged-in user's editable profile fields.
+ *
+ * @param user Updated UserDto fields
+ * @returns Updated UserDto
+ */
+export const updateCurrentUser = (user) =>
+    axios.put(`${USER_REST_API_BASE_URL}/me`, user, getAuthHeader())
 
 /**
  * Deletes a user.

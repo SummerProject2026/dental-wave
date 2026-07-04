@@ -7,7 +7,7 @@ import {
     publishCalendar,
     unpublishCalendar
 } from '../services/CalendarService'
-import { assignEmployeeToTeam, removeEmployeeFromTeam } from '../services/ScheduleService'
+import { assignEmployeeToTeam, removeEmployeeFromTeam, renameTeam } from '../services/ScheduleService'
 import { getEmployeesByOffice } from '../services/EmployeeService'
 import { getAllTimeOffRequests } from '../services/TimeOffRequestService'
 import { getLoggedInUserId } from '../services/AuthService'
@@ -29,6 +29,8 @@ function ManagerCalendarPage() {
     const [selectedDay, setSelectedDay] = useState(null)
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
+    const [editingTeamId, setEditingTeamId] = useState(null)
+    const [editingTeamName, setEditingTeamName] = useState('')
 
     const monthName = currentDate.toLocaleString('default', { month: 'long' })
     const year = currentDate.getFullYear()
@@ -185,6 +187,28 @@ function ManagerCalendarPage() {
         }
     }
 
+    function isSunday(day) {
+        if (!day) return false
+        return new Date(currentDate.getFullYear(), currentDate.getMonth(), day).getDay() === 0
+    }
+
+    async function handleRenameTeam(teamId) {
+        if (!editingTeamName.trim()) return
+        setLoading(true)
+        setError('')
+        try {
+            await renameTeam(teamId, editingTeamName.trim())
+            await loadCalendarsAndReturn()
+        } catch (err) {
+            console.error('Failed to rename team', err)
+            setError('Failed to rename team.')
+        } finally {
+            setLoading(false)
+            setEditingTeamId(null)
+            setEditingTeamName('')
+        }
+    }
+
     async function handleAddEmployeeToTeam(scheduleId, teamId, employeeId) {
         if (!employeeId) return
 
@@ -302,9 +326,10 @@ function ManagerCalendarPage() {
                                         'mini-cal-day',
                                         !day ? 'empty' : '',
                                         scheduleByDay[day] ? 'calendar-day-has-schedule' : '',
-                                        selectedDay === day ? 'mini-cal-day-selected' : ''
+                                        selectedDay === day ? 'mini-cal-day-selected' : '',
+                                        isSunday(day) ? 'cal-day-disabled' : ''
                                     ].join(' ')}
-                                    onClick={() => day && scheduleByDay[day] && setSelectedDay(day)}
+                                    onClick={() => day && !isSunday(day) && scheduleByDay[day] && setSelectedDay(day)}
                                 >
                                     {day || ''}
                                 </div>
@@ -322,6 +347,8 @@ function ManagerCalendarPage() {
                         {selectedSchedule.teams && Object.keys(selectedSchedule.teams).length > 0 ? (
                             Object.entries(selectedSchedule.teams).map(([teamId, employees]) => {
                                 const assignedIds = employees.map((e) => e.id)
+                                const teamIdNum = Number(teamId)
+                                const teamDisplayName = selectedSchedule.teamNames?.[teamIdNum] || `Team ${teamId}`
 
                                 // Filter out: already assigned + inactive + on approved time-off this day
                                 const availableToAdd = officeEmployees.filter(
@@ -332,7 +359,27 @@ function ManagerCalendarPage() {
 
                                 return (
                                     <div key={teamId} className="day-team-block">
-                                        <strong>Team {teamId}</strong>
+                                        {editingTeamId === teamIdNum ? (
+                                            <div className="team-rename-row">
+                                                <input
+                                                    className="team-rename-input"
+                                                    value={editingTeamName}
+                                                    onChange={(e) => setEditingTeamName(e.target.value)}
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === 'Enter') handleRenameTeam(teamIdNum)
+                                                        if (e.key === 'Escape') { setEditingTeamId(null); setEditingTeamName('') }
+                                                    }}
+                                                    autoFocus
+                                                />
+                                                <button className="team-rename-save-btn" onClick={() => handleRenameTeam(teamIdNum)} disabled={loading}>Save</button>
+                                                <button className="team-rename-cancel-btn" onClick={() => { setEditingTeamId(null); setEditingTeamName('') }}>✕</button>
+                                            </div>
+                                        ) : (
+                                            <div className="team-name-row">
+                                                <strong>{teamDisplayName}</strong>
+                                                <button className="team-rename-btn" onClick={() => { setEditingTeamId(teamIdNum); setEditingTeamName(teamDisplayName) }} title="Rename team">✎</button>
+                                            </div>
+                                        )}
                                         <ul>
                                             {employees.map((emp) => (
                                                 <li key={emp.id}>

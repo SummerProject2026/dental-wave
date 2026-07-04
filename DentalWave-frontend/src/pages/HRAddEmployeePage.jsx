@@ -7,6 +7,8 @@ import { createEmployee } from '../services/EmployeeService'
 function HRAddEmployeePage() {
     const navigate = useNavigate()
 
+    const [errors, setErrors] = useState({})
+
     // Stores all form values for the new user account and employee profile
     const [employee, setEmployee] = useState({
         firstName: '',
@@ -27,11 +29,23 @@ function HRAddEmployeePage() {
     // Updates normal input/select values
     function handleChange(event) {
         const { name, value } = event.target
+        setErrors({ ...errors, [name]: '' })
+        setEmployee({ ...employee, [name]: value })
+    }
 
-        setEmployee({
-            ...employee,
-            [name]: value
-        })
+    function validate() {
+        const newErrors = {}
+
+        if (!employee.email.endsWith('@gmail.com')) {
+            newErrors.email = 'Email must end with @gmail.com'
+        }
+
+        if (employee.phoneNumber && !/^\d{10}$/.test(employee.phoneNumber)) {
+            newErrors.phoneNumber = 'Phone number must be exactly 10 digits'
+        }
+
+        setErrors(newErrors)
+        return Object.keys(newErrors).length === 0
     }
 
     // Updates selected offices from the multi-select
@@ -62,6 +76,7 @@ function HRAddEmployeePage() {
     // Builds the CreateEmployeeDto expected by the backend
     function handleSubmit(event) {
         event.preventDefault()
+        if (!validate()) return
         const employeeToCreate = {
             user: {
                 firstName: employee.firstName,
@@ -114,7 +129,7 @@ function HRAddEmployeePage() {
             <HRHeader />
 
             <main className="add-employee-content">
-                <form className="add-employee-card" onSubmit={handleSubmit}>
+                <form className="add-employee-card" onSubmit={handleSubmit} autoComplete="off">
                     <section className="form-section">
                         <h2>Employee Information</h2>
 
@@ -139,12 +154,14 @@ function HRAddEmployeePage() {
 
                         <div className="form-row">
                             <label>Phone Number</label>
-                            <input name="phoneNumber" value={employee.phoneNumber} onChange={handleChange} />
+                            <input name="phoneNumber" value={employee.phoneNumber} onChange={handleChange} autoComplete="off" />
+                            {errors.phoneNumber && <span className="field-error">{errors.phoneNumber}</span>}
                         </div>
 
                         <div className="form-row">
                             <label>Email</label>
-                            <input type="email" name="email" value={employee.email} onChange={handleChange} required />
+                            <input type="email" name="email" value={employee.email} onChange={handleChange} required autoComplete="off" />
+                            {errors.email && <span className="field-error">{errors.email}</span>}
                         </div>
 
                         <div className="form-row">
@@ -233,8 +250,8 @@ function HRAddEmployeePage() {
                             </div>
 
                             <div className="form-row">
-                                <label>Time-Off Balance</label>
-                                <input type="number" name="timeOffBalance" value={employee.timeOffBalance} onChange={handleChange} />
+                                <label>Time-Off Balance (hours)</label>
+                                <input type="number" name="timeOffBalance" value={employee.timeOffBalance} onChange={handleChange} min="0" />
                             </div>
 
                             <div className="form-row">

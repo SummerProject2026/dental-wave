@@ -94,8 +94,14 @@ function ManagerEditCalendarPage() {
         return response.data || []
     }
 
+    function isSunday(day) {
+        if (!day) return false
+        return new Date(currentDate.getFullYear(), currentDate.getMonth(), day).getDay() === 0
+    }
+
     async function handleDayClick(day) {
         if (!day) return
+        if (isSunday(day)) return
 
         setLoading(true)
         setError('')
@@ -230,7 +236,7 @@ function ManagerEditCalendarPage() {
                         {cells.map((day, i) => (
                             <div
                                 key={i}
-                                className={`calendar-day calendar-day-editable ${isToday(day) ? 'calendar-day-today' : ''} ${!day ? 'calendar-day-empty' : ''} ${scheduleByDay[day] ? 'calendar-day-has-schedule' : ''}`}
+                                className={`calendar-day calendar-day-editable ${isToday(day) ? 'calendar-day-today' : ''} ${!day ? 'calendar-day-empty' : ''} ${scheduleByDay[day] ? 'calendar-day-has-schedule' : ''} ${isSunday(day) ? 'calendar-day-sunday' : ''}`}
                                 onClick={() => handleDayClick(day)}
                             >
                                 {day || ''}

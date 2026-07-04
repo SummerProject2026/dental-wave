@@ -114,8 +114,30 @@ function EmployeeRequestTimeOffPage() {
     // -------------------------------------------------------------------
     // Calendar day click handler
     // -------------------------------------------------------------------
+    function isSunday(day) {
+        if (!day) return false
+        return new Date(calDate.getFullYear(), calDate.getMonth(), day).getDay() === 0
+    }
+
+    function isPastDate(day) {
+        if (!day) return false
+        const d = new Date(calDate.getFullYear(), calDate.getMonth(), day)
+        d.setHours(0, 0, 0, 0)
+        const t = new Date()
+        t.setHours(0, 0, 0, 0)
+        return d < t
+    }
+
     function handleDayClick(day) {
         if (!day) return
+        if (isSunday(day)) {
+            setErrorMessage('Sundays cannot be selected.')
+            return
+        }
+        if (isPastDate(day)) {
+            setErrorMessage('Cannot request time off for a past date.')
+            return
+        }
 
         const clickedDate = new Date(calDate.getFullYear(), calDate.getMonth(), day)
         const dateStr = formatDateForInput(clickedDate)
@@ -238,6 +260,30 @@ function EmployeeRequestTimeOffPage() {
             return
         }
 
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+        const startDateObj = new Date(fromDate + 'T00:00:00')
+        if (startDateObj < today) {
+            setErrorMessage('Cannot submit a request for a past date.')
+            return
+        }
+
+        if (new Date(fromDate).getDay() === 0) {
+            setErrorMessage('Sundays cannot be requested.')
+            return
+        }
+
+        if (toDate) {
+            if (toDate < fromDate) {
+                setErrorMessage('End date cannot be before start date.')
+                return
+            }
+            if (fromDate === toDate && fromTime && toTime && fromTime >= toTime) {
+                setErrorMessage('End time must be after start time.')
+                return
+            }
+        }
+
         // Final duplicate check before submitting
         const ownConflict = findOwnRequestForDate(fromDate)
         if (ownConflict) {
@@ -317,6 +363,7 @@ function EmployeeRequestTimeOffPage() {
                                     className="time-input"
                                     type="date"
                                     value={fromDate}
+                                    min={formatDateForInput(today)}
                                     onChange={handleFromDateChange}
                                 />
                                 <input
@@ -378,7 +425,8 @@ function EmployeeRequestTimeOffPage() {
                                             'mini-cal-day',
                                             !day ? 'empty' : '',
                                             isToday(day) ? 'today' : '',
-                                            selectedDay === day ? 'selected' : ''
+                                            selectedDay === day ? 'selected' : '',
+                                            isSunday(day) || isPastDate(day) ? 'cal-day-disabled' : ''
                                         ].join(' ')}
                                     >
                                         {day || ''}

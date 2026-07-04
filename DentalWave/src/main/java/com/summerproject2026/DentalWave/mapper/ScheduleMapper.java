@@ -68,13 +68,16 @@ public class ScheduleMapper {
         // using a real, addressable team identifier
         if (schedule.getTeams() != null) {
             Map<Long, List<EmployeeDto>> teamsMap = new LinkedHashMap<>();
+            Map<Long, String> teamNamesMap = new LinkedHashMap<>();
             for (ScheduleTeam team : schedule.getTeams()) {
                 List<EmployeeDto> employeeDtos = team.getEmployees().stream()
                         .map(employeeMapper::mapToEmployeeDto)
                         .collect(Collectors.toList());
                 teamsMap.put(team.getId(), employeeDtos);
+                teamNamesMap.put(team.getId(), team.getName());
             }
             dto.setTeams(teamsMap);
+            dto.setTeamNames(teamNamesMap);
         }
 
         return dto;

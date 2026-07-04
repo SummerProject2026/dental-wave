@@ -496,6 +496,13 @@ body {
   margin-bottom: 12px;
 }
 
+.field-error {
+  color: red;
+  font-size: 12px;
+  margin-top: 2px;
+  display: block;
+}
+
 .new-request-btn {
   background-color: #443066;
   color: white;
@@ -784,6 +791,16 @@ body {
 
 .mini-cal-day.empty {
   cursor: default;
+}
+
+.mini-cal-day.cal-day-disabled {
+  color: #bbb;
+  cursor: not-allowed;
+  background-color: transparent;
+}
+
+.mini-cal-day.cal-day-disabled:hover {
+  background-color: transparent;
 }
 
 .request-timeoff-actions {
@@ -1709,6 +1726,15 @@ body {
   font-size: 15px;
 }
 
+.reason-readonly {
+  background-color: #f5f5f5;
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-size: 14px;
+  color: #444;
+  margin: 0;
+}
+
 .request-detail-section .reason-textarea {
   width: 100%;
   min-height: 60px;
@@ -2244,6 +2270,66 @@ body {
   border: 1px solid #ccc;
   font-size: 13px;
 }
+
+.team-name-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.team-rename-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #555;
+  font-size: 14px;
+  padding: 0 2px;
+}
+
+.team-rename-btn:hover {
+  color: #443066;
+}
+
+.team-rename-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.team-rename-input {
+  flex: 1;
+  padding: 4px 8px;
+  border: 1px solid #443066;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.team-rename-save-btn {
+  background-color: #443066;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 10px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.team-rename-cancel-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #b00020;
+  font-size: 14px;
+}
+
+.calendar-day-sunday {
+  color: #bbb;
+  cursor: not-allowed !important;
+  pointer-events: none;
+}
+
 .forgot-title {
   color: #2323c9;
   margin-bottom: 4px;

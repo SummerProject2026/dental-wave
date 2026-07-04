@@ -80,9 +80,9 @@ public class Employee {
     private LocalDate hireDate;
 
     /**
-     * Remaining time-off balance in days.
-     * Supports half-day increments via Double (e.g. 2.5 days).
-     * Defaults to 0.0 on creation and is adjusted when time-off requests are approved.
+     * Remaining time-off balance in hours.
+     * Supports fractional hours via Double (e.g. 4.5 hours).
+     * Defaults to 0.0 on creation and is decremented when time-off requests are approved.
      */
     @Column(nullable = false)
     private Double timeOff = 0.0;

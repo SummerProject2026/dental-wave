@@ -40,8 +40,11 @@ public class ScheduleDto {
     /** ID of the calendar this schedule belongs to */
     private Long calendarId;
 
-    /** Team assignments: team lead user ID → list of employees */
+    /** Team assignments: team ID → list of employees */
     private Map<Long, List<EmployeeDto>> teams;
+
+    /** Team names: team ID → display name */
+    private Map<Long, String> teamNames;
 
     public ScheduleDto() {}
 
@@ -87,4 +90,7 @@ public class ScheduleDto {
 
     public Map<Long, List<EmployeeDto>> getTeams() { return teams; }
     public void setTeams(Map<Long, List<EmployeeDto>> teams) { this.teams = teams; }
+
+    public Map<Long, String> getTeamNames() { return teamNames; }
+    public void setTeamNames(Map<Long, String> teamNames) { this.teamNames = teamNames; }
 }

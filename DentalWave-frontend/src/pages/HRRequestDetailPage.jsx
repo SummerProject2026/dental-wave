@@ -132,12 +132,17 @@ function HRRequestDetailPage() {
                     )}
 
                     <div className="request-detail-section">
-                        <h3>Reason/Comment:</h3>
+                        <h3>Employee Reason:</h3>
+                        <p className="reason-readonly">{request.reason || 'No reason provided'}</p>
+                    </div>
+
+                    <div className="request-detail-section">
+                        <h3>HR Response:</h3>
                         <textarea
                             className="reason-textarea"
                             value={reviewComment}
                             onChange={(e) => setReviewComment(e.target.value)}
-                            placeholder={request.reason || 'No reason provided'}
+                            placeholder="Enter your response or comment..."
                             disabled={!isPending}
                         />
                     </div>

@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -158,6 +159,31 @@ public class TimeOffRequestServiceImpl implements TimeOffRequestService {
     // Private Helpers
     // -------------------------
 
+    private void deductPtoHours(TimeOffRequest request) {
+        try {
+            Employee employee = request.getEmployee();
+            double hoursToDeduct;
+
+            if (request.getStartDate() != null && request.getEndDate() != null
+                    && request.getStartDate().equals(request.getEndDate())
+                    && request.getStartTime() != null && request.getEndTime() != null) {
+                long minutes = ChronoUnit.MINUTES.between(request.getStartTime(), request.getEndTime());
+                hoursToDeduct = minutes / 60.0;
+            } else if (request.getStartDate() != null && request.getEndDate() != null) {
+                long days = ChronoUnit.DAYS.between(request.getStartDate(), request.getEndDate()) + 1;
+                hoursToDeduct = days * 8.0;
+            } else {
+                hoursToDeduct = 8.0;
+            }
+
+            double newBalance = (employee.getTimeOff() != null ? employee.getTimeOff() : 0.0) - hoursToDeduct;
+            employee.setTimeOff(newBalance);
+            employeeRepository.save(employee);
+        } catch (Exception e) {
+            System.err.println("Failed to deduct PTO hours for request " + request.getId() + ": " + e.getMessage());
+        }
+    }
+
     private TimeOffRequestDto reviewRequest(Long id,
                                             Long reviewedById,
                                             String reviewComment,
@@ -182,6 +208,11 @@ public class TimeOffRequestServiceImpl implements TimeOffRequestService {
         timeOffRequest.setReviewComment(reviewComment);
 
         TimeOffRequest updatedRequest = timeOffRequestRepository.save(timeOffRequest);
+
+        // Deduct PTO hours from employee balance when approved
+        if (targetStatus == RequestStatus.APPROVED) {
+            deductPtoHours(updatedRequest);
+        }
 
         // Notify the employee of the decision
         notifyEmployeeOfDecision(updatedRequest, targetStatus);
@@ -234,10 +265,6 @@ public class TimeOffRequestServiceImpl implements TimeOffRequestService {
                     ? request.getStartDate().toString()
                     : request.getStartDate() + " to " + request.getEndDate();
 
-            String reasonPart = (request.getReason() != null && !request.getReason().isBlank())
-                    ? " Reason: " + request.getReason()
-                    : "";
-
             List<Schedule> affectedSchedules = scheduleRepository
                     .findPublishedSchedulesByEmployeeIdAndDateRange(
                             employeeId,
@@ -251,8 +278,7 @@ public class TimeOffRequestServiceImpl implements TimeOffRequestService {
                 // who created the affected schedules
                 String message = employeeName + " has approved time off for " + dateRange
                         + " which affects a published schedule. "
-                        + "Schedule update may be required."
-                        + reasonPart;
+                        + "Schedule update may be required.";
 
                 for (Schedule schedule : affectedSchedules) {
                     User manager = schedule.getCreatedBy();
@@ -276,7 +302,7 @@ public class TimeOffRequestServiceImpl implements TimeOffRequestService {
                 // No schedule impact — still notify all managers
                 // so they are always aware of approved time-off
                 String message = employeeName + " has been approved for time off on "
-                        + dateRange + "." + reasonPart;
+                        + dateRange + ".";
 
                 userRepository.findByRoles_NameIgnoreCase("ROLE_MANAGER")
                         .forEach(manager -> {

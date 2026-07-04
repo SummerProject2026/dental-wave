@@ -126,3 +126,17 @@ export const removeEmployeeFromTeam = (scheduleId, teamId, employeeId) =>
  */
 export const publishSchedule = (scheduleId) =>
     axios.patch(`${SCHEDULE_REST_API_BASE_URL}/${scheduleId}/publish`, null, getAuthHeader())
+
+/**
+ * Renames a schedule team.
+ *
+ * @param teamId the team id
+ * @param name the new name
+ * @returns {Promise<axios.AxiosResponse<any>>}
+ */
+export const renameTeam = (teamId, name) =>
+    axios.put(
+        `http://localhost:8080/api/schedule-teams/${teamId}/name`,
+        null,
+        { ...getAuthHeader(), params: { name } }
+    )

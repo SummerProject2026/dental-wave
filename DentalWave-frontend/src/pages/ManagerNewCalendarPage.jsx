@@ -1,9 +1,10 @@
 import '../App.css'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import ManagerHeader from '../components/ManagerHeader'
 import { createCalendar } from '../services/CalendarService'
 import { getLoggedInUserId } from '../services/AuthService'
+import { getAllOffices } from '../services/OfficeService'
 
 // Office name → id mapping. Matches the offices already seeded in the database.
 const OFFICES = [
@@ -18,7 +19,8 @@ function ManagerNewCalendarPage() {
     const today = new Date()
     const [selectedMonth, setSelectedMonth] = useState(today.getMonth())
     const [selectedYear, setSelectedYear] = useState(today.getFullYear())
-    const [selectedOfficeId, setSelectedOfficeId] = useState(OFFICES[0].id)
+    const [offices, setOffices] = useState(OFFICES)
+    const [selectedOfficeId, setSelectedOfficeId] = useState('')
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
 
@@ -26,6 +28,21 @@ function ManagerNewCalendarPage() {
         'January', 'February', 'March', 'April', 'May', 'June',
         'July', 'August', 'September', 'October', 'November', 'December'
     ]
+
+    useEffect(() => {
+        getAllOffices()
+            .then((response) => {
+                const loadedOffices = response.data || []
+                if (loadedOffices.length === 0) return
+
+                setOffices(loadedOffices)
+                setSelectedOfficeId((currentOfficeId) => currentOfficeId || loadedOffices[0].id)
+            })
+            .catch((err) => {
+                console.error('Failed to load offices', err)
+                setSelectedOfficeId((currentOfficeId) => currentOfficeId || OFFICES[0].id)
+            })
+    }, [])
 
     function getMonthLabel() {
         return `${monthNames[selectedMonth]} ${selectedYear}`
@@ -47,6 +64,11 @@ function ManagerNewCalendarPage() {
 
     async function handleSave(published) {
         setError('')
+        if (!selectedOfficeId) {
+            setError('Select a location before creating a calendar.')
+            return
+        }
+
         setLoading(true)
 
         const { startDate, endDate } = getStartAndEndDates()
@@ -96,7 +118,7 @@ function ManagerNewCalendarPage() {
                                 value={selectedOfficeId}
                                 onChange={(e) => setSelectedOfficeId(Number(e.target.value))}
                             >
-                                {OFFICES.map((office) => (
+                                {offices.map((office) => (
                                     <option key={office.id} value={office.id}>
                                         {office.name}
                                     </option>

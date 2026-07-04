@@ -128,6 +128,20 @@ export const publishSchedule = (scheduleId) =>
     axios.patch(`${SCHEDULE_REST_API_BASE_URL}/${scheduleId}/publish`, null, getAuthHeader())
 
 /**
+ * Creates a named team for a schedule.
+ *
+ * @param scheduleId the schedule id
+ * @param name the team label/name
+ * @returns {Promise<axios.AxiosResponse<any>>}
+ */
+export const createTeam = (scheduleId, name) =>
+    axios.post(
+        'http://localhost:8080/api/schedule-teams',
+        { name, scheduleId, employees: [] },
+        getAuthHeader()
+    )
+
+/**
  * Renames a schedule team.
  *
  * @param teamId the team id
@@ -140,3 +154,12 @@ export const renameTeam = (teamId, name) =>
         null,
         { ...getAuthHeader(), params: { name } }
     )
+
+/**
+ * Deletes a schedule team.
+ *
+ * @param teamId the team id
+ * @returns {Promise<axios.AxiosResponse<any>>}
+ */
+export const deleteTeam = (teamId) =>
+    axios.delete(`http://localhost:8080/api/schedule-teams/${teamId}`, getAuthHeader())

@@ -1,6 +1,6 @@
 import '../App.css'
 import { useState, useEffect } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useParams, useSearchParams } from 'react-router-dom'
 import ManagerHeader from '../components/ManagerHeader'
 import {
     getAllCalendars,
@@ -10,6 +10,7 @@ import {
     addScheduleToCalendar
 } from '../services/CalendarService'
 import { getLoggedInUserId } from '../services/AuthService'
+import { getAllOffices } from '../services/OfficeService'
 
 const OFFICES = [
     { id: 1, name: 'Raleigh' },
@@ -17,13 +18,25 @@ const OFFICES = [
     { id: 3, name: 'Smithfield' }
 ]
 
+function parseLocalDate(dateValue) {
+    if (!dateValue) return null
+
+    const [datePart] = String(dateValue).split('T')
+    const [year, month, day] = datePart.split('-').map(Number)
+
+    if (!year || !month || !day) return null
+    return new Date(year, month - 1, day)
+}
+
 function ManagerEditCalendarPage() {
+    const { id } = useParams()
     const [searchParams] = useSearchParams()
 
     const today = new Date()
     const [currentDate, setCurrentDate] = useState(new Date(today.getFullYear(), today.getMonth(), 1))
+    const [offices, setOffices] = useState(OFFICES)
     const [selectedOfficeId, setSelectedOfficeId] = useState(
-        Number(searchParams.get('officeId')) || OFFICES[0].id
+        Number(searchParams.get('officeId')) || ''
     )
     const [calendars, setCalendars] = useState([])
     const [error, setError] = useState('')
@@ -34,12 +47,43 @@ function ManagerEditCalendarPage() {
     const monthLabel = `${monthName} ${year}`
 
     useEffect(() => {
+        loadOffices()
         loadCalendars()
     }, [])
 
+    function loadOffices() {
+        getAllOffices()
+            .then((response) => {
+                const loadedOffices = response.data || []
+                if (loadedOffices.length === 0) return
+
+                setOffices(loadedOffices)
+                setSelectedOfficeId((currentOfficeId) => currentOfficeId || loadedOffices[0].id)
+            })
+            .catch((err) => {
+                console.error('Failed to load offices', err)
+                setSelectedOfficeId((currentOfficeId) => currentOfficeId || OFFICES[0].id)
+            })
+    }
+
     function loadCalendars() {
         getAllCalendars()
-            .then((response) => setCalendars(response.data || []))
+            .then((response) => {
+                const loadedCalendars = response.data || []
+                const routeCalendar = id
+                    ? loadedCalendars.find((cal) => cal.id === Number(id))
+                    : null
+
+                if (routeCalendar) {
+                    const startDate = parseLocalDate(routeCalendar.startCalendarDate)
+                    if (startDate) {
+                        setCurrentDate(new Date(startDate.getFullYear(), startDate.getMonth(), 1))
+                    }
+                    setSelectedOfficeId(routeCalendar.officeId)
+                }
+
+                setCalendars(loadedCalendars)
+            })
             .catch((err) => console.error('Failed to load calendars', err))
     }
 
@@ -51,9 +95,9 @@ function ManagerEditCalendarPage() {
         setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))
     }
 
-    const activeCalendar = calendars.find(
-        (cal) => cal.officeId === selectedOfficeId && cal.month === monthLabel
-    )
+    const activeCalendar = id
+        ? calendars.find((cal) => cal.id === Number(id))
+        : calendars.find((cal) => cal.officeId === selectedOfficeId && cal.month === monthLabel)
 
     function getStartAndEndDates() {
         const start = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1)
@@ -71,6 +115,7 @@ function ManagerEditCalendarPage() {
 
     async function ensureCalendarExists() {
         if (activeCalendar) return activeCalendar
+        if (!selectedOfficeId) throw new Error('Select an office before creating a calendar.')
 
         const { startDate, endDate } = getStartAndEndDates()
         const createdById = getLoggedInUserId()
@@ -111,7 +156,8 @@ function ManagerEditCalendarPage() {
 
             const existingSchedule = (calendar.schedules || []).find((s) => {
                 if (!s.date) return false
-                return new Date(s.date).getDate() === day
+                const scheduleDate = parseLocalDate(s.date)
+                return scheduleDate?.getDate() === day
             })
 
             if (existingSchedule) {
@@ -181,7 +227,9 @@ function ManagerEditCalendarPage() {
     if (activeCalendar) {
         ;(activeCalendar.schedules || []).forEach((schedule) => {
             if (!schedule.date) return
-            const day = new Date(schedule.date).getDate()
+            const scheduleDate = parseLocalDate(schedule.date)
+            if (!scheduleDate) return
+            const day = scheduleDate.getDate()
             scheduleByDay[day] = schedule
         })
     }
@@ -202,7 +250,7 @@ function ManagerEditCalendarPage() {
                     <div className="manager-location-section">
                         <h3 className="manager-location-title">Location ▾</h3>
                         <ul className="manager-location-list">
-                            {OFFICES.map(office => (
+                            {offices.map(office => (
                                 <li
                                     key={office.id}
                                     className={`manager-location-item ${selectedOfficeId === office.id ? 'active' : ''}`}

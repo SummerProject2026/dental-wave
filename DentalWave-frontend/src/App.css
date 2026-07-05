@@ -461,6 +461,218 @@ body {
   background-color: #f0f0ff;
 }
 
+.universal-calendar-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 6px;
+  font-size: 11px;
+  line-height: 1.2;
+  overflow: hidden;
+}
+
+.universal-calendar-office {
+  border-left: 3px solid #443066;
+  padding-left: 5px;
+  color: #1a1a2e;
+}
+
+.universal-calendar-office strong,
+.universal-calendar-office span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.universal-calendar-office strong {
+  color: #a32626;
+}
+
+.universal-calendar-layout {
+  flex: 1;
+  display: flex;
+  gap: 24px;
+  padding: 24px 40px;
+  box-sizing: border-box;
+}
+
+.universal-calendar-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.universal-calendar-main h1 {
+  margin: 0;
+  font-size: 28px;
+  color: #2444d8;
+  font-family: Georgia, 'Times New Roman', serif;
+}
+
+.universal-calendar-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.universal-status-badge {
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 800;
+  color: #2e1a47;
+  background-color: white;
+  border: 1px solid rgba(68, 48, 102, 0.18);
+}
+
+.universal-status-badge.published {
+  color: #155c35;
+  background-color: #e3f8ec;
+}
+
+.universal-status-badge.draft {
+  color: #6b4a00;
+  background-color: #fff3c9;
+}
+
+.universal-status-badge.not-created {
+  color: #5f5f6b;
+  background-color: #f1f1f5;
+}
+
+.universal-calendar-empty-message {
+  margin: 0 0 14px;
+  color: #2e1a47;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.universal-calendar-grid .calendar-day {
+  min-height: 112px;
+  overflow: hidden;
+  position: relative;
+}
+
+.universal-calendar-day-number {
+  display: block;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.calendar-day-has-published-schedule {
+  background-color: #fbfbff;
+}
+
+.calendar-day-has-published-schedule:hover {
+  background-color: #f0f0ff;
+}
+
+.universal-calendar-total {
+  color: #666;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.universal-day-panel {
+  width: 300px;
+  max-height: calc(100vh - 170px);
+  overflow-y: auto;
+  flex-shrink: 0;
+  background-color: white;
+  border-radius: 10px;
+  padding: 18px;
+  box-sizing: border-box;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.universal-day-panel h2 {
+  margin: 0;
+  font-size: 24px;
+  color: #2444d8;
+  font-family: Georgia, 'Times New Roman', serif;
+}
+
+.universal-day-panel-month {
+  margin: 4px 0 16px;
+  color: #555;
+  font-weight: 700;
+}
+
+.universal-location-card {
+  border: 1px solid #e2e2e8;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 14px;
+  background-color: #fff;
+}
+
+.universal-location-card h3 {
+  margin: 0 0 10px;
+  color: #a32626;
+  font-size: 18px;
+  font-family: Georgia, 'Times New Roman', serif;
+}
+
+.universal-team-block {
+  border-left: 4px solid #443066;
+  padding-left: 10px;
+  margin-bottom: 12px;
+}
+
+.universal-team-block h4 {
+  margin: 0 0 4px;
+  color: #2e1a47;
+  font-size: 15px;
+}
+
+.universal-team-block ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.universal-team-block li {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  border-bottom: 1px solid #eeeeee;
+  padding: 5px 0;
+  font-size: 14px;
+}
+
+.universal-team-block li:last-child {
+  border-bottom: none;
+}
+
+.universal-team-block small {
+  color: #777;
+  text-align: right;
+  text-transform: uppercase;
+  font-size: 11px;
+}
+
+.universal-team-block p,
+.universal-empty-day,
+.universal-day-hint {
+  color: #666;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.universal-schedule-notes {
+  margin: 8px 0 0;
+  color: #2e1a47;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.employee-universal-day-panel {
+  width: 300px;
+  padding-top: 18px;
+}
+
 /* ---------- My Requests Page ---------- */
 
 .employee-requests-page {
@@ -2420,6 +2632,14 @@ body {
   padding: 4px 14px;
   border-radius: 14px;
   background-color: white;
+  color: #2e1a47;
+  font-weight: 700;
+}
+
+.manager-builder-title-block small {
+  display: block;
+  margin-top: 8px;
+  max-width: 520px;
   color: #2e1a47;
   font-weight: 700;
 }

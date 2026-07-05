@@ -4,8 +4,7 @@ import ManagerHeader from '../components/ManagerHeader'
 import {
     getAllCalendars,
     generateCalendar,
-    publishCalendar,
-    unpublishCalendar
+    updateCalendar
 } from '../services/CalendarService'
 import {
     assignEmployeeToTeam,
@@ -58,6 +57,7 @@ function ManagerCalendarPage() {
     const [approvedTimeOffRequests, setApprovedTimeOffRequests] = useState([])
     const [selectedDay, setSelectedDay] = useState(null)
     const [error, setError] = useState('')
+    const [success, setSuccess] = useState('')
     const [loading, setLoading] = useState(false)
     const [editingTeamId, setEditingTeamId] = useState(null)
     const [editingTeamName, setEditingTeamName] = useState('')
@@ -128,6 +128,8 @@ function ManagerCalendarPage() {
         const [selectedYear, selectedMonth] = value.split('-').map(Number)
         setCurrentDate(new Date(selectedYear, selectedMonth - 1, 1))
         setSelectedDay(null)
+        setError('')
+        setSuccess('')
     }
 
     function handlePrint() {
@@ -183,67 +185,106 @@ function ManagerCalendarPage() {
     }
 
     async function handleNewCalendar() {
-        if (activeCalendar) {
-            setError('A calendar already exists for this office and month.')
-            return
-        }
-
         setLoading(true)
         setError('')
+        setSuccess('')
 
         try {
             const { startDate, endDate } = getStartAndEndDates()
             const createdById = getLoggedInUserId()
+            const existingOfficeIds = new Set(monthCalendars.map((calendar) => calendar.officeId))
+            const officesToCreate = offices.filter((office) => !existingOfficeIds.has(office.id))
 
-            await generateCalendar({
-                month: monthLabel,
-                startCalendarDate: startDate,
-                endCalendarDate: endDate,
-                createdById,
-                officeId: selectedOfficeId
-            })
+            if (officesToCreate.length === 0) {
+                setError('A draft already exists for every office this month. Select a day to edit it.')
+                return
+            }
+
+            for (const office of officesToCreate) {
+                await generateCalendar({
+                    month: monthLabel,
+                    startCalendarDate: startDate,
+                    endCalendarDate: endDate,
+                    createdById,
+                    officeId: office.id
+                })
+            }
 
             await loadCalendarsAndReturn()
+            if (!selectedOfficeId && officesToCreate[0]) {
+                setSelectedOfficeId(officesToCreate[0].id)
+            }
         } catch (err) {
             console.error('Failed to generate calendar', err)
-            setError('Failed to generate a new calendar. Please try again.')
+            if (err.response?.status === 401) {
+                setError('Your login session is no longer valid. Please log out and log back in, then create the calendar again.')
+            } else {
+                setError('Failed to generate the monthly draft. Please try again.')
+            }
         } finally {
             setLoading(false)
         }
     }
 
     async function handlePublish() {
-        if (!activeCalendar) {
-            setError('Generate a calendar first before publishing.')
+        if (monthCalendars.length === 0) {
+            setError('Create the monthly calendar first before publishing.')
             return
         }
 
         setLoading(true)
         setError('')
+        setSuccess('')
         try {
-            await publishCalendar(activeCalendar.id)
+            for (const calendar of monthCalendars) {
+                if (!calendar.published) {
+                    await updateCalendar(calendar.id, {
+                        ...calendar,
+                        published: true
+                    })
+                }
+            }
             await loadCalendarsAndReturn()
+            setSuccess('Published the monthly schedule as the Universal Calendar.')
         } catch (err) {
             console.error('Failed to publish calendar', err)
-            setError('Failed to publish calendar.')
+            if (err.response?.status === 401) {
+                setError('Your login session is no longer valid. Please log out and log back in, then publish again.')
+            } else {
+                setError('Failed to publish calendar.')
+            }
         } finally {
             setLoading(false)
         }
     }
 
     async function handleSaveDraft() {
-        if (!activeCalendar) return
+        if (monthCalendars.length === 0) {
+            setError('Create the monthly calendar first before saving a draft.')
+            return
+        }
 
         setLoading(true)
         setError('')
+        setSuccess('')
         try {
-            if (activeCalendar.published) {
-                await unpublishCalendar(activeCalendar.id)
+            for (const calendar of monthCalendars) {
+                if (calendar.published) {
+                    await updateCalendar(calendar.id, {
+                        ...calendar,
+                        published: false
+                    })
+                }
             }
             await loadCalendarsAndReturn()
+            setSuccess('Draft saved. You can come back and keep editing this month.')
         } catch (err) {
             console.error('Failed to save as draft', err)
-            setError('Failed to save as draft.')
+            if (err.response?.status === 401) {
+                setError('Your login session is no longer valid. Please log out and log back in, then save again.')
+            } else {
+                setError('Failed to save as draft.')
+            }
         } finally {
             setLoading(false)
         }
@@ -389,6 +430,13 @@ function ManagerCalendarPage() {
         currentDate.getFullYear() === today.getFullYear()
 
     const monthCalendars = calendars.filter((cal) => cal.month === monthLabel)
+    const allOfficeCalendarsExist = offices.length > 0 &&
+        offices.every((office) => monthCalendars.some((calendar) => calendar.officeId === office.id))
+    const monthStatus = monthCalendars.length === 0
+        ? 'No calendar created'
+        : monthCalendars.every((calendar) => calendar.published)
+            ? 'Published Universal Calendar'
+            : 'Draft'
     const officeNameById = offices.reduce((names, office) => {
         names[office.id] = office.name
         return names
@@ -535,7 +583,8 @@ function ManagerCalendarPage() {
                 <section className="manager-builder-toolbar">
                     <div className="manager-builder-title-block">
                         <h1>Manager Monthly Schedule</h1>
-                        <p>{activeCalendar ? (activeCalendar.published ? 'Published' : 'Draft') : 'No calendar created'}</p>
+                        <p>{monthStatus}</p>
+                        <small>Generate Monthly Draft creates the recurring doctor/location pattern. Publish shares the month as the Universal Calendar.</small>
                     </div>
 
                     <div className="manager-builder-controls">
@@ -565,13 +614,13 @@ function ManagerCalendarPage() {
                             </select>
                         </label>
 
-                        <button className="save-draft-btn" onClick={handleNewCalendar} disabled={loading || !selectedOfficeId || activeCalendar}>
-                            Create New Calendar
+                        <button className="save-draft-btn" onClick={handleNewCalendar} disabled={loading || !offices.length || allOfficeCalendarsExist}>
+                            Generate Monthly Draft
                         </button>
-                        <button className="save-draft-btn" onClick={handleSaveDraft} disabled={loading || !activeCalendar}>
+                        <button className="save-draft-btn" onClick={handleSaveDraft} disabled={loading || !monthCalendars.length}>
                             Save Draft
                         </button>
-                        <button className="publish-btn" onClick={handlePublish} disabled={loading || !activeCalendar}>
+                        <button className="publish-btn" onClick={handlePublish} disabled={loading || !monthCalendars.length}>
                             Publish
                         </button>
                         <button className="print-schedule-btn" onClick={handlePrint} disabled={!monthCalendars.length}>
@@ -581,6 +630,7 @@ function ManagerCalendarPage() {
                 </section>
 
                 {error && <p className="error-message manager-builder-error">{error}</p>}
+                {success && <p className="success-message manager-builder-error">{success}</p>}
 
                 <section className="manager-builder-workspace">
                     <div className="manager-month-card">

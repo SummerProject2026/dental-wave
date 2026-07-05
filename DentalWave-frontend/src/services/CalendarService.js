@@ -58,7 +58,7 @@ export const deleteCalendar = (calendarId) =>
  * @returns {Promise<axios.AxiosResponse<any>>}
  */
 export const publishCalendar = (calendarId) =>
-    axios.patch(`${CALENDAR_REST_API_BASE_URL}/${calendarId}/publish`, null, getAuthHeader())
+    axios.post(`${CALENDAR_REST_API_BASE_URL}/${calendarId}/publish`, null, getAuthHeader())
 
 /**
  * Reverts a calendar to draft state.
@@ -67,7 +67,7 @@ export const publishCalendar = (calendarId) =>
  * @returns {Promise<axios.AxiosResponse<any>>}
  */
 export const unpublishCalendar = (calendarId) =>
-    axios.patch(`${CALENDAR_REST_API_BASE_URL}/${calendarId}/unpublish`, null, getAuthHeader())
+    axios.post(`${CALENDAR_REST_API_BASE_URL}/${calendarId}/unpublish`, null, getAuthHeader())
 
 /**
  * Gets all calendars for a given month label.

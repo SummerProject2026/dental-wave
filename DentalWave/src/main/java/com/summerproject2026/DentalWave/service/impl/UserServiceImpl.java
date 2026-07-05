@@ -290,16 +290,6 @@ public class UserServiceImpl implements UserService {
             existingUser.setEmail(userDto.getEmail());
         }
 
-        if (userDto.getUsername() != null && !userDto.getUsername().equalsIgnoreCase(existingUser.getUsername())) {
-            userRepository.findByUsername(userDto.getUsername())
-                    .filter(user -> !user.getId().equals(existingUser.getId()))
-                    .ifPresent(user -> {
-                        throw new DuplicateResourceException(
-                                "Username '" + userDto.getUsername() + "' is already taken.");
-                    });
-            existingUser.setUsername(userDto.getUsername());
-        }
-
         existingUser.setFirstName(userDto.getFirstName());
         existingUser.setLastName(userDto.getLastName());
         existingUser.setPhoneNumber(userDto.getPhoneNumber());

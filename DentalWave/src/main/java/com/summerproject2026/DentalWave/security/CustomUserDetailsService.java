@@ -24,7 +24,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 
         // Try to find user by username first, then fall back to email
         User user = userRepository.findByUsername(username)
-                .or(() -> userRepository.findByUsername(username))
+                .or(() -> userRepository.findByEmail(username))
                 .orElseThrow(() -> new UsernameNotFoundException(
                         "User not found with username or email: " + username));
 

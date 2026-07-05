@@ -82,7 +82,6 @@ function HRProfilePage() {
             id: form.id || null,
             firstName: form.firstName,
             lastName: form.lastName,
-            username: form.username,
             email: form.email,
             phoneNumber: form.phoneNumber,
             roles: form.roles

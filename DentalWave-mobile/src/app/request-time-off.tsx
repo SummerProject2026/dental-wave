@@ -1,37 +1,99 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import {
     View, Text, TextInput, TouchableOpacity, StyleSheet,
     SafeAreaView, ScrollView, KeyboardAvoidingView, Platform, Alert
 } from 'react-native'
-import { useRouter } from 'expo-router'
+import { useRouter, useFocusEffect } from 'expo-router'
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker'
 import AppHeader from '@/components/app-header'
+import InlineCalendar from '@/components/inline-calendar'
 import { getSession } from '@/services/session'
 import { createTimeOffRequest } from '@/services/timeOffRequests'
+import { getSchedulesByEmployee } from '@/services/schedules'
+
+type PickerTarget = 'fromDate' | 'fromTime' | 'toDate' | 'toTime' | null
+
+function toDateStr(d: Date): string {
+    const y = d.getFullYear()
+    const m = String(d.getMonth() + 1).padStart(2, '0')
+    const day = String(d.getDate()).padStart(2, '0')
+    return `${y}-${m}-${day}`
+}
+
+function toTimeStr(d: Date): string {
+    const h = String(d.getHours()).padStart(2, '0')
+    const m = String(d.getMinutes()).padStart(2, '0')
+    return `${h}:${m}:00`
+}
+
+function formatDateDisplay(d: Date | null): string {
+    if (!d) return 'Select date'
+    return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
+}
+
+function formatTimeDisplay(d: Date | null): string {
+    if (!d) return 'Select time'
+    return d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit', hour12: true })
+}
 
 export default function RequestTimeOffScreen() {
     const router = useRouter()
 
-    const [fromDate, setFromDate] = useState('')
-    const [fromTime, setFromTime] = useState('')
-    const [toDate, setToDate] = useState('')
-    const [toTime, setToTime] = useState('')
+    const [fromDate, setFromDate] = useState<Date | null>(null)
+    const [fromTime, setFromTime] = useState<Date | null>(null)
+    const [toDate, setToDate] = useState<Date | null>(null)
+    const [toTime, setToTime] = useState<Date | null>(null)
+    const [activePicker, setActivePicker] = useState<PickerTarget>(null)
     const [reason, setReason] = useState('')
     const [requestType, setRequestType] = useState<'timeoff' | 'emergency'>('timeoff')
     const [submitting, setSubmitting] = useState(false)
     const [error, setError] = useState('')
+    const [scheduledDates, setScheduledDates] = useState<Set<string>>(new Set())
+    const [scheduleLoaded, setScheduleLoaded] = useState(false)
+
+    useFocusEffect(
+        useCallback(() => {
+            const session = getSession()
+            if (!session?.employeeId) return
+            getSchedulesByEmployee(session.employeeId)
+                .then((schedules) => {
+                    setScheduledDates(new Set(schedules.map((s) => s.date).filter(Boolean)))
+                })
+                .catch(() => {})
+                .finally(() => setScheduleLoaded(true))
+        }, [])
+    )
+
+    function valueForTimePicker(target: PickerTarget): Date {
+        switch (target) {
+            case 'fromTime': return fromTime ?? new Date()
+            case 'toTime': return toTime ?? new Date()
+            default: return new Date()
+        }
+    }
+
+    function handleTimePickerChange(event: DateTimePickerEvent, selected?: Date) {
+        if (Platform.OS === 'android') setActivePicker(null)
+        if (event.type === 'dismissed' || !selected) return
+        if (activePicker === 'fromTime') setFromTime(selected)
+        else if (activePicker === 'toTime') setToTime(selected)
+    }
+
+    function handleDateSelect(target: PickerTarget, date: Date) {
+        if (target === 'fromDate') setFromDate(date)
+        else if (target === 'toDate') setToDate(date)
+        setActivePicker(null)
+    }
+
+    function openPicker(target: PickerTarget) {
+        setError('')
+        setActivePicker(target)
+    }
 
     function validate(): boolean {
-        if (!fromDate.trim()) { setError('Please enter a start date (YYYY-MM-DD).'); return false }
-        const today = new Date(); today.setHours(0, 0, 0, 0)
-        const start = new Date(fromDate + 'T00:00:00')
-        if (isNaN(start.getTime())) { setError('Invalid start date. Use YYYY-MM-DD format.'); return false }
-        if (start < today) { setError('Cannot request time off for a past date.'); return false }
-        if (toDate) {
-            const end = new Date(toDate + 'T00:00:00')
-            if (isNaN(end.getTime())) { setError('Invalid end date. Use YYYY-MM-DD format.'); return false }
-            if (end < start) { setError('End date cannot be before start date.'); return false }
-        }
-        if (fromTime && toTime && fromDate === (toDate || fromDate) && fromTime >= toTime) {
+        if (!fromDate) { setError('Please select a start date.'); return false }
+        if (toDate && toDate < fromDate) { setError('End date cannot be before start date.'); return false }
+        if (fromTime && toTime && toDateStr(fromDate) === toDateStr(toDate ?? fromDate) && toTimeStr(fromTime) >= toTimeStr(toTime)) {
             setError('End time must be after start time.')
             return false
         }
@@ -49,10 +111,10 @@ export default function RequestTimeOffScreen() {
         try {
             await createTimeOffRequest({
                 employeeId: session.employeeId,
-                startDate: fromDate.trim(),
-                endDate: toDate.trim() || fromDate.trim(),
-                startTime: fromTime.trim() ? fromTime.trim() + ':00' : null,
-                endTime: toTime.trim() ? toTime.trim() + ':00' : null,
+                startDate: toDateStr(fromDate!),
+                endDate: toDateStr(toDate ?? fromDate!),
+                startTime: fromTime ? toTimeStr(fromTime) : null,
+                endTime: toTime ? toTimeStr(toTime) : null,
                 reason: reason.trim(),
                 emergency: requestType === 'emergency',
                 status: 'PENDING',
@@ -66,6 +128,9 @@ export default function RequestTimeOffScreen() {
             setSubmitting(false)
         }
     }
+
+    const isDatePicker = activePicker === 'fromDate' || activePicker === 'toDate'
+    const isTimePicker = activePicker === 'fromTime' || activePicker === 'toTime'
 
     return (
         <SafeAreaView style={styles.page}>
@@ -84,39 +149,72 @@ export default function RequestTimeOffScreen() {
 
                         <View style={styles.timeRow}>
                             <Text style={styles.timeRowLabel}>From:</Text>
-                            <TextInput
-                                style={styles.dateInput}
-                                placeholder="YYYY-MM-DD"
-                                placeholderTextColor="#aaa"
-                                value={fromDate}
-                                onChangeText={setFromDate}
-                            />
-                            <TextInput
-                                style={styles.timeInput}
-                                placeholder="HH:MM"
-                                placeholderTextColor="#aaa"
-                                value={fromTime}
-                                onChangeText={setFromTime}
-                            />
+                            <TouchableOpacity style={styles.dateInput} onPress={() => openPicker('fromDate')}>
+                                <Text style={[styles.fieldText, !fromDate && styles.placeholderText]}>
+                                    {formatDateDisplay(fromDate)}
+                                </Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.timeInput} onPress={() => openPicker('fromTime')}>
+                                <Text style={[styles.fieldText, !fromTime && styles.placeholderText]}>
+                                    {formatTimeDisplay(fromTime)}
+                                </Text>
+                            </TouchableOpacity>
                         </View>
 
                         <View style={styles.timeRow}>
                             <Text style={styles.timeRowLabel}>To:</Text>
-                            <TextInput
-                                style={styles.dateInput}
-                                placeholder="YYYY-MM-DD"
-                                placeholderTextColor="#aaa"
-                                value={toDate}
-                                onChangeText={setToDate}
-                            />
-                            <TextInput
-                                style={styles.timeInput}
-                                placeholder="HH:MM"
-                                placeholderTextColor="#aaa"
-                                value={toTime}
-                                onChangeText={setToTime}
-                            />
+                            <TouchableOpacity style={styles.dateInput} onPress={() => openPicker('toDate')}>
+                                <Text style={[styles.fieldText, !toDate && styles.placeholderText]}>
+                                    {formatDateDisplay(toDate)}
+                                </Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.timeInput} onPress={() => openPicker('toTime')}>
+                                <Text style={[styles.fieldText, !toTime && styles.placeholderText]}>
+                                    {formatTimeDisplay(toTime)}
+                                </Text>
+                            </TouchableOpacity>
                         </View>
+
+                        {isDatePicker && (
+                            scheduleLoaded ? (
+                                <InlineCalendar
+                                    initialDate={(activePicker === 'toDate' ? toDate : fromDate) ?? fromDate ?? new Date()}
+                                    scheduledDates={scheduledDates}
+                                    minDate={activePicker === 'toDate' ? (fromDate ?? new Date()) : new Date()}
+                                    onSelect={(date) => handleDateSelect(activePicker, date)}
+                                />
+                            ) : (
+                                <Text style={styles.fieldText}>Loading your schedule...</Text>
+                            )
+                        )}
+
+                        {isTimePicker && Platform.OS === 'ios' && (
+                            <View style={styles.pickerPanel}>
+                                <View style={styles.pickerPanelHeader}>
+                                    <TouchableOpacity onPress={() => setActivePicker(null)}>
+                                        <Text style={styles.pickerDoneText}>Done</Text>
+                                    </TouchableOpacity>
+                                </View>
+                                <DateTimePicker
+                                    value={valueForTimePicker(activePicker)}
+                                    mode="time"
+                                    display="spinner"
+                                    is24Hour={false}
+                                    locale="en-US"
+                                    onChange={handleTimePickerChange}
+                                />
+                            </View>
+                        )}
+
+                        {isTimePicker && Platform.OS === 'android' && (
+                            <DateTimePicker
+                                value={valueForTimePicker(activePicker)}
+                                mode="time"
+                                display="default"
+                                is24Hour={false}
+                                onChange={handleTimePickerChange}
+                            />
+                        )}
 
                         <Text style={styles.sectionLabel}>Reason:</Text>
                         <TextInput
@@ -193,12 +291,22 @@ const styles = StyleSheet.create({
     timeRowLabel: { fontSize: 15, color: '#444', width: 36 },
     dateInput: {
         flex: 2, backgroundColor: '#f0f0f8', borderRadius: 8,
-        paddingHorizontal: 10, paddingVertical: 10, fontSize: 14, color: '#333',
+        paddingHorizontal: 10, paddingVertical: 12, justifyContent: 'center',
     },
     timeInput: {
         flex: 1, backgroundColor: '#f0f0f8', borderRadius: 8,
-        paddingHorizontal: 10, paddingVertical: 10, fontSize: 14, color: '#333',
+        paddingHorizontal: 10, paddingVertical: 12, justifyContent: 'center',
     },
+    fieldText: { fontSize: 14, color: '#333' },
+    placeholderText: { color: '#aaa' },
+    pickerPanel: {
+        backgroundColor: '#f0f0f8', borderRadius: 10, overflow: 'hidden',
+    },
+    pickerPanelHeader: {
+        flexDirection: 'row', justifyContent: 'flex-end',
+        paddingHorizontal: 14, paddingTop: 8,
+    },
+    pickerDoneText: { color: '#443066', fontWeight: '700', fontSize: 15 },
     reasonInput: {
         backgroundColor: '#f0f0f8', borderRadius: 8,
         paddingHorizontal: 12, paddingVertical: 10,

@@ -11,6 +11,8 @@ export type Session = {
     userId: number
     employeeId: number | null
     username: string
+    firstName: string | null
+    lastName: string | null
     role: string
 }
 

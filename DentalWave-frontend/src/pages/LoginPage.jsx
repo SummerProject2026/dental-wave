@@ -8,7 +8,8 @@ import {
     loginAPICall,
     storeToken,
     saveLoggedInUser,
-    saveLoggedInUserId
+    saveLoggedInUserId,
+    saveLoggedInUserName
 } from '../services/AuthService'
 
 /**
@@ -24,6 +25,7 @@ import {
 function LoginPage() {
     const [username, setUsername] = useState('')
     const [password, setPassword] = useState('')
+    const [showPassword, setShowPassword] = useState(false)
     const [error, setError] = useState('')
 
     const navigator = useNavigate()
@@ -50,6 +52,9 @@ function LoginPage() {
 
             // Store user id
             saveLoggedInUserId(userId)
+
+            // Store first and last name for display (e.g. avatar initials)
+            saveLoggedInUserName(response.data.firstName, response.data.lastName)
 
             // Store employee id for employee-specific pages
             sessionStorage.setItem('employeeId', employeeId)
@@ -98,13 +103,23 @@ function LoginPage() {
 
                     <label className="login-label">Password:</label>
 
-                    <input
-                        className="login-input"
-                        type="password"
-                        placeholder="••••••••••••"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                    />
+                    <div className="password-input-row">
+                        <input
+                            className="login-input"
+                            type={showPassword ? 'text' : 'password'}
+                            placeholder="••••••••••••"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                        />
+                        <button
+                            type="button"
+                            className="password-eye-button"
+                            onClick={() => setShowPassword((prev) => !prev)}
+                            aria-label={showPassword ? 'Hide password' : 'Show password'}
+                        >
+                            {showPassword ? '🙈' : '👁️'}
+                        </button>
+                    </div>
 
                     <Link className="forgot-link" to="/forgot-password">
                         Forgot Password?

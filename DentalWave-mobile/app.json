@@ -5,6 +5,7 @@
     "backgroundColor": "#c8cbff"
   },
   "plugins": [
-    "expo-router"
+    "expo-router",
+    "@react-native-community/datetimepicker"
   ]
 }

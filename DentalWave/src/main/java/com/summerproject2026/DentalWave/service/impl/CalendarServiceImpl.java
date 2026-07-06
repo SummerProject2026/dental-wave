@@ -194,6 +194,9 @@ public class CalendarServiceImpl implements CalendarService {
     public CalendarDto publishCalendar(Long id) {
         Calendar calendar = findCalendarOrThrow(id);
         calendar.setPublished(true);
+        for (Schedule schedule : calendar.getSchedules()) {
+            schedule.setPublished(true);
+        }
         Calendar saved = calendarRepository.save(calendar);
 
         // UC12 — notify every assigned employee that their schedule is available
@@ -206,6 +209,9 @@ public class CalendarServiceImpl implements CalendarService {
     public CalendarDto unpublishCalendar(Long id) {
         Calendar calendar = findCalendarOrThrow(id);
         calendar.setPublished(false);
+        for (Schedule schedule : calendar.getSchedules()) {
+            schedule.setPublished(false);
+        }
         return calendarMapper.mapToCalendarDto(calendarRepository.save(calendar));
     }
 

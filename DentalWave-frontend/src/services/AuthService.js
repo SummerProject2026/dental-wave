@@ -56,9 +56,25 @@ export const saveLoggedInUserId = (userId) => {
     sessionStorage.setItem('userId', userId)
 }
 
+// Saves the logged-in user's first and last name.
+export const saveLoggedInUserName = (firstName, lastName) => {
+    sessionStorage.setItem('firstName', firstName ?? '')
+    sessionStorage.setItem('lastName', lastName ?? '')
+}
+
 // Gets the logged-in user's username.
 export const getLoggedInUser = () => {
     return sessionStorage.getItem('authenticatedUser')
+}
+
+// Gets the logged-in user's first name.
+export const getLoggedInUserFirstName = () => {
+    return sessionStorage.getItem('firstName')
+}
+
+// Gets the logged-in user's last name.
+export const getLoggedInUserLastName = () => {
+    return sessionStorage.getItem('lastName')
 }
 
 // Gets the logged-in user's id.

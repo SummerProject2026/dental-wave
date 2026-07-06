@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { logout, getLoggedInUserId } from '../services/AuthService'
 import { getUnreadNotifications, markAsRead } from '../services/NotificationService'
+import UserAvatar from './UserAvatar'
 
 function EmployeeHeader() {
 
@@ -100,9 +101,7 @@ function EmployeeHeader() {
                     )}
                 </div>
 
-                <Link to="/employee/profile" className="user-icon">
-                    👤
-                </Link>
+                <UserAvatar to="/employee/profile" hasUnread={totalUnreadCount > 0} />
                 <button className="logout-button" onClick={handleLogout}>
                     Logout
                 </button>

@@ -6,6 +6,7 @@ import {
 import { useRouter, useFocusEffect } from 'expo-router'
 import { getSession } from '@/services/session'
 import { getSchedulesByEmployee, getAllCalendars, ScheduleEntry } from '@/services/schedules'
+import ProfileAvatarButton from '@/components/profile-avatar'
 
 const OFFICE_NAMES: Record<number, string> = { 1: 'Raleigh', 2: 'Garner', 3: 'Smithfield' }
 
@@ -110,17 +111,13 @@ export default function CalendarScreen() {
         <SafeAreaView style={styles.page}>
 
             <View style={styles.header}>
-                <TouchableOpacity style={styles.iconBtn}>
-                    <Text style={styles.icon}>☰</Text>
-                </TouchableOpacity>
+                <View style={styles.iconBtn} />
                 <Image
                     source={require('../../assets/images/wake-logo.png')}
                     style={styles.headerLogo}
                     resizeMode="contain"
                 />
-                <TouchableOpacity style={styles.iconBtn} onPress={() => router.push('/settings')}>
-                    <Text style={styles.icon}>👤</Text>
-                </TouchableOpacity>
+                <ProfileAvatarButton />
             </View>
 
             <ScrollView contentContainerStyle={styles.content}>
@@ -239,7 +236,6 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16, paddingVertical: 8, backgroundColor: '#c8cbff',
     },
     iconBtn: { width: 36, alignItems: 'center' },
-    icon: { fontSize: 26, color: '#1a1a2e' },
     headerLogo: { width: 180, height: 60 },
     errorText: { fontSize: 15, color: '#c0392b', textAlign: 'center', marginTop: 40 },
     content: { padding: 16, alignItems: 'center' },

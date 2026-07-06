@@ -29,6 +29,12 @@ public class JwtAuthResponse {
     /** Username of the authenticated user. */
     private String username;
 
+    /** First name of the authenticated user. */
+    private String firstName;
+
+    /** Last name of the authenticated user. */
+    private String lastName;
+
     /** Email address of the authenticated user. */
     private String email;
 

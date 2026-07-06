@@ -107,12 +107,22 @@ public class CalendarController {
         return ResponseEntity.ok(calendarService.publishCalendar(id));
     }
 
+    @PostMapping("/{id}/publish")
+    public ResponseEntity<CalendarDto> publishCalendarPost(@PathVariable Long id) {
+        return ResponseEntity.ok(calendarService.publishCalendar(id));
+    }
+
     // -------------------------------------------------------------------------
     // PATCH /api/calendars/{id}/unpublish — unpublish
     // -------------------------------------------------------------------------
 
     @PatchMapping("/{id}/unpublish")
     public ResponseEntity<CalendarDto> unpublishCalendar(@PathVariable Long id) {
+        return ResponseEntity.ok(calendarService.unpublishCalendar(id));
+    }
+
+    @PostMapping("/{id}/unpublish")
+    public ResponseEntity<CalendarDto> unpublishCalendarPost(@PathVariable Long id) {
         return ResponseEntity.ok(calendarService.unpublishCalendar(id));
     }
 

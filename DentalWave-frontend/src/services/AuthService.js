@@ -35,6 +35,7 @@ export const storeToken = (token) => {
 
     console.log('Saving token:', cleanToken)
 
+    localStorage.removeItem('token')
     localStorage.setItem('token', cleanToken)
 }
 
@@ -130,6 +131,12 @@ export const getAuthHeader = () => {
     const token = getToken()
 
     console.log('Using token:', token)
+
+    if (!token) {
+        return {
+            headers: {}
+        }
+    }
 
     return {
         headers: {

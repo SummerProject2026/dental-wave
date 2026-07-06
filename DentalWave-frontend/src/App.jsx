@@ -4,6 +4,8 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import LoginPage from './pages/LoginPage'
 import ManagerCalendarPage from './pages/ManagerCalendarPage'
 import ManagerCalendarOverviewPage from './pages/ManagerCalendarOverviewPage.jsx'
+import ManagerEditCalendarPage from './pages/ManagerEditCalendarPage.jsx'
+import ManagerNewCalendarPage from './pages/ManagerNewCalendarPage.jsx'
 import EmployeeCalendarPage from './pages/EmployeeCalendarPage'
 import EmployeeProfilePage from './pages/EmployeeProfilePage.jsx'
 import EmployeeEditProfilePage from './pages/EmployeeEditProfilePage.jsx'
@@ -38,6 +40,8 @@ function App() {
                 {/* Manager */}
                 <Route path="/manager/calendar" element={<ManagerCalendarOverviewPage />} />
                 <Route path="/manager/calendar/build" element={<ManagerCalendarPage />} />
+                <Route path="/manager/calendar/new" element={<ManagerNewCalendarPage />} />
+                <Route path="/manager/calendar/:id/edit" element={<ManagerEditCalendarPage />} />
 
                 {/* Assistant / Employee */}
                 <Route path="/employee/calendar" element={<EmployeeCalendarPage />} />

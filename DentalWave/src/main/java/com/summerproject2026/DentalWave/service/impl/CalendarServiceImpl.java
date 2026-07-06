@@ -12,6 +12,7 @@ import com.summerproject2026.DentalWave.entity.Schedule;
 import com.summerproject2026.DentalWave.entity.ScheduleTeam;
 import com.summerproject2026.DentalWave.entity.User;
 import com.summerproject2026.DentalWave.enums.NotificationType;
+import com.summerproject2026.DentalWave.enums.WorkStatus;
 import com.summerproject2026.DentalWave.repository.CalendarRepository;
 import com.summerproject2026.DentalWave.repository.EmployeeRepository;
 import com.summerproject2026.DentalWave.repository.OfficeRepository;
@@ -31,7 +32,9 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -277,20 +280,15 @@ public class CalendarServiceImpl implements CalendarService {
         calendar.setCreatedBy(creator);
         calendar.setOffice(office);
 
-        List<Employee> doctors = employeeRepository
-                .findByOfficeIdAndPosition(office.getId(), "Doctor");
-        List<Employee> tcs = employeeRepository
-                .findByOfficeIdAndPosition(office.getId(), "TC");
-        List<Employee> assistants = employeeRepository
-                .findByOfficeIdAndPosition(office.getId(), "Assistant");
+        List<Employee> assistants = getActiveEmployeesByOfficeAndPosition(office.getId(), "Assistant");
 
         LocalDate current = calendarDto.getStartCalendarDate();
         LocalDate end = calendarDto.getEndCalendarDate();
 
         while (!current.isAfter(end)) {
-            DayOfWeek dayOfWeek = current.getDayOfWeek();
-            if (dayOfWeek != DayOfWeek.SATURDAY && dayOfWeek != DayOfWeek.SUNDAY) {
-                Schedule schedule = buildScheduleForDay(current, doctors, tcs, assistants);
+            List<String> teamNames = getDefaultTeamNamesForOfficeDay(office.getName(), current.getDayOfWeek());
+            if (!teamNames.isEmpty()) {
+                Schedule schedule = buildScheduleForDay(current, teamNames, assistants);
                 calendar.addSchedule(schedule);
             }
             current = current.plusDays(1);
@@ -301,8 +299,7 @@ public class CalendarServiceImpl implements CalendarService {
     }
 
     private Schedule buildScheduleForDay(LocalDate date,
-                                         List<Employee> doctors,
-                                         List<Employee> tcs,
+                                         List<String> teamNames,
                                          List<Employee> assistants) {
         Schedule schedule = new Schedule();
         schedule.setDate(date);
@@ -310,19 +307,11 @@ public class CalendarServiceImpl implements CalendarService {
         schedule.setEndTime(LocalTime.of(17, 0));
         schedule.setPublished(false);
 
-        int teamCount = Math.min(doctors.size(), tcs.size());
-
         List<ScheduleTeam> teams = new ArrayList<>();
-        for (int i = 0; i < teamCount; i++) {
+        for (String teamName : teamNames) {
             ScheduleTeam team = new ScheduleTeam();
-            team.setName("Team " + (i + 1));
+            team.setName(teamName);
             team.setSchedule(schedule);
-
-            List<Employee> teamEmployees = new ArrayList<>();
-            teamEmployees.add(doctors.get(i));
-            teamEmployees.add(tcs.get(i));
-            team.setEmployees(teamEmployees);
-
             teams.add(team);
         }
 
@@ -335,6 +324,52 @@ public class CalendarServiceImpl implements CalendarService {
 
         schedule.setTeams(teams);
         return schedule;
+    }
+
+    private List<String> getDefaultTeamNamesForOfficeDay(String officeName, DayOfWeek dayOfWeek) {
+        Map<DayOfWeek, List<String>> officePattern = getDefaultMonthlyPattern()
+                .getOrDefault(normalizeOfficeName(officeName), Map.of());
+
+        return officePattern.getOrDefault(dayOfWeek, List.of());
+    }
+
+    private Map<String, Map<DayOfWeek, List<String>>> getDefaultMonthlyPattern() {
+        Map<String, Map<DayOfWeek, List<String>>> pattern = new LinkedHashMap<>();
+
+        pattern.put("raleigh", Map.of(
+                DayOfWeek.MONDAY, List.of("C) Dr. Collie", "M) Dr. Macon"),
+                DayOfWeek.TUESDAY, List.of("L) Dr. Lamb"),
+                DayOfWeek.WEDNESDAY, List.of("L) Dr. Lamb", "McC) Dr. McCutchen"),
+                DayOfWeek.THURSDAY, List.of("McC) Dr. McCutchen")
+        ));
+
+        pattern.put("garner", Map.of(
+                DayOfWeek.MONDAY, List.of("L) Dr. Lamb"),
+                DayOfWeek.TUESDAY, List.of("M) Dr. Macon"),
+                DayOfWeek.WEDNESDAY, List.of("C) Dr. Collie"),
+                DayOfWeek.THURSDAY, List.of("L) Dr. Lamb")
+        ));
+
+        pattern.put("smithfield", Map.of(
+                DayOfWeek.TUESDAY, List.of("C) Dr. Collie")
+        ));
+
+        return pattern;
+    }
+
+    private String normalizeOfficeName(String officeName) {
+        if (officeName == null) {
+            return "";
+        }
+        return officeName.trim().toLowerCase();
+    }
+
+    private List<Employee> getActiveEmployeesByOfficeAndPosition(Long officeId, String position) {
+        return employeeRepository.findByOfficeId(officeId).stream()
+                .filter(employee -> employee.getStatus() == WorkStatus.ACTIVE)
+                .filter(employee -> employee.getPosition() != null
+                        && employee.getPosition().equalsIgnoreCase(position))
+                .collect(Collectors.toList());
     }
 
     // -------------------------------------------------------------------------

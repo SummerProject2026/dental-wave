@@ -87,21 +87,23 @@ public class AuthServiceImpl implements AuthService {
      */
     @Override
     public JwtAuthResponse login(LoginDto loginDto) {
+        String loginIdentifier = loginDto.getUsername().trim();
+
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                        loginDto.getUsername(),
+                        loginIdentifier,
                         loginDto.getPassword()
                 )
         );
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        String token = jwtTokenProvider.generateToken(authentication);
-
-        User user = userRepository.findByUsername(loginDto.getUsername())
-                .or(() -> userRepository.findByEmail(loginDto.getUsername()))
+        User user = userRepository.findByUsername(loginIdentifier)
+                .or(() -> userRepository.findByEmail(loginIdentifier))
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "User not found with email or username : " + loginDto.getUsername()));
+                        "User not found with email or username : " + loginIdentifier));
+
+        String token = jwtTokenProvider.generateToken(user.getUsername());
 
         // Get the user's primary role
         String role = user.getRoles()

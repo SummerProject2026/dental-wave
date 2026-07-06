@@ -5,6 +5,7 @@ import com.summerproject2026.DentalWave.service.UserService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,6 +25,26 @@ public class UserController {
 
     /** Service that contains the user business logic */
     private final UserService userService;
+
+    /**
+     * GET /api/users/me - get the authenticated user's profile
+     */
+    @GetMapping("/me")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<UserDto> getCurrentUser(Authentication authentication) {
+        return ResponseEntity.ok(userService.getCurrentUser(authentication.getName()));
+    }
+
+    /**
+     * PUT /api/users/me - update editable fields for the authenticated user
+     */
+    @PutMapping("/me")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<UserDto> updateCurrentUser(
+            Authentication authentication,
+            @RequestBody UserDto userDto) {
+        return ResponseEntity.ok(userService.updateCurrentUser(authentication.getName(), userDto));
+    }
 
     /**
      * POST /api/users - create a new user

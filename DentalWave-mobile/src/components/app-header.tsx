@@ -1,5 +1,6 @@
 import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native'
 import { useRouter } from 'expo-router'
+import ProfileAvatarButton from './profile-avatar'
 
 type Props = {
   showBack?: boolean
@@ -32,9 +33,7 @@ export default function AppHeader({ showBack = false, showMenu = false, hideProf
       {hideProfile ? (
         <View style={styles.iconBtn} />
       ) : (
-        <TouchableOpacity style={styles.iconBtn} onPress={() => router.push('/settings')}>
-          <Text style={styles.icon}>👤</Text>
-        </TouchableOpacity>
+        <ProfileAvatarButton />
       )}
     </View>
   )

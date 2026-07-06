@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { logout, getLoggedInUserId } from '../services/AuthService'
 import { getUnreadNotifications, markAsRead } from '../services/NotificationService'
+import UserAvatar from './UserAvatar'
 
 function ManagerHeader() {
     const navigate = useNavigate()
@@ -87,7 +88,7 @@ function ManagerHeader() {
                     )}
                 </div>
 
-                <Link to="/manager/profile" className="user-icon">👤</Link>
+                <UserAvatar to="/manager/profile" hasUnread={totalUnreadCount > 0} />
                 <button className="logout-button" onClick={handleLogout}>Logout</button>
             </div>
         </header>

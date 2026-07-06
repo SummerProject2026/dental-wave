@@ -11,6 +11,7 @@ import { API_BASE_URL } from '@/services/api'
 export default function LoginScreen() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
 
@@ -29,6 +30,8 @@ export default function LoginScreen() {
         userId: data.userId,
         employeeId: data.employeeId ?? null,
         username: data.username,
+        firstName: data.firstName ?? null,
+        lastName: data.lastName ?? null,
         role: data.role,
       })
       router.replace('/calendar')
@@ -62,14 +65,22 @@ export default function LoginScreen() {
         />
 
         <Text style={styles.label}>Password:</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="••••••••••••"
-          placeholderTextColor="#aaa"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-        />
+        <View style={styles.passwordRow}>
+          <TextInput
+            style={[styles.input, styles.passwordInput]}
+            placeholder="••••••••••••"
+            placeholderTextColor="#aaa"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry={!showPassword}
+          />
+          <TouchableOpacity
+            style={styles.eyeButton}
+            onPress={() => setShowPassword((prev) => !prev)}
+          >
+            <Text style={styles.eyeIcon}>{showPassword ? '🙈' : '👁️'}</Text>
+          </TouchableOpacity>
+        </View>
 
         <TouchableOpacity>
           <Text style={styles.forgotLink}>Forgot Password?</Text>
@@ -121,6 +132,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     fontSize: 18,
     color: '#333',
+  },
+  passwordRow: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  passwordInput: {
+    flex: 1,
+    paddingRight: 48,
+  },
+  eyeButton: {
+    position: 'absolute',
+    right: 14,
+    height: 52,
+    justifyContent: 'center',
+  },
+  eyeIcon: {
+    fontSize: 20,
   },
   forgotLink: {
     alignSelf: 'flex-end',

@@ -1,9 +1,22 @@
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { logout } from '../services/AuthService'
+import { logout, getLoggedInUserId } from '../services/AuthService'
+import { getUnreadNotifications } from '../services/NotificationService'
+import UserAvatar from './UserAvatar'
 
 function HRHeader() {
 
     const navigate = useNavigate()
+    const [hasUnread, setHasUnread] = useState(false)
+
+    useEffect(() => {
+        const userId = getLoggedInUserId()
+        if (!userId) return
+
+        getUnreadNotifications(userId)
+            .then((response) => setHasUnread((response.data || []).length > 0))
+            .catch((err) => console.error('Failed to load notifications', err))
+    }, [])
 
     function handleLogout() {
         logout()
@@ -24,9 +37,7 @@ function HRHeader() {
             </nav>
 
             <div className="header-actions">
-                <Link to="/hr/profile" className="user-icon">
-                    👤
-                </Link>
+                <UserAvatar to="/hr/profile" hasUnread={hasUnread} />
 
                 <button
                     className="logout-button"

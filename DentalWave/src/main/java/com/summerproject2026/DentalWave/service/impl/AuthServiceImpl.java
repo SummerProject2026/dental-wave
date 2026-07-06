@@ -119,6 +119,8 @@ public class AuthServiceImpl implements AuthService {
         jwtAuthResponse.setRole(role);
         jwtAuthResponse.setEmail(user.getEmail());
         jwtAuthResponse.setUsername(user.getUsername());
+        jwtAuthResponse.setFirstName(user.getFirstName());
+        jwtAuthResponse.setLastName(user.getLastName());
         jwtAuthResponse.setUserId(user.getId());
 
         Optional<Employee> employee = employeeRepository.findByUserId(user.getId());

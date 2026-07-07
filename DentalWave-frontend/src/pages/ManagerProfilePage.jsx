@@ -3,6 +3,7 @@ import logo from '../pictures/wake-logo.png'
 import ManagerHeader from '../components/ManagerHeader'
 import { useEffect, useState } from 'react'
 import { getCurrentUser, updateCurrentUser } from '../services/UserService'
+import { digitsOnly, formatPhoneNumber } from '../utils/phoneUtils'
 
 function ManagerProfilePage() {
 
@@ -41,9 +42,9 @@ function ManagerProfilePage() {
             phoneNumber: safeValue(user.phoneNumber),
             status: user.enabled === null || user.enabled === undefined
                 ? ''
-                : user.enabled ? 'Active' : 'Disabled',
-            hireDate: '',
-            pto: '',
+                : (user.employeeStatus || (user.enabled ? 'Active' : 'Disabled')),
+            hireDate: safeValue(user.hireDate),
+            pto: user.timeOff === null || user.timeOff === undefined ? '' : `${user.timeOff} hours`,
             roles: user.roles || []
         }
     }
@@ -64,7 +65,12 @@ function ManagerProfilePage() {
     }
 
     function handleChange(e) {
-        setForm({ ...form, [e.target.name]: e.target.value })
+        setForm({
+            ...form,
+            [e.target.name]: e.target.name === 'phoneNumber'
+                ? digitsOnly(e.target.value).slice(0, 10)
+                : e.target.value
+        })
     }
 
     function handleCancel() {
@@ -171,7 +177,7 @@ function ManagerProfilePage() {
                                 <span>Phone number:</span>
                                 <input
                                     name="phoneNumber"
-                                    value={form.phoneNumber}
+                                    value={formatPhoneNumber(form.phoneNumber)}
                                     onChange={handleChange}
                                     readOnly={!isEditing}
                                 />
@@ -206,7 +212,7 @@ function ManagerProfilePage() {
                                 />
                             </div>
                             <div className="profile-row">
-                                <span>PTO:</span>
+                                <span>PTO Hours:</span>
                                 <input
                                     name="pto"
                                     value={form.pto}

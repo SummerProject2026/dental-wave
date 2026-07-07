@@ -4,10 +4,13 @@ import { useNavigate } from 'react-router-dom'
 import EmployeeHeader from '../components/EmployeeHeader'
 import {
     getTimeOffRequestsByEmployee,
-    getAllTimeOffRequests,
-    createTimeOffRequest,
-    deleteTimeOffRequest
+    createTimeOffRequest
 } from '../services/TimeOffRequestService'
+import {
+    dateRangeContainsSunday,
+    formatDateForInput,
+    isPastDateString
+} from '../utils/timeOffDateUtils'
 
 function EmployeeRequestTimeOffPage() {
     const navigate = useNavigate()
@@ -25,12 +28,9 @@ function EmployeeRequestTimeOffPage() {
     const [calDate, setCalDate] = useState(new Date(today.getFullYear(), today.getMonth(), 1))
     const [selectedDay, setSelectedDay] = useState(null)
 
-    const [allRequests, setAllRequests] = useState([])
     const [myRequests, setMyRequests] = useState([])
 
     const [errorMessage, setErrorMessage] = useState('')
-    const [conflict, setConflict] = useState(null) // { date, request }
-    const [pendingDate, setPendingDate] = useState(null)
 
     const monthName = calDate.toLocaleString('default', { month: 'long' })
     const year = calDate.getFullYear()
@@ -52,9 +52,6 @@ function EmployeeRequestTimeOffPage() {
                 .catch(err => console.error('Failed to load own requests', err))
         }
 
-        getAllTimeOffRequests()
-            .then(res => setAllRequests(res.data || []))
-            .catch(err => console.error('Failed to load all requests', err))
     }, [employeeId])
 
     function prevMonth() {
@@ -77,14 +74,6 @@ function EmployeeRequestTimeOffPage() {
     // Date helpers
     // -------------------------------------------------------------------
 
-    // Format a JS Date as YYYY-MM-DD (matches <input type="date"> and LocalDate JSON)
-    function formatDateForInput(date) {
-        const y = date.getFullYear()
-        const m = String(date.getMonth() + 1).padStart(2, '0')
-        const d = String(date.getDate()).padStart(2, '0')
-        return `${y}-${m}-${d}`
-    }
-
     // Is dateStr within [request.startDate, request.endDate] (inclusive)?
     function dateInRequestRange(dateStr, request) {
         const start = request.startDate
@@ -100,15 +89,6 @@ function EmployeeRequestTimeOffPage() {
     // Does THIS employee already have a request covering this date?
     function findOwnRequestForDate(dateStr) {
         return myRequests.find(req => isActive(req) && dateInRequestRange(dateStr, req))
-    }
-
-    // Does ANOTHER employee already have a request covering this date?
-    function findOtherRequestForDate(dateStr) {
-        return allRequests.find(req =>
-            req.employeeId !== employeeId &&
-            isActive(req) &&
-            dateInRequestRange(dateStr, req)
-        )
     }
 
     // -------------------------------------------------------------------
@@ -143,7 +123,6 @@ function EmployeeRequestTimeOffPage() {
         const dateStr = formatDateForInput(clickedDate)
 
         setErrorMessage('')
-        setConflict(null)
 
         // 1. Already requested by this employee?
         const ownConflict = findOwnRequestForDate(dateStr)
@@ -152,15 +131,6 @@ function EmployeeRequestTimeOffPage() {
             return
         }
 
-        // 2. Requested by someone else?
-        const otherConflict = findOtherRequestForDate(dateStr)
-        if (otherConflict) {
-            setConflict({ date: dateStr, request: otherConflict })
-            setPendingDate(dateStr)
-            return
-        }
-
-        // 3. No conflicts
         selectDate(dateStr)
     }
 
@@ -179,7 +149,6 @@ function EmployeeRequestTimeOffPage() {
         const dateStr = e.target.value
         setFromDate(dateStr)
         setErrorMessage('')
-        setConflict(null)
 
         if (!dateStr) {
             setSelectedDay(null)
@@ -191,62 +160,12 @@ function EmployeeRequestTimeOffPage() {
             setErrorMessage('Request has already been made for this date.')
         }
 
-        const otherConflict = findOtherRequestForDate(dateStr)
-        if (otherConflict) {
-            setConflict({ date: dateStr, request: otherConflict })
-            setPendingDate(dateStr)
-        }
-
         const [y, m, d] = dateStr.split('-').map(Number)
         if (y === calDate.getFullYear() && (m - 1) === calDate.getMonth()) {
             setSelectedDay(d)
         } else {
             setSelectedDay(null)
         }
-    }
-
-    // -------------------------------------------------------------------
-    // Conflict modal actions
-    // -------------------------------------------------------------------
-
-    // Cancel own conflicting request, then proceed with the date
-    async function handleCancelConflictingRequest() {
-        if (!conflict) return
-
-        // Find this employee's own request that overlaps the same date,
-        // since the conflict shown is the OTHER employee's request.
-        const ownConflict = findOwnRequestForDate(conflict.date)
-        if (!ownConflict) {
-            // Nothing of ours to cancel — just proceed
-            selectDate(pendingDate)
-            setConflict(null)
-            setPendingDate(null)
-            return
-        }
-
-        try {
-            await deleteTimeOffRequest(ownConflict.id)
-            setMyRequests(prev => prev.filter(r => r.id !== ownConflict.id))
-            setAllRequests(prev => prev.filter(r => r.id !== ownConflict.id))
-            selectDate(pendingDate)
-        } catch (err) {
-            console.error('Failed to cancel conflicting request', err)
-            setErrorMessage('Failed to cancel your existing request. Please try again.')
-        } finally {
-            setConflict(null)
-            setPendingDate(null)
-        }
-    }
-
-    function handleContinueAnyway() {
-        if (pendingDate) selectDate(pendingDate)
-        setConflict(null)
-        setPendingDate(null)
-    }
-
-    function handleDismissConflict() {
-        setConflict(null)
-        setPendingDate(null)
     }
 
     // -------------------------------------------------------------------
@@ -260,16 +179,8 @@ function EmployeeRequestTimeOffPage() {
             return
         }
 
-        const today = new Date()
-        today.setHours(0, 0, 0, 0)
-        const startDateObj = new Date(fromDate + 'T00:00:00')
-        if (startDateObj < today) {
+        if (isPastDateString(fromDate)) {
             setErrorMessage('Cannot submit a request for a past date.')
-            return
-        }
-
-        if (new Date(fromDate).getDay() === 0) {
-            setErrorMessage('Sundays cannot be requested.')
             return
         }
 
@@ -282,6 +193,11 @@ function EmployeeRequestTimeOffPage() {
                 setErrorMessage('End time must be after start time.')
                 return
             }
+        }
+
+        if (dateRangeContainsSunday(fromDate, toDate || fromDate)) {
+            setErrorMessage('Sundays cannot be requested.')
+            return
         }
 
         // Final duplicate check before submitting
@@ -305,11 +221,8 @@ function EmployeeRequestTimeOffPage() {
 
         try {
 
-            console.log('Submitting time off request for employeeId:', employeeId)
-            console.log('Payload:', payload)
             const res = await createTimeOffRequest(payload)
             setMyRequests(prev => [...prev, res.data])
-            setAllRequests(prev => [...prev, res.data])
             navigate('/employee/requests')
         } catch (err) {
             console.error('Failed to submit time off request', err)
@@ -449,25 +362,6 @@ function EmployeeRequestTimeOffPage() {
                 </div>
 
             </main>
-
-            {conflict && (
-                <div className="modal-overlay">
-                    <div className="modal-box">
-                        <h2>Date Already Requested</h2>
-                        <p>
-                            {conflict.date} has already been requested off by {conflict.request.employeeName || 'another employee'}.
-                            You can cancel your own conflicting request (if any) or continue anyway.
-                        </p>
-                        <div className="modal-actions">
-                            <button onClick={handleContinueAnyway}>Continue Anyway</button>
-                            <button onClick={handleCancelConflictingRequest}>
-                                Cancel My Existing Request &amp; Proceed
-                            </button>
-                            <button onClick={handleDismissConflict}>Cancel</button>
-                        </div>
-                    </div>
-                </div>
-            )}
 
             <footer className="page-footer">© All Rights Reserved</footer>
         </div>

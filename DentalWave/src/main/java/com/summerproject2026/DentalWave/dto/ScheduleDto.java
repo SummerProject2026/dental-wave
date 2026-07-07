@@ -7,6 +7,9 @@ import java.util.Map;
 
 /**
  * Data Transfer Object for Schedule.
+ *
+ * Carries one scheduled day, including notes, publish state,
+ * and team assignments used by the manager calendar UI.
  */
 public class ScheduleDto {
 
@@ -46,8 +49,18 @@ public class ScheduleDto {
     /** Team names: team ID → display name */
     private Map<Long, String> teamNames;
 
+    /** Default constructor required for JSON serialization. */
     public ScheduleDto() {}
 
+    /**
+     * Creates a schedule DTO with basic date range and publish information.
+     *
+     * @param id schedule id
+     * @param startScheduleDate first date covered by the schedule
+     * @param endScheduleDate last date covered by the schedule
+     * @param published whether the schedule is visible to employees
+     * @param createdById id of the user who created the schedule
+     */
     public ScheduleDto(Long id, LocalDate startScheduleDate,
                        LocalDate endScheduleDate, Boolean published,
                        Long createdById) {

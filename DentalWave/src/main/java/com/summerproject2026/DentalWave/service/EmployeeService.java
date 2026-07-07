@@ -42,6 +42,11 @@ public interface EmployeeService {
     EmployeeDto updateEmployee(Long id, EmployeeDto employeeDto);
 
     /**
+     * Generates and stores an encrypted temporary password for an employee's user account.
+     */
+    String resetEmployeePassword(Long id);
+
+    /**
      * Deletes an employee and all cascaded data (availabilities, time-off requests).
      *
      * @throws com.summerproject2026.DentalWave.exception.ResourceNotFoundException if not found

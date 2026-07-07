@@ -19,9 +19,11 @@ import com.summerproject2026.DentalWave.service.UserService;
 import com.summerproject2026.DentalWave.dto.UserDto;
 
 // --- Project: Entities ---
+import com.summerproject2026.DentalWave.entity.Employee;
 import com.summerproject2026.DentalWave.entity.User;
 
 // --- Project: Repositories ---
+import com.summerproject2026.DentalWave.repository.EmployeeRepository;
 import com.summerproject2026.DentalWave.repository.UserRepository;
 import com.summerproject2026.DentalWave.repository.RoleRepository;
 
@@ -58,6 +60,7 @@ public class UserServiceImpl implements UserService {
 
     /** Repository for User persistence operations. */
     private final UserRepository userRepository;
+    private final EmployeeRepository employeeRepository;
 
     /**
      * Repository for Role entity lookups.
@@ -270,7 +273,7 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "User not found with username: " + username));
 
-        return userMapper.toDto(user);
+        return withEmployeeProfileFields(userMapper.toDto(user), user);
     }
 
     @Override
@@ -294,7 +297,7 @@ public class UserServiceImpl implements UserService {
         existingUser.setLastName(userDto.getLastName());
         existingUser.setPhoneNumber(userDto.getPhoneNumber());
 
-        return userMapper.toDto(userRepository.save(existingUser));
+        return withEmployeeProfileFields(userMapper.toDto(userRepository.save(existingUser)), existingUser);
     }
 
 
@@ -444,5 +447,36 @@ public class UserServiceImpl implements UserService {
                     log.warn("User not found with id: {}", id);
                     return new ResourceNotFoundException("User not found with id: " + id);
                 });
+    }
+
+    /**
+     * Adds linked employee profile fields to the current-user response.
+     *
+     * Some users, such as HR and managers, also have an Employee record.
+     * When that record exists, this method includes hire date, PTO balance,
+     * and employee status for the profile page.
+     *
+     * @param userDto user data returned to the frontend
+     * @param user authenticated user entity
+     * @return the same UserDto with employee profile fields added when available
+     */
+    private UserDto withEmployeeProfileFields(UserDto userDto, User user) {
+        employeeRepository.findByUserId(user.getId())
+                .ifPresent(employee -> applyEmployeeProfileFields(userDto, employee));
+
+        return userDto;
+    }
+
+    /**
+     * Copies employee-only fields onto a user profile DTO.
+     *
+     * @param userDto profile DTO being returned
+     * @param employee linked employee record
+     */
+    private void applyEmployeeProfileFields(UserDto userDto, Employee employee) {
+        userDto.setEmployeeId(employee.getId());
+        userDto.setHireDate(employee.getHireDate());
+        userDto.setTimeOff(employee.getTimeOff());
+        userDto.setEmployeeStatus(employee.getStatus() != null ? employee.getStatus().name() : null);
     }
 }

@@ -8,6 +8,7 @@ import com.summerproject2026.DentalWave.entity.Office;
 import com.summerproject2026.DentalWave.entity.ScheduleTeam;
 import com.summerproject2026.DentalWave.entity.User;
 import com.summerproject2026.DentalWave.enums.WorkStatus;
+import com.summerproject2026.DentalWave.exception.DuplicateResourceException;
 import com.summerproject2026.DentalWave.exception.ResourceNotFoundException;
 import com.summerproject2026.DentalWave.mapper.AvailabilityMapper;
 import com.summerproject2026.DentalWave.mapper.EmployeeMapper;
@@ -25,11 +26,13 @@ import com.summerproject2026.DentalWave.dto.RegisterDto;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import com.summerproject2026.DentalWave.entity.Role;
 import com.summerproject2026.DentalWave.repository.RoleRepository;
+import java.security.SecureRandom;
 import java.util.Set;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.regex.Pattern;
 
 /**
  * Implementation of EmployeeService.
@@ -46,6 +49,14 @@ import java.util.stream.Collectors;
 @Service
 @Transactional
 public class EmployeeServiceImpl implements EmployeeService {
+
+    private static final String TEMP_PASSWORD_CHARS =
+            "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
+    private static final int TEMP_PASSWORD_LENGTH = 12;
+    private static final Pattern EMAIL_PATTERN =
+            Pattern.compile("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
+    private static final Pattern PHONE_PATTERN =
+            Pattern.compile("^\\d{10}$");
 
     private final EmployeeRepository     employeeRepository;
     private final UserRepository         userRepository;
@@ -89,8 +100,28 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     @Transactional
     public EmployeeDto createEmployee(CreateEmployeeDto createEmployeeDto) {
+        if (createEmployeeDto == null || createEmployeeDto.getUser() == null || createEmployeeDto.getEmployee() == null) {
+            throw new IllegalArgumentException("Missing required employee creation information.");
+        }
+
         RegisterDto userDto = createEmployeeDto.getUser();
         EmployeeDto employeeDto = createEmployeeDto.getEmployee();
+
+        if (userDto.getUsername() == null || userDto.getUsername().isBlank()) {
+            throw new IllegalArgumentException("Username is required.");
+        }
+
+        if (userDto.getEmail() == null || userDto.getEmail().isBlank()) {
+            throw new IllegalArgumentException("Email is required.");
+        }
+
+        if (userRepository.existsByUsername(userDto.getUsername())) {
+            throw new DuplicateResourceException("Username is already in use.");
+        }
+
+        if (userRepository.existsByEmail(userDto.getEmail())) {
+            throw new DuplicateResourceException("Email is already in use.");
+        }
 
         // 1. Create the User first
         User user = new User();
@@ -179,6 +210,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     public EmployeeDto updateEmployee(Long id, EmployeeDto employeeDto) {
         Employee existing = findEmployeeOrThrow(id);
+        validateEmployeeUpdate(existing, employeeDto);
 
         WorkStatus previousStatus = existing.getStatus();
 
@@ -229,6 +261,23 @@ public class EmployeeServiceImpl implements EmployeeService {
         }
 
         return employeeMapper.mapToEmployeeDto(savedEmployee);
+    }
+
+    @Override
+    public String resetEmployeePassword(Long id) {
+        Employee employee = findEmployeeOrThrow(id);
+        User user = employee.getUser();
+
+        if (user == null) {
+            throw new ResourceNotFoundException("User account not found for employee id: " + id);
+        }
+
+        String temporaryPassword = generateTemporaryPassword();
+        user.setPassword(passwordEncoder.encode(temporaryPassword));
+        userRepository.save(user);
+
+        System.out.println("Password reset for employee " + id + " / user " + user.getId());
+        return temporaryPassword;
     }
 
     // ------------------------------------------------------------------ //
@@ -326,12 +375,88 @@ public class EmployeeServiceImpl implements EmployeeService {
                         "Employee not found with id: " + id));
     }
 
+    private void validateEmployeeUpdate(Employee existing, EmployeeDto employeeDto) {
+        if (employeeDto == null) {
+            throw new IllegalArgumentException("Employee information is required.");
+        }
+
+        if (isBlank(employeeDto.getFirstName())) {
+            throw new IllegalArgumentException("First name is required.");
+        }
+
+        if (isBlank(employeeDto.getLastName())) {
+            throw new IllegalArgumentException("Last name is required.");
+        }
+
+        if (isBlank(employeeDto.getUsername())) {
+            throw new IllegalArgumentException("Username is required.");
+        }
+
+        if (isBlank(employeeDto.getEmail())) {
+            throw new IllegalArgumentException("Email is required.");
+        }
+
+        if (!EMAIL_PATTERN.matcher(employeeDto.getEmail()).matches()) {
+            throw new IllegalArgumentException("Please enter a valid email address.");
+        }
+
+        String digitsOnlyPhone = employeeDto.getPhoneNumber() == null
+                ? ""
+                : employeeDto.getPhoneNumber().replaceAll("\\D", "");
+        if (!digitsOnlyPhone.isBlank() && !PHONE_PATTERN.matcher(digitsOnlyPhone).matches()) {
+            throw new IllegalArgumentException("Phone number must include 10 digits.");
+        }
+
+        if (isBlank(employeeDto.getPosition())) {
+            throw new IllegalArgumentException("Position is required.");
+        }
+
+        if (employeeDto.getStatus() == null) {
+            throw new IllegalArgumentException("Employee status is required.");
+        }
+
+        if (employeeDto.getOffices() == null || employeeDto.getOffices().isEmpty()) {
+            throw new IllegalArgumentException("Please select at least one office.");
+        }
+
+        Long currentUserId = existing.getUser() != null ? existing.getUser().getId() : null;
+
+        userRepository.findByUsername(employeeDto.getUsername())
+                .filter(user -> !user.getId().equals(currentUserId))
+                .ifPresent(user -> {
+                    throw new DuplicateResourceException("Username is already in use.");
+                });
+
+        userRepository.findByEmail(employeeDto.getEmail())
+                .filter(user -> !user.getId().equals(currentUserId))
+                .ifPresent(user -> {
+                    throw new DuplicateResourceException("Email is already in use.");
+                });
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.isBlank();
+    }
+
+    private String generateTemporaryPassword() {
+        SecureRandom random = new SecureRandom();
+        StringBuilder password = new StringBuilder(TEMP_PASSWORD_LENGTH);
+
+        for (int i = 0; i < TEMP_PASSWORD_LENGTH; i++) {
+            password.append(TEMP_PASSWORD_CHARS.charAt(random.nextInt(TEMP_PASSWORD_CHARS.length())));
+        }
+
+        return password.toString();
+    }
+
     /**
      * Resolves OfficeDto list from the DTO to managed Office entities.
      * Throws ResourceNotFoundException for any ID that doesn't exist in the DB.
      */
     private List<Office> resolveOffices(EmployeeDto dto) {
-        if (dto.getOffices() == null || dto.getOffices().isEmpty()) return new ArrayList<>();
+        if (dto.getOffices() == null || dto.getOffices().isEmpty()) {
+            throw new IllegalArgumentException("Please select at least one office.");
+        }
         return dto.getOffices().stream()
                 .map(officeDto -> officeRepository.findById(officeDto.getId())
                         .orElseThrow(() -> new ResourceNotFoundException(

@@ -4,7 +4,8 @@ import ManagerHeader from '../components/ManagerHeader'
 import {
     getAllCalendars,
     generateCalendar,
-    updateCalendar
+    updateCalendar,
+    deleteCalendar
 } from '../services/CalendarService'
 import {
     assignEmployeeToTeam,
@@ -14,7 +15,7 @@ import {
     renameTeam,
     updateSchedule
 } from '../services/ScheduleService'
-import { getEmployeesByOffice } from '../services/EmployeeService'
+import { getAllEmployees, getEmployeesByOffice } from '../services/EmployeeService'
 import { getAllTimeOffRequests } from '../services/TimeOffRequestService'
 import { getLoggedInUserId } from '../services/AuthService'
 import { getAllOffices } from '../services/OfficeService'
@@ -53,8 +54,11 @@ function ManagerCalendarPage() {
     const [offices, setOffices] = useState(OFFICES)
     const [selectedOfficeId, setSelectedOfficeId] = useState('')
     const [calendars, setCalendars] = useState([])
+    const [employees, setEmployees] = useState([])
     const [officeEmployees, setOfficeEmployees] = useState([])
     const [approvedTimeOffRequests, setApprovedTimeOffRequests] = useState([])
+    const [validationIssues, setValidationIssues] = useState([])
+    const [showValidationModal, setShowValidationModal] = useState(false)
     const [selectedDay, setSelectedDay] = useState(null)
     const [error, setError] = useState('')
     const [success, setSuccess] = useState('')
@@ -71,6 +75,7 @@ function ManagerCalendarPage() {
     useEffect(() => {
         loadOffices()
         loadCalendars()
+        loadEmployees()
         loadApprovedTimeOffRequests()
     }, [])
 
@@ -100,6 +105,12 @@ function ManagerCalendarPage() {
         getAllCalendars()
             .then((response) => setCalendars(response.data || []))
             .catch((err) => console.error('Failed to load calendars', err))
+    }
+
+    function loadEmployees() {
+        getAllEmployees()
+            .then((response) => setEmployees(response.data || []))
+            .catch((err) => console.error('Failed to load employees', err))
     }
 
     function loadApprovedTimeOffRequests() {
@@ -192,15 +203,20 @@ function ManagerCalendarPage() {
         try {
             const { startDate, endDate } = getStartAndEndDates()
             const createdById = getLoggedInUserId()
-            const existingOfficeIds = new Set(monthCalendars.map((calendar) => calendar.officeId))
-            const officesToCreate = offices.filter((office) => !existingOfficeIds.has(office.id))
+            const publishedCalendars = monthCalendars.filter((calendar) => calendar.published)
 
-            if (officesToCreate.length === 0) {
-                setError('A draft already exists for every office this month. Select a day to edit it.')
+            if (publishedCalendars.length > 0) {
+                setError('This month is already published. Save it as a draft before generating a new monthly draft.')
                 return
             }
 
-            for (const office of officesToCreate) {
+            setSelectedDay(null)
+
+            for (const calendar of monthCalendars) {
+                await deleteCalendar(calendar.id)
+            }
+
+            for (const office of offices) {
                 await generateCalendar({
                     month: monthLabel,
                     startCalendarDate: startDate,
@@ -211,9 +227,10 @@ function ManagerCalendarPage() {
             }
 
             await loadCalendarsAndReturn()
-            if (!selectedOfficeId && officesToCreate[0]) {
-                setSelectedOfficeId(officesToCreate[0].id)
+            if (!selectedOfficeId && offices[0]) {
+                setSelectedOfficeId(offices[0].id)
             }
+            setSuccess('Generated a new monthly draft. You can regenerate again to shuffle assignments.')
         } catch (err) {
             console.error('Failed to generate calendar', err)
             if (err.response?.status === 401) {
@@ -226,12 +243,101 @@ function ManagerCalendarPage() {
         }
     }
 
-    async function handlePublish() {
-        if (monthCalendars.length === 0) {
-            setError('Create the monthly calendar first before publishing.')
-            return
+    function getScheduledAssignmentsForMonth() {
+        const assignments = []
+
+        monthCalendars.forEach((calendar) => {
+            ;(calendar.schedules || []).forEach((schedule) => {
+                Object.entries(schedule.teams || {}).forEach(([teamId, teamEmployees]) => {
+                    ;(teamEmployees || []).forEach((employee) => {
+                        assignments.push({
+                            employee,
+                            employeeId: employee.id,
+                            date: schedule.date,
+                            teamId,
+                            officeId: calendar.officeId
+                        })
+                    })
+                })
+            })
+        })
+
+        return assignments
+    }
+
+    function buildPublishValidationIssues() {
+        const issues = []
+        const assignments = getScheduledAssignmentsForMonth()
+        const scheduledEmployeeIds = new Set(assignments.map((assignment) => assignment.employeeId))
+        const activeAssistants = employees.filter((employee) =>
+            employee.status !== 'INACTIVE' &&
+            String(employee.position || '').toLowerCase().includes('assistant')
+        )
+
+        const unscheduledAssistants = activeAssistants.filter((employee) => !scheduledEmployeeIds.has(employee.id))
+        if (unscheduledAssistants.length > 0) {
+            issues.push(`${unscheduledAssistants.length} active assistant${unscheduledAssistants.length === 1 ? ' has' : 's have'} no assigned shifts.`)
         }
 
+        let unassignedTeamCount = 0
+        monthCalendars.forEach((calendar) => {
+            ;(calendar.schedules || []).forEach((schedule) => {
+                Object.values(schedule.teams || {}).forEach((teamEmployees) => {
+                    if (!teamEmployees || teamEmployees.length === 0) {
+                        unassignedTeamCount += 1
+                    }
+                })
+            })
+        })
+        if (unassignedTeamCount > 0) {
+            issues.push(`${unassignedTeamCount} team${unassignedTeamCount === 1 ? ' has' : 's have'} no assigned assistants.`)
+        }
+
+        const sameDayAssignments = new Map()
+        assignments.forEach((assignment) => {
+            const key = `${assignment.employeeId}-${assignment.date}`
+            const current = sameDayAssignments.get(key) || new Set()
+            current.add(Number(assignment.officeId))
+            sameDayAssignments.set(key, current)
+        })
+
+        const duplicateSameDayAssignments = Array.from(sameDayAssignments.values())
+            .filter((officeIds) => officeIds.size > 1)
+        if (duplicateSameDayAssignments.length > 0) {
+            issues.push(`${duplicateSameDayAssignments.length} assistant assignment${duplicateSameDayAssignments.length === 1 ? ' is' : 's are'} scheduled in multiple offices on the same day.`)
+        }
+
+        const leaveConflictIds = new Set()
+        approvedTimeOffRequests.forEach((request) => {
+            assignments.forEach((assignment) => {
+                if (assignment.employeeId !== request.employeeId) return
+                const assignedDate = parseLocalDate(assignment.date)
+                const start = parseLocalDate(request.startDate)
+                const end = parseLocalDate(request.endDate)
+                if (assignedDate && start && end && assignedDate >= start && assignedDate <= end) {
+                    leaveConflictIds.add(`${assignment.employeeId}-${assignment.date}`)
+                }
+            })
+        })
+        if (leaveConflictIds.size > 0) {
+            issues.push(`${leaveConflictIds.size} approved time-off request${leaveConflictIds.size === 1 ? ' conflicts' : 's conflict'} with scheduled shifts.`)
+        }
+
+        const officeMismatchIds = new Set()
+        assignments.forEach((assignment) => {
+            const allowedOfficeIds = (assignment.employee.offices || []).map((office) => Number(office.id))
+            if (allowedOfficeIds.length > 0 && !allowedOfficeIds.includes(Number(assignment.officeId))) {
+                officeMismatchIds.add(`${assignment.employeeId}-${assignment.officeId}`)
+            }
+        })
+        if (officeMismatchIds.size > 0) {
+            issues.push(`${officeMismatchIds.size} assignment${officeMismatchIds.size === 1 ? ' is' : 's are'} outside the employee's office locations.`)
+        }
+
+        return issues
+    }
+
+    async function publishMonth() {
         setLoading(true)
         setError('')
         setSuccess('')
@@ -255,7 +361,24 @@ function ManagerCalendarPage() {
             }
         } finally {
             setLoading(false)
+            setShowValidationModal(false)
         }
+    }
+
+    async function handlePublish() {
+        if (monthCalendars.length === 0) {
+            setError('Create the monthly calendar first before publishing.')
+            return
+        }
+
+        const issues = buildPublishValidationIssues()
+        if (issues.length > 0) {
+            setValidationIssues(issues)
+            setShowValidationModal(true)
+            return
+        }
+
+        await publishMonth()
     }
 
     async function handleSaveDraft() {
@@ -430,8 +553,6 @@ function ManagerCalendarPage() {
         currentDate.getFullYear() === today.getFullYear()
 
     const monthCalendars = calendars.filter((cal) => cal.month === monthLabel)
-    const allOfficeCalendarsExist = offices.length > 0 &&
-        offices.every((office) => monthCalendars.some((calendar) => calendar.officeId === office.id))
     const monthStatus = monthCalendars.length === 0
         ? 'No calendar created'
         : monthCalendars.every((calendar) => calendar.published)
@@ -468,32 +589,38 @@ function ManagerCalendarPage() {
         return schedule.teamNames?.[teamIdNum] || `Team ${teamId}`
     }
 
-    function getDoctorAbbreviation(teamName, employees) {
+    function getDoctorIdentifier(teamName, employees) {
         const doctor = employees.find((employee) =>
             String(employee.position || '').toLowerCase().includes('doctor')
         )
-        const sourceName = /^team\s+\d+$/i.test(teamName)
+        const sourceName = doctor && /^team\s+\d+$/i.test(teamName)
             ? getEmployeeName(doctor || employees[0] || {})
             : teamName
 
+        if (/no\s*dr/i.test(sourceName)) return 'NO DR'
+
         const cleaned = sourceName
+            .replace(/^[a-zA-Z]+\)\s*/, '')
             .replace(/^dr\.?\s*/i, '')
+            .replace(/\bdr\.?\b/gi, '')
             .replace(/[^a-zA-Z\s-]/g, ' ')
             .trim()
 
         if (!cleaned) return teamName
 
         const parts = cleaned.split(/\s+/).filter(Boolean)
-        if (parts.length === 1) return `${parts[0].slice(0, 2).toUpperCase()})`
-        return `${parts.map((part) => part[0]).join('').slice(0, 3).toUpperCase()})`
+        const lastName = parts[parts.length - 1]
+        return lastName[0].toUpperCase()
     }
 
     function getPrintableAssistants(teamName, employees) {
-        const shouldRemoveDoctor = /^team\s+\d+$/i.test(teamName)
-        return employees.filter((employee) => {
-            if (!shouldRemoveDoctor) return true
-            return !String(employee.position || '').toLowerCase().includes('doctor')
-        })
+        return employees.filter((employee) =>
+            !String(employee.position || '').toLowerCase().includes('doctor')
+        )
+    }
+
+    function getPrintableFirstName(employee) {
+        return employee.firstName || getEmployeeName(employee).split(/\s+/)[0] || ''
     }
 
     function getPrintWeeks() {
@@ -548,19 +675,20 @@ function ManagerCalendarPage() {
         printEmptyDates.slice(2).map((date) => getDateKey(date))
     )
 
-    const printTeamColorById = {}
+    const printTeamColorByDoctor = {}
     monthCalendars.forEach((calendar) => {
         ;(calendar.schedules || []).forEach((schedule) => {
-            Object.keys(schedule.teams || {}).forEach((teamId) => {
-                if (printTeamColorById[teamId] === undefined) {
-                    printTeamColorById[teamId] = Object.keys(printTeamColorById).length
+            Object.entries(schedule.teams || {}).forEach(([teamId, employees]) => {
+                const doctorIdentifier = getDoctorIdentifier(getTeamName(schedule, teamId), employees)
+                if (printTeamColorByDoctor[doctorIdentifier] === undefined) {
+                    printTeamColorByDoctor[doctorIdentifier] = Object.keys(printTeamColorByDoctor).length
                 }
             })
         })
     })
 
-    function getPrintTeamColorClass(teamId) {
-        return `print-team-color-${printTeamColorById[teamId] % 10}`
+    function getPrintTeamColorClass(doctorIdentifier) {
+        return `print-team-color-${printTeamColorByDoctor[doctorIdentifier] % 10}`
     }
 
     const approvedRequestsForMonth = approvedTimeOffRequests.filter((request) => {
@@ -614,7 +742,7 @@ function ManagerCalendarPage() {
                             </select>
                         </label>
 
-                        <button className="save-draft-btn" onClick={handleNewCalendar} disabled={loading || !offices.length || allOfficeCalendarsExist}>
+                        <button className="save-draft-btn" onClick={handleNewCalendar} disabled={loading || !offices.length}>
                             Generate Monthly Draft
                         </button>
                         <button className="save-draft-btn" onClick={handleSaveDraft} disabled={loading || !monthCalendars.length}>
@@ -880,16 +1008,17 @@ function ManagerCalendarPage() {
                                                                 {Object.entries(schedule.teams || {}).map(([teamId, employees]) => {
                                                                     const teamName = getTeamName(schedule, teamId)
                                                                     const assistants = getPrintableAssistants(teamName, employees)
+                                                                    const doctorIdentifier = getDoctorIdentifier(teamName, employees)
 
                                                                     return (
                                                                         <div key={teamId} className="print-team-group">
-                                                                            <div className={`print-team-name ${getPrintTeamColorClass(teamId)}`}>
-                                                                                {getDoctorAbbreviation(teamName, employees)}
+                                                                            <div className={`print-team-name ${getPrintTeamColorClass(doctorIdentifier)}`}>
+                                                                                {doctorIdentifier}
                                                                             </div>
                                                                             <div className="print-assistant-list">
                                                                                 {assistants.map((employee) => (
                                                                                     <div key={employee.id}>
-                                                                                        {getEmployeeName(employee)}
+                                                                                        {getPrintableFirstName(employee)}
                                                                                     </div>
                                                                                 ))}
                                                                             </div>
@@ -913,6 +1042,32 @@ function ManagerCalendarPage() {
                 </section>
 
             </main>
+
+            {showValidationModal && (
+                <div className="modal-overlay">
+                    <div className="modal-box schedule-validation-modal">
+                        <h2>Schedule Validation Warning</h2>
+                        <p>The following issues were found:</p>
+                        <ul className="validation-modal-list">
+                            {validationIssues.map((issue) => (
+                                <li key={issue}>{issue}</li>
+                            ))}
+                        </ul>
+                        <p>Would you like to review the schedule or publish anyway?</p>
+                        <div className="modal-actions">
+                            <button onClick={() => setShowValidationModal(false)}>
+                                Review Schedule
+                            </button>
+                            <button onClick={publishMonth} disabled={loading}>
+                                Publish Anyway
+                            </button>
+                            <button onClick={() => setShowValidationModal(false)}>
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <footer className="page-footer">© All Rights Reserved</footer>
 

@@ -6,6 +6,12 @@ import lombok.Setter;
 import java.util.Collection;
 import java.util.HashSet;
 
+/**
+ * Represents an application login account.
+ *
+ * User stores authentication fields such as username, password, and roles.
+ * Employee-specific details are stored separately on the Employee entity.
+ */
 @Entity
 @Table(name = "users")
 @Getter
@@ -44,9 +50,22 @@ public class User {
             inverseJoinColumns = @JoinColumn(name = "role_id"))
     private Collection<Role> roles = new HashSet<>();
 
-    public User() {
-    }
+    /** Default constructor required by JPA. */
+    public User() {}
 
+    /**
+     * Creates a user account with identity, contact, and role information.
+     *
+     * @param id user id, usually assigned by the database
+     * @param firstName user's first name
+     * @param lastName user's last name
+     * @param username unique username used to log in
+     * @param email unique email address
+     * @param phoneNumber contact phone number
+     * @param password hashed password
+     * @param enabled whether the account can log in
+     * @param roles security roles assigned to the account
+     */
     public User(Long id,
                 String firstName,
                 String lastName,

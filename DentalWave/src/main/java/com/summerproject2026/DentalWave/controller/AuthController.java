@@ -72,7 +72,7 @@ public class AuthController {
      * @return 201 Created with the new HR user details
      */
     @PostMapping("/register/hr")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UserDto> registerHR(@RequestBody RegisterDto registerDto) {
 
         // Delegate HR registration to the auth service with ROLE_HR

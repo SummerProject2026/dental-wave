@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import logo from '../pictures/wake-logo.png'
 import EmployeeHeader from '../components/EmployeeHeader'
 import { getEmployeeById, updateEmployee } from '../services/EmployeeService'
+import { digitsOnly, formatPhoneNumber } from '../utils/phoneUtils'
 
 function EmployeeEditProfilePage() {
     const navigate = useNavigate()
@@ -58,7 +59,7 @@ function EmployeeEditProfilePage() {
 
         setFormData({
             ...formData,
-            [name]: value
+            [name]: name === 'phoneNumber' ? digitsOnly(value).slice(0, 10) : value
         })
     }
 
@@ -175,7 +176,7 @@ function EmployeeEditProfilePage() {
                                 <span>Phone Number:</span>
                                 <input
                                     name="phoneNumber"
-                                    value={formData.phoneNumber}
+                                    value={formatPhoneNumber(formData.phoneNumber)}
                                     onChange={handleChange}
                                 />
                             </div>

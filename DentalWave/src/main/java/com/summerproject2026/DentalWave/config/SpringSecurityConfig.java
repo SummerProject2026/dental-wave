@@ -77,7 +77,13 @@ public class SpringSecurityConfig {
 
         // Use custom handler for unauthorized requests
         http.exceptionHandling(exception ->
-                exception.authenticationEntryPoint(authenticationEntryPoint));
+                exception
+                        .authenticationEntryPoint(authenticationEntryPoint)
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            response.setStatus(403);
+                            response.setContentType("application/json");
+                            response.getWriter().write("{\"message\":\"You are not authorized to perform this action.\"}");
+                        }));
 
         // Validate JWT tokens before Spring Security attempts authentication
         http.addFilterBefore(

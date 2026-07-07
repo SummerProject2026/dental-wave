@@ -1,13 +1,19 @@
 import '../App.css'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import HRHeader from '../components/HRHeader'
 import { createEmployee } from '../services/EmployeeService'
+import { getLoggedInUserRole, getToken } from '../services/AuthService'
+import { getAllOffices } from '../services/OfficeService'
+import { digitsOnly, formatPhoneNumber } from '../utils/phoneUtils'
 
 function HRAddEmployeePage() {
     const navigate = useNavigate()
 
     const [errors, setErrors] = useState({})
+    const [submitError, setSubmitError] = useState('')
+    const [offices, setOffices] = useState([])
+    const [officesLoading, setOfficesLoading] = useState(true)
 
     // Stores all form values for the new user account and employee profile
     const [employee, setEmployee] = useState({
@@ -22,15 +28,32 @@ function HRAddEmployeePage() {
         hireDate: '',
         responsibilities: '',
         timeOffBalance: '',
-        officeIds: ['1'],
+        officeIds: [],
         status: 'ACTIVE'
     })
+
+    useEffect(() => {
+        setOfficesLoading(true)
+
+        getAllOffices()
+            .then((response) => {
+                setOffices(response.data || [])
+            })
+            .catch((error) => {
+                console.error('Error loading offices:', error)
+                setSubmitError('Unable to load office locations. Please refresh and try again.')
+            })
+            .finally(() => setOfficesLoading(false))
+    }, [])
 
     // Updates normal input/select values
     function handleChange(event) {
         const { name, value } = event.target
         setErrors({ ...errors, [name]: '' })
-        setEmployee({ ...employee, [name]: value })
+        setEmployee({
+            ...employee,
+            [name]: name === 'phoneNumber' ? digitsOnly(value).slice(0, 10) : value
+        })
     }
 
     function validate() {
@@ -44,38 +67,72 @@ function HRAddEmployeePage() {
             newErrors.phoneNumber = 'Phone number must be exactly 10 digits'
         }
 
+        if (employee.officeIds.length === 0) {
+            newErrors.officeIds = 'Please select at least one office.'
+        }
+
         setErrors(newErrors)
         return Object.keys(newErrors).length === 0
     }
 
-    // Updates selected offices from the multi-select
-    function handleOfficeChange(event) {
-        const selectedOfficeIds = Array.from(
-            event.target.selectedOptions,
-            option => option.value
-        )
-
-        setEmployee({
-            ...employee,
-            officeIds: selectedOfficeIds
-        })
-    }
-
     // Adds or removes an office from the selected office list
     function toggleOffice(officeId) {
-        const officeSelected = employee.officeIds.includes(officeId)
+        const officeIdString = String(officeId)
+        const officeSelected = employee.officeIds.includes(officeIdString)
+        setErrors({ ...errors, officeIds: '' })
 
         setEmployee({
             ...employee,
             officeIds: officeSelected
-                ? employee.officeIds.filter(id => id !== officeId)
-                : [...employee.officeIds, officeId]
+                ? employee.officeIds.filter(id => id !== officeIdString)
+                : [...employee.officeIds, officeIdString]
         })
+    }
+
+    function getEmployeeCreateErrorMessage(error) {
+        const status = error.response?.status
+        const responseMessage = typeof error.response?.data === 'string'
+            ? error.response.data
+            : error.response?.data?.message
+        const normalizedMessage = String(responseMessage || '').toLowerCase()
+
+        if (status === 401 || status === 403) {
+            return 'Your session is not authorized to create employees.\nPlease log out and sign back in as an HR or Admin user.'
+        }
+
+        if (status === 400) {
+            if (normalizedMessage.includes('username')) {
+                return 'Unable to create employee.\nThe username is already being used by another employee.'
+            }
+
+            if (normalizedMessage.includes('email')) {
+                return 'Unable to create employee.\nThe email address is already being used by another employee.'
+            }
+
+            return responseMessage
+                ? `Unable to create employee.\n${responseMessage}`
+                : 'Unable to create employee.\nPlease verify the information entered and try again.'
+        }
+
+        if (status >= 500) {
+            return 'Unable to create employee.\nThe request could not be completed due to a system error.'
+        }
+
+        return 'Unable to create employee.\n\nPossible causes:\n• Username already exists\n• Email already exists\n• Session expired\n• Temporary system issue\n\nPlease review the information and try again.'
     }
 
     // Builds the CreateEmployeeDto expected by the backend
     function handleSubmit(event) {
         event.preventDefault()
+        setSubmitError('')
+
+        const token = getToken()
+        const role = getLoggedInUserRole()
+        if (!token || !['ROLE_HR', 'ROLE_ADMIN'].includes(role)) {
+            setSubmitError('Your login session is not authorized to create employees. Please log out and log back in as HR or Admin.')
+            return
+        }
+
         if (!validate()) return
         const employeeToCreate = {
             user: {
@@ -120,7 +177,8 @@ function HRAddEmployeePage() {
                 navigate('/hr/employees', { state: { employeeCreated: true } })
             })
             .catch((error) => {
-                console.error('Error creating employee:', error)
+                console.error('Employee creation failed:', error)
+                setSubmitError(getEmployeeCreateErrorMessage(error))
             })
     }
 
@@ -130,6 +188,8 @@ function HRAddEmployeePage() {
 
             <main className="add-employee-content">
                 <form className="add-employee-card" onSubmit={handleSubmit} autoComplete="off">
+                    {submitError && <p className="error-message">{submitError}</p>}
+
                     <section className="form-section">
                         <h2>Employee Information</h2>
 
@@ -154,7 +214,7 @@ function HRAddEmployeePage() {
 
                         <div className="form-row">
                             <label>Phone Number</label>
-                            <input name="phoneNumber" value={employee.phoneNumber} onChange={handleChange} autoComplete="off" />
+                            <input name="phoneNumber" value={formatPhoneNumber(employee.phoneNumber)} onChange={handleChange} autoComplete="off" />
                             {errors.phoneNumber && <span className="field-error">{errors.phoneNumber}</span>}
                         </div>
 
@@ -203,40 +263,35 @@ function HRAddEmployeePage() {
 
                                 <table className="office-table">
                                     <tbody>
-                                    <tr>
-                                        <td>
-                                            <input
-                                                type="checkbox"
-                                                checked={employee.officeIds.includes('1')}
-                                                onChange={() => toggleOffice('1')}
-                                            />
-                                        </td>
-                                        <td>Raleigh</td>
-                                    </tr>
+                                    {officesLoading ? (
+                                        <tr>
+                                            <td colSpan="2">Loading offices...</td>
+                                        </tr>
+                                    ) : offices.length > 0 ? (
+                                        offices.map((office) => {
+                                            const officeId = String(office.id)
 
-                                    <tr>
-                                        <td>
-                                            <input
-                                                type="checkbox"
-                                                checked={employee.officeIds.includes('2')}
-                                                onChange={() => toggleOffice('2')}
-                                            />
-                                        </td>
-                                        <td>Garner</td>
-                                    </tr>
-
-                                    <tr>
-                                        <td>
-                                            <input
-                                                type="checkbox"
-                                                checked={employee.officeIds.includes('3')}
-                                                onChange={() => toggleOffice('3')}
-                                            />
-                                        </td>
-                                        <td>Smithfield</td>
-                                    </tr>
+                                            return (
+                                                <tr key={office.id}>
+                                                    <td>
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={employee.officeIds.includes(officeId)}
+                                                            onChange={() => toggleOffice(officeId)}
+                                                        />
+                                                    </td>
+                                                    <td>{office.name}</td>
+                                                </tr>
+                                            )
+                                        })
+                                    ) : (
+                                        <tr>
+                                            <td colSpan="2">No offices found.</td>
+                                        </tr>
+                                    )}
                                     </tbody>
                                 </table>
+                                {errors.officeIds && <span className="field-error">{errors.officeIds}</span>}
                             </div>
 
                             <div className="form-row">

@@ -2,11 +2,20 @@ import '../App.css'
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import HRHeader from '../components/HRHeader'
-import { getEmployeeById, updateEmployee } from '../services/EmployeeService'
+import { getEmployeeById, resetEmployeePassword, updateEmployee } from '../services/EmployeeService'
+import { getAllOffices } from '../services/OfficeService'
+import { digitsOnly, formatPhoneNumber } from '../utils/phoneUtils'
 
 function HREditEmployeePage() {
     const { id } = useParams()
     const navigate = useNavigate()
+    const [temporaryPassword, setTemporaryPassword] = useState('')
+    const [resetError, setResetError] = useState('')
+    const [offices, setOffices] = useState([])
+    const [loading, setLoading] = useState(true)
+    const [saving, setSaving] = useState(false)
+    const [error, setError] = useState('')
+    const [saveError, setSaveError] = useState('')
 
     const [employee, setEmployee] = useState({
         id: '',
@@ -25,12 +34,16 @@ function HREditEmployeePage() {
     })
 
     useEffect(() => {
+        setLoading(true)
+        setError('')
 
-        getEmployeeById(id)
+        Promise.all([getEmployeeById(id), getAllOffices()])
             .then((response) => {
-                console.log('Employee loaded:', response.data)
+                const employeeResponse = response[0]
+                const officeResponse = response[1]
+                const data = employeeResponse.data
 
-                const data = response.data
+                setOffices(officeResponse.data || [])
 
                 setEmployee({
                     id: data.id || '',
@@ -54,7 +67,13 @@ function HREditEmployeePage() {
             })
             .catch((error) => {
                 console.error('Error loading employee:', error)
+                if (error.response?.status === 404) {
+                    setError('Employee could not be found. Please return to the employee list and try again.')
+                } else {
+                    setError('Unable to load employee information. Please return to the employee list and try again.')
+                }
             })
+            .finally(() => setLoading(false))
     }, [id])
 
     function handleChange(event) {
@@ -62,7 +81,7 @@ function HREditEmployeePage() {
 
         setEmployee({
             ...employee,
-            [name]: value
+            [name]: name === 'phoneNumber' ? digitsOnly(value).slice(0, 10) : value
         })
     }
 
@@ -105,16 +124,32 @@ function HREditEmployeePage() {
 
     function handleSubmit(event) {
         event.preventDefault()
+        setSaveError('')
+
+        const employeeId = employee.id || id
+        if (!employeeId) {
+            setSaveError('Employee could not be found. Please return to the employee list and try again.')
+            return
+        }
 
         const updatedEmployee = buildUpdatedEmployee()
 
-        updateEmployee(id, updatedEmployee)
+        setSaving(true)
+        updateEmployee(employeeId, updatedEmployee)
             .then(() => {
-                navigate('/hr/employees')
+                navigate(`/hr/employees/${employeeId}`)
             })
             .catch((error) => {
                 console.error('Error updating employee:', error)
+                if (error.response?.status === 404) {
+                    setSaveError('Employee could not be found. Please return to the employee list and try again.')
+                } else if (error.response?.data?.message) {
+                    setSaveError(error.response.data.message)
+                } else {
+                    setSaveError('Unable to update employee. Please verify the information and try again.')
+                }
             })
+            .finally(() => setSaving(false))
     }
 
     function handleStatusToggle() {
@@ -124,13 +159,69 @@ function HREditEmployeePage() {
 
         const updatedEmployee = buildUpdatedEmployee(newStatus)
 
-        updateEmployee(id, updatedEmployee)
+        const employeeId = employee.id || id
+
+        setSaving(true)
+        updateEmployee(employeeId, updatedEmployee)
             .then(() => {
-                navigate('/hr/employees')
+                navigate(`/hr/employees/${employeeId}`)
             })
             .catch((error) => {
                 console.error('Error updating employee status:', error)
+                if (error.response?.status === 404) {
+                    setSaveError('Employee could not be found. Please return to the employee list and try again.')
+                } else {
+                    setSaveError('Unable to update employee status. Please try again.')
+                }
             })
+            .finally(() => setSaving(false))
+    }
+
+    function handleResetPassword() {
+        setTemporaryPassword('')
+        setResetError('')
+
+        if (!window.confirm('Reset this employee password and generate a temporary password?')) {
+            return
+        }
+
+        resetEmployeePassword(id)
+            .then((response) => {
+                setTemporaryPassword(response.data)
+            })
+            .catch((error) => {
+                console.error('Error resetting employee password:', error)
+                setResetError('Password reset failed. Please try again.')
+            })
+    }
+
+    if (loading) {
+        return (
+            <div className="hr-page">
+                <HRHeader />
+                <main className="add-employee-content">
+                    <p>Loading employee...</p>
+                </main>
+            </div>
+        )
+    }
+
+    if (error) {
+        return (
+            <div className="hr-page">
+                <HRHeader />
+                <main className="add-employee-content">
+                    <p className="error-message">{error}</p>
+                    <button
+                        type="button"
+                        className="cancel-employee-btn"
+                        onClick={() => navigate('/hr/employees')}
+                    >
+                        Back to Employees
+                    </button>
+                </main>
+            </div>
+        )
     }
 
     return (
@@ -139,6 +230,8 @@ function HREditEmployeePage() {
 
             <main className="add-employee-content">
                 <form className="add-employee-card" onSubmit={handleSubmit}>
+                    {saveError && <p className="error-message">{saveError}</p>}
+
                     <section className="form-section">
                         <h2>Employee Information</h2>
 
@@ -163,7 +256,7 @@ function HREditEmployeePage() {
 
                         <div className="form-row">
                             <label>Phone Number</label>
-                            <input name="phoneNumber" value={employee.phoneNumber} onChange={handleChange} />
+                            <input name="phoneNumber" value={formatPhoneNumber(employee.phoneNumber)} onChange={handleChange} />
                         </div>
 
                         <div className="form-row">
@@ -196,38 +289,28 @@ function HREditEmployeePage() {
 
                                 <table className="office-table">
                                     <tbody>
-                                    <tr>
-                                        <td>
-                                            <input
-                                                type="checkbox"
-                                                checked={employee.officeIds.includes('855')}
-                                                onChange={() => toggleOffice('855')}
-                                            />
-                                        </td>
-                                        <td>Raleigh</td>
-                                    </tr>
+                                    {offices.length > 0 ? (
+                                        offices.map((office) => {
+                                            const officeId = String(office.id)
 
-                                    <tr>
-                                        <td>
-                                            <input
-                                                type="checkbox"
-                                                checked={employee.officeIds.includes('856')}
-                                                onChange={() => toggleOffice('856')}
-                                            />
-                                        </td>
-                                        <td>Garner</td>
-                                    </tr>
-
-                                    <tr>
-                                        <td>
-                                            <input
-                                                type="checkbox"
-                                                checked={employee.officeIds.includes('857')}
-                                                onChange={() => toggleOffice('857')}
-                                            />
-                                        </td>
-                                        <td>Smithfield</td>
-                                    </tr>
+                                            return (
+                                                <tr key={office.id}>
+                                                    <td>
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={employee.officeIds.includes(officeId)}
+                                                            onChange={() => toggleOffice(officeId)}
+                                                        />
+                                                    </td>
+                                                    <td>{office.name}</td>
+                                                </tr>
+                                            )
+                                        })
+                                    ) : (
+                                        <tr>
+                                            <td colSpan="2">No offices found.</td>
+                                        </tr>
+                                    )}
                                     </tbody>
                                 </table>
                             </div>
@@ -261,7 +344,7 @@ function HREditEmployeePage() {
                             Cancel
                         </button>
 
-                        <button type="submit" className="save-employee-btn">
+                        <button type="submit" className="save-employee-btn" disabled={saving}>
                             Save
                         </button>
                     </div>
@@ -274,12 +357,31 @@ function HREditEmployeePage() {
                                 : 'activate-employee-btn'
                         }
                         onClick={handleStatusToggle}
+                        disabled={saving}
                     >
                         {employee.status === 'ACTIVE'
                             ? 'Deactivate Employee'
                             : 'Activate Employee'}
                     </button>
                 </form>
+
+                <div className="view-employee-actions">
+                    <button
+                        type="button"
+                        className="reset-password-btn"
+                        onClick={handleResetPassword}
+                    >
+                        Reset Password
+                    </button>
+                </div>
+
+                {temporaryPassword && (
+                    <div className="temporary-password-box">
+                        Temporary password: {temporaryPassword}
+                    </div>
+                )}
+
+                {resetError && <p className="error-message">{resetError}</p>}
             </main>
 
             <footer className="page-footer">© All Rights Reserved</footer>

@@ -54,7 +54,7 @@ public class UserController {
      * @return 201 Created with the new user
      */
     @PostMapping
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UserDto> createUser(@RequestBody UserDto userDto) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(userService.createUser(userDto));
@@ -68,7 +68,7 @@ public class UserController {
      * @return 200 OK with the user
      */
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UserDto> getUserById(@PathVariable Long id) {
         return ResponseEntity.ok(userService.getUserById(id));
     }
@@ -80,7 +80,7 @@ public class UserController {
      * @return 200 OK with list of all users
      */
     @GetMapping
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<UserDto>> getAllUsers() {
         return ResponseEntity.ok(userService.getAllUsers());
     }
@@ -94,7 +94,7 @@ public class UserController {
      * @return 200 OK with the updated user
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UserDto> updateUser(
             @PathVariable Long id,
             @RequestBody UserDto userDto) {
@@ -109,7 +109,7 @@ public class UserController {
      * @return 200 OK with confirmation message
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<String> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
         return ResponseEntity.ok("User with id " + id + " deleted successfully.");
@@ -123,7 +123,7 @@ public class UserController {
      * @return 200 OK with the matching user
      */
     @GetMapping("/username/{username}")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UserDto> getUserByUsername(@PathVariable String username) {
         return ResponseEntity.ok(userService.getUserByUsername(username));
     }
@@ -136,7 +136,7 @@ public class UserController {
      * @return 200 OK with list of matching users
      */
     @GetMapping("/role/{role}")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<UserDto>> getUsersByRole(@PathVariable String role) {
         return ResponseEntity.ok(userService.getUsersByRole(role));
     }
@@ -149,7 +149,7 @@ public class UserController {
      * @return 200 OK with list of matching users
      */
     @GetMapping("/search")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<UserDto>> searchUsers(@RequestParam String keyword) {
         return ResponseEntity.ok(userService.searchUsers(keyword));
     }
@@ -162,7 +162,7 @@ public class UserController {
      * @return 200 OK with the updated user
      */
     @PatchMapping("/{id}/enable")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UserDto> enableUser(@PathVariable Long id) {
         return ResponseEntity.ok(userService.enableUser(id));
     }
@@ -175,7 +175,7 @@ public class UserController {
      * @return 200 OK with the updated user
      */
     @PatchMapping("/{id}/disable")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UserDto> disableUser(@PathVariable Long id) {
         return ResponseEntity.ok(userService.disableUser(id));
     }

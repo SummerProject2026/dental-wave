@@ -39,6 +39,9 @@ class ScheduleControllerTest {
     private ScheduleService scheduleService;
 
     @MockitoBean
+    private com.summerproject2026.DentalWave.service.EmployeeService employeeService;
+
+    @MockitoBean
     private com.summerproject2026.DentalWave.security.JwtTokenProvider jwtTokenProvider;
 
     @MockitoBean

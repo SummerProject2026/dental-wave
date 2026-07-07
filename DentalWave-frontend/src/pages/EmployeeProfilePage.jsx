@@ -4,6 +4,7 @@ import EmployeeHeader from '../components/EmployeeHeader'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getEmployeeById } from '../services/EmployeeService'
+import { formatPhoneNumber } from '../utils/phoneUtils'
 
 /**
  * EmployeeProfilePage
@@ -129,7 +130,7 @@ function EmployeeProfilePage() {
                             <div className="profile-row">
                                 <span>Phone Number:</span>
                                 <input
-                                    value={employee?.phoneNumber || ''}
+                                    value={formatPhoneNumber(employee?.phoneNumber)}
                                     readOnly
                                 />
                             </div>
@@ -165,9 +166,9 @@ function EmployeeProfilePage() {
                             </div>
 
                             <div className="profile-row">
-                                <span>PTO:</span>
+                                <span>PTO Hours:</span>
                                 <input
-                                    value={employee?.timeOff ?? ''}
+                                    value={employee?.timeOff === null || employee?.timeOff === undefined ? '' : `${employee.timeOff} hours`}
                                     readOnly
                                 />
                             </div>

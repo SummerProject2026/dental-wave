@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { getAuthHeader } from './AuthService'
+import { getAuthHeader, getAuthHeaders } from './AuthService'
 
 /**
  * Base URL for Employee endpoints.
@@ -13,7 +13,9 @@ const EMPLOYEE_REST_API_BASE_URL = 'http://localhost:8080/api/employees'
  * @returns Created EmployeeDto
  */
 export const createEmployee = (employee) =>
-    axios.post(EMPLOYEE_REST_API_BASE_URL, employee, getAuthHeader())
+    axios.post(EMPLOYEE_REST_API_BASE_URL, employee, {
+        headers: getAuthHeaders()
+    })
 
 /**
  * Retrieves an employee by id.
@@ -41,6 +43,15 @@ export const getAllEmployees = () =>
  */
 export const updateEmployee = (id, employee) =>
     axios.put(`${EMPLOYEE_REST_API_BASE_URL}/${id}`, employee, getAuthHeader())
+
+/**
+ * Resets an employee password and returns the temporary password.
+ *
+ * @param id Employee id
+ * @returns Temporary password string
+ */
+export const resetEmployeePassword = (id) =>
+    axios.post(`${EMPLOYEE_REST_API_BASE_URL}/${id}/reset-password`, null, getAuthHeader())
 
 /**
  * Deletes an employee.

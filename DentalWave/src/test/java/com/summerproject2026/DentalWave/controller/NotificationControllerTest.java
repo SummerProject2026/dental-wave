@@ -48,6 +48,12 @@ class NotificationControllerTest {
     @MockitoBean
     private NotificationService notificationService;
 
+    @MockitoBean
+    private com.summerproject2026.DentalWave.repository.NotificationRepository notificationRepository;
+
+    @MockitoBean
+    private com.summerproject2026.DentalWave.repository.UserRepository userRepository;
+
     /**
      * Mocked JwtTokenProvider — required by Spring Security
      * context loaded by @WebMvcTest.

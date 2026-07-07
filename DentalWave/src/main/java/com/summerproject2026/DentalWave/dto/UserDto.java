@@ -3,6 +3,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import java.time.LocalDate;
 import java.util.Set;
 
 /**
@@ -40,4 +41,10 @@ public class UserDto {
 
     // Indicates whether the user account is active or disabled
     private Boolean enabled;
+
+    // Linked employee profile fields, when this user has an Employee record
+    private Long employeeId;
+    private LocalDate hireDate;
+    private Double timeOff;
+    private String employeeStatus;
 }

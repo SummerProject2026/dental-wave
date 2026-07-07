@@ -58,4 +58,13 @@ public interface TimeOffRequestRepository extends JpaRepository<TimeOffRequest, 
      *         the specified status; returns an empty list if none found
      */
     List<TimeOffRequest> findByStatus(RequestStatus status);
+
+    /**
+     * Finds requests for an employee by review status.
+     *
+     * @param employeeId employee who submitted the requests
+     * @param status request status to match
+     * @return matching requests
+     */
+    List<TimeOffRequest> findByEmployeeIdAndStatus(Long employeeId, RequestStatus status);
 }

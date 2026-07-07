@@ -43,4 +43,10 @@ public class TimeOffRequest {
     private String reviewComment;
     private Boolean emergency;
     private LocalDateTime submittedAt;
+
+    /**
+     * True after a manager removes this approved request's employee from the
+     * affected schedules. This keeps the Manager Requests page accurate after reloads.
+     */
+    private Boolean scheduleRemoved = false;
 }

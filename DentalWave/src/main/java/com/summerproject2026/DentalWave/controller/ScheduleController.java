@@ -1,11 +1,16 @@
 package com.summerproject2026.DentalWave.controller;
 
 import com.summerproject2026.DentalWave.dto.ScheduleDto;
+import com.summerproject2026.DentalWave.dto.EmployeeDto;
+import com.summerproject2026.DentalWave.service.EmployeeService;
 import com.summerproject2026.DentalWave.service.ScheduleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -26,10 +31,13 @@ import java.util.List;
 public class ScheduleController {
 
     private final ScheduleService scheduleService;
+    private final EmployeeService employeeService;
 
     @Autowired
-    public ScheduleController(ScheduleService scheduleService) {
+    public ScheduleController(ScheduleService scheduleService,
+                              EmployeeService employeeService) {
         this.scheduleService = scheduleService;
+        this.employeeService = employeeService;
     }
 
     // -------------------------------------------------------------------------
@@ -43,6 +51,7 @@ public class ScheduleController {
      * @return 201 Created with the persisted ScheduleDto
      */
     @PostMapping
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public ResponseEntity<ScheduleDto> createSchedule(@RequestBody ScheduleDto scheduleDto) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(scheduleService.createSchedule(scheduleDto));
@@ -59,6 +68,7 @@ public class ScheduleController {
      * @return 200 OK with the ScheduleDto
      */
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('HR', 'MANAGER', 'ADMIN')")
     public ResponseEntity<ScheduleDto> getScheduleById(@PathVariable Long id) {
         return ResponseEntity.ok(scheduleService.getScheduleById(id));
     }
@@ -73,6 +83,7 @@ public class ScheduleController {
      * @return 200 OK with the full list
      */
     @GetMapping
+    @PreAuthorize("hasAnyRole('HR', 'MANAGER', 'ADMIN')")
     public ResponseEntity<List<ScheduleDto>> getAllSchedules() {
         return ResponseEntity.ok(scheduleService.getAllSchedules());
     }
@@ -89,6 +100,7 @@ public class ScheduleController {
      * @return 200 OK with the updated ScheduleDto
      */
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public ResponseEntity<ScheduleDto> updateSchedule(@PathVariable Long id,
                                                       @RequestBody ScheduleDto scheduleDto) {
         return ResponseEntity.ok(scheduleService.updateSchedule(id, scheduleDto));
@@ -105,6 +117,7 @@ public class ScheduleController {
      * @return 200 OK with a confirmation message
      */
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public ResponseEntity<String> deleteSchedule(@PathVariable Long id) {
         scheduleService.deleteSchedule(id);
         return ResponseEntity.ok("Schedule with id " + id + " deleted successfully.");
@@ -121,6 +134,7 @@ public class ScheduleController {
      * @return 200 OK with the matching list
      */
     @GetMapping("/date/{date}")
+    @PreAuthorize("hasAnyRole('HR', 'MANAGER', 'ADMIN')")
     public ResponseEntity<List<ScheduleDto>> getSchedulesByDate(
             @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         return ResponseEntity.ok(scheduleService.getSchedulesByDate(date));
@@ -137,6 +151,7 @@ public class ScheduleController {
      * @return 200 OK with the matching list
      */
     @GetMapping("/calendar/{calendarId}")
+    @PreAuthorize("hasAnyRole('HR', 'MANAGER', 'ADMIN')")
     public ResponseEntity<List<ScheduleDto>> getSchedulesByCalendar(@PathVariable Long calendarId) {
         return ResponseEntity.ok(scheduleService.getSchedulesByCalendar(calendarId));
     }
@@ -154,8 +169,11 @@ public class ScheduleController {
      * @return 200 OK with the list of published schedules for the employee
      */
     @GetMapping("/employee/{employeeId}")
+    @PreAuthorize("hasAnyRole('ASSISTANT', 'HR', 'MANAGER', 'ADMIN')")
     public ResponseEntity<List<ScheduleDto>> getSchedulesByEmployee(
-            @PathVariable Long employeeId) {
+            @PathVariable Long employeeId,
+            Authentication authentication) {
+        assertCanAccessEmployeeSchedule(employeeId, authentication);
         return ResponseEntity.ok(scheduleService.getSchedulesByEmployee(employeeId));
     }
 
@@ -172,6 +190,7 @@ public class ScheduleController {
      * @return 200 OK with the updated ScheduleDto
      */
     @PostMapping("/{scheduleId}/teams/{userId}/employees/{employeeId}")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public ResponseEntity<ScheduleDto> assignEmployeeToTeam(@PathVariable Long scheduleId,
                                                             @PathVariable Long userId,
                                                             @PathVariable Long employeeId) {
@@ -192,6 +211,7 @@ public class ScheduleController {
      * @return 200 OK with the updated ScheduleDto
      */
     @DeleteMapping("/{scheduleId}/teams/{userId}/employees/{employeeId}")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public ResponseEntity<ScheduleDto> removeEmployeeFromTeam(@PathVariable Long scheduleId,
                                                               @PathVariable Long userId,
                                                               @PathVariable Long employeeId) {
@@ -210,6 +230,7 @@ public class ScheduleController {
      * @return 200 OK with the updated ScheduleDto
      */
     @PatchMapping("/{id}/publish")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public ResponseEntity<ScheduleDto> publishSchedule(@PathVariable Long id) {
         return ResponseEntity.ok(scheduleService.publishSchedule(id));
     }
@@ -222,8 +243,36 @@ public class ScheduleController {
      * @return 200 OK with the list of published schedules for the employee
      */
     @GetMapping("/employee/name/{employeeName}")
+    @PreAuthorize("hasAnyRole('HR', 'MANAGER', 'ADMIN')")
     public ResponseEntity<List<ScheduleDto>> getSchedulesByEmployeeName(
             @PathVariable String employeeName) {
         return ResponseEntity.ok(scheduleService.getSchedulesByEmployeeName(employeeName));
+    }
+
+    private void assertCanAccessEmployeeSchedule(Long employeeId, Authentication authentication) {
+        if (hasAnyAuthority(authentication, "ROLE_HR", "ROLE_MANAGER", "ROLE_ADMIN")) {
+            return;
+        }
+
+        EmployeeDto employee = employeeService.getEmployeeById(employeeId);
+        String principal = authentication != null ? authentication.getName() : null;
+        boolean ownsSchedule = principal != null
+                && (principal.equals(employee.getUsername()) || principal.equals(employee.getEmail()));
+
+        if (!ownsSchedule) {
+            throw new AccessDeniedException("Employees may only view their own schedule.");
+        }
+    }
+
+    private boolean hasAnyAuthority(Authentication authentication, String... authorities) {
+        if (authentication == null) return false;
+        return authentication.getAuthorities().stream()
+                .anyMatch(grantedAuthority -> {
+                    String value = grantedAuthority.getAuthority();
+                    for (String authority : authorities) {
+                        if (authority.equals(value)) return true;
+                    }
+                    return false;
+                });
     }
 }

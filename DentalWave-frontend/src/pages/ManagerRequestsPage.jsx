@@ -13,7 +13,6 @@ function ManagerRequestsPage() {
     const [filterBy, setFilterBy] = useState('approved')
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
-    const [successId, setSuccessId] = useState(null)
 
     useEffect(() => {
         loadRequests()
@@ -72,7 +71,6 @@ function ManagerRequestsPage() {
 
     async function handleRemoveFromSchedule(req) {
         setError('')
-        setSuccessId(null)
         setLoading(true)
 
         try {
@@ -92,7 +90,7 @@ function ManagerRequestsPage() {
             )
 
             await loadCalendars()
-            setSuccessId(req.id)
+            await loadRequests()
         } catch (err) {
             console.error('Failed to remove from schedule', err)
             setError('Failed to remove employee from schedule. Please try again.')
@@ -158,13 +156,17 @@ function ManagerRequestsPage() {
                                     <td>{req.status}</td>
                                     <td>{req.emergency ? 'YES' : 'NO'}</td>
                                     <td>{formatDate(req.submittedAt)}</td>
-                                    <td>
-                                        {req.status?.toUpperCase() === 'APPROVED' ? (
-                                            successId === req.id ? (
-                                                <span style={{ color: 'green', fontWeight: 600 }}>
-                                                    ✓ Removed
-                                                </span>
-                                            ) : (
+	                                    <td className="manager-request-action-cell">
+	                                        {req.status?.toUpperCase() === 'APPROVED' ? (
+	                                            req.scheduleRemoved ? (
+	                                                <button
+                                                        className="deactivate-employee-btn"
+                                                        disabled
+                                                        style={{ opacity: 0.7 }}
+                                                    >
+	                                                    ✓ Removed
+	                                                </button>
+	                                            ) : (
                                                 <button
                                                     className="deactivate-employee-btn"
                                                     onClick={() => handleRemoveFromSchedule(req)}

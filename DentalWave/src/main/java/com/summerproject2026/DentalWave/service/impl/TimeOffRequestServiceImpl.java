@@ -72,6 +72,7 @@ public class TimeOffRequestServiceImpl implements TimeOffRequestService {
         timeOffRequest.setEmployee(employee);
         timeOffRequest.setStatus(RequestStatus.PENDING);
         timeOffRequest.setSubmittedAt(LocalDateTime.now());
+        timeOffRequest.setScheduleRemoved(false);
 
         TimeOffRequest savedRequest = timeOffRequestRepository.save(timeOffRequest);
 
@@ -159,29 +160,33 @@ public class TimeOffRequestServiceImpl implements TimeOffRequestService {
     // Private Helpers
     // -------------------------
 
+    /**
+     * Deducts PTO hours from the employee when a request is approved.
+     *
+     * Same-day requests with times use the exact hour range. Full-day or
+     * multi-day requests count as eight hours per day.
+     *
+     * @param request approved time-off request
+     */
     private void deductPtoHours(TimeOffRequest request) {
-        try {
-            Employee employee = request.getEmployee();
-            double hoursToDeduct;
+        Employee employee = request.getEmployee();
+        double hoursToDeduct;
 
-            if (request.getStartDate() != null && request.getEndDate() != null
-                    && request.getStartDate().equals(request.getEndDate())
-                    && request.getStartTime() != null && request.getEndTime() != null) {
-                long minutes = ChronoUnit.MINUTES.between(request.getStartTime(), request.getEndTime());
-                hoursToDeduct = minutes / 60.0;
-            } else if (request.getStartDate() != null && request.getEndDate() != null) {
-                long days = ChronoUnit.DAYS.between(request.getStartDate(), request.getEndDate()) + 1;
-                hoursToDeduct = days * 8.0;
-            } else {
-                hoursToDeduct = 8.0;
-            }
-
-            double newBalance = (employee.getTimeOff() != null ? employee.getTimeOff() : 0.0) - hoursToDeduct;
-            employee.setTimeOff(newBalance);
-            employeeRepository.save(employee);
-        } catch (Exception e) {
-            System.err.println("Failed to deduct PTO hours for request " + request.getId() + ": " + e.getMessage());
+        if (request.getStartDate() != null && request.getEndDate() != null
+                && request.getStartDate().equals(request.getEndDate())
+                && request.getStartTime() != null && request.getEndTime() != null) {
+            long minutes = ChronoUnit.MINUTES.between(request.getStartTime(), request.getEndTime());
+            hoursToDeduct = minutes / 60.0;
+        } else if (request.getStartDate() != null && request.getEndDate() != null) {
+            long days = ChronoUnit.DAYS.between(request.getStartDate(), request.getEndDate()) + 1;
+            hoursToDeduct = days * 8.0;
+        } else {
+            hoursToDeduct = 8.0;
         }
+
+        double currentBalance = employee.getTimeOff() != null ? employee.getTimeOff() : 0.0;
+        employee.setTimeOff(currentBalance - hoursToDeduct);
+        employeeRepository.save(employee);
     }
 
     private TimeOffRequestDto reviewRequest(Long id,

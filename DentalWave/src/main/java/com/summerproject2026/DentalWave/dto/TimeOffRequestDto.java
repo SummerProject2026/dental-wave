@@ -69,6 +69,9 @@ public class TimeOffRequestDto {
     /** Timestamp of when the request was submitted by the employee. */
     private LocalDateTime submittedAt;
 
+    /** True when a manager already removed this approved request from schedules. */
+    private Boolean scheduleRemoved;
+
     // -------------------------
     // Constructors
     // -------------------------
@@ -94,6 +97,7 @@ public class TimeOffRequestDto {
      * @param reviewComment  the comment from the reviewer
      * @param emergency      whether this is an emergency request
      * @param submittedAt    the timestamp when the request was submitted
+     * @param scheduleRemoved whether the request has been removed from schedules
      */
     public TimeOffRequestDto(Long id,
                              Long employeeId,
@@ -107,9 +111,10 @@ public class TimeOffRequestDto {
                              Long reviewedById,
                              String reviewedByName,
                              LocalDateTime reviewedAt,
-                             String reviewComment,
-                             Boolean emergency,
-                             LocalDateTime submittedAt) {
+	                             String reviewComment,
+	                             Boolean emergency,
+	                             LocalDateTime submittedAt,
+	                             Boolean scheduleRemoved) {
         this.id = id;
         this.employeeId = employeeId;
         this.employeeName = employeeName;
@@ -125,6 +130,7 @@ public class TimeOffRequestDto {
         this.reviewComment = reviewComment;
         this.emergency = emergency;
         this.submittedAt = submittedAt;
+        this.scheduleRemoved = scheduleRemoved;
     }
 
     // -------------------------
@@ -175,4 +181,7 @@ public class TimeOffRequestDto {
 
     public LocalDateTime getSubmittedAt() { return submittedAt; }
     public void setSubmittedAt(LocalDateTime submittedAt) { this.submittedAt = submittedAt; }
+
+    public Boolean getScheduleRemoved() { return scheduleRemoved; }
+    public void setScheduleRemoved(Boolean scheduleRemoved) { this.scheduleRemoved = scheduleRemoved; }
 }

@@ -5,6 +5,7 @@ import com.summerproject2026.DentalWave.service.ScheduleTeamService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,6 +24,7 @@ public class ScheduleTeamController {
 
     // POST /api/schedule-teams - creates a new team
     @PostMapping
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public ResponseEntity<ScheduleTeamDto> createTeam(
             @RequestBody ScheduleTeamDto scheduleTeamDto) {
         return new ResponseEntity<>(
@@ -32,12 +34,14 @@ public class ScheduleTeamController {
 
     // GET /api/schedule-teams/{id} - gets a team by id
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('HR', 'MANAGER', 'ADMIN')")
     public ResponseEntity<ScheduleTeamDto> getTeamById(@PathVariable Long id) {
         return ResponseEntity.ok(scheduleTeamService.getTeamById(id));
     }
 
     // GET /api/schedule-teams/schedule/{scheduleId} - gets all teams for a schedule
     @GetMapping("/schedule/{scheduleId}")
+    @PreAuthorize("hasAnyRole('HR', 'MANAGER', 'ADMIN')")
     public ResponseEntity<List<ScheduleTeamDto>> getTeamsBySchedule(
             @PathVariable Long scheduleId) {
         return ResponseEntity.ok(
@@ -46,6 +50,7 @@ public class ScheduleTeamController {
 
     // POST /api/schedule-teams/{teamId}/employees/{employeeId} - adds employee to team
     @PostMapping("/{teamId}/employees/{employeeId}")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public ResponseEntity<ScheduleTeamDto> addEmployeeToTeam(
             @PathVariable Long teamId,
             @PathVariable Long employeeId) {
@@ -55,6 +60,7 @@ public class ScheduleTeamController {
 
     // DELETE /api/schedule-teams/{teamId}/employees/{employeeId} - removes employee from team
     @DeleteMapping("/{teamId}/employees/{employeeId}")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public ResponseEntity<ScheduleTeamDto> removeEmployeeFromTeam(
             @PathVariable Long teamId,
             @PathVariable Long employeeId) {
@@ -64,6 +70,7 @@ public class ScheduleTeamController {
 
     // PUT /api/schedule-teams/{id}/name - updates team name
     @PutMapping("/{id}/name")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public ResponseEntity<ScheduleTeamDto> updateTeamName(
             @PathVariable Long id,
             @RequestParam String name) {
@@ -73,6 +80,7 @@ public class ScheduleTeamController {
 
     // DELETE /api/schedule-teams/{id} - deletes a team
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public ResponseEntity<Void> deleteTeam(@PathVariable Long id) {
         scheduleTeamService.deleteTeam(id);
         return ResponseEntity.noContent().build();

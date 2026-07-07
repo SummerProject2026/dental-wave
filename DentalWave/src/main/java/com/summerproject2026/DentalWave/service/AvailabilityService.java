@@ -19,6 +19,14 @@ public interface AvailabilityService {
     AvailabilityDto createAvailability(AvailabilityDto availabilityDto);
 
     /**
+     * Returns one availability record by its id.
+     *
+     * @param id the availability record id
+     * @return matching AvailabilityDto
+     */
+    AvailabilityDto getAvailabilityById(Long id);
+
+    /**
      * Returns all availability records for a specific employee.
      *
      * @param employeeId the ID of the employee

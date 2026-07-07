@@ -2,7 +2,7 @@ import '../App.css'
 import EmployeeHeader from '../components/EmployeeHeader'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getAllCalendars, getPublishedCalendars } from '../services/CalendarService'
+import { getPublishedCalendars } from '../services/CalendarService'
 import { getAllOffices } from '../services/OfficeService'
 
 function parseLocalDate(dateValue) {
@@ -23,7 +23,6 @@ function EmployeeCalendarPage() {
     const [currentDate, setCurrentDate] = useState(new Date(today.getFullYear(), today.getMonth(), 1))
     const [selectedDay, setSelectedDay] = useState(null)
     const [publishedCalendars, setPublishedCalendars] = useState([])
-    const [allCalendars, setAllCalendars] = useState([])
     const [offices, setOffices] = useState([])
     const navigate = useNavigate()
 
@@ -31,10 +30,6 @@ function EmployeeCalendarPage() {
         getPublishedCalendars()
             .then((response) => setPublishedCalendars(response.data || []))
             .catch((err) => console.error('Failed to load published calendars', err))
-
-        getAllCalendars()
-            .then((response) => setAllCalendars(response.data || []))
-            .catch((err) => console.error('Failed to load calendar status', err))
 
         getAllOffices()
             .then((response) => setOffices(response.data || []))
@@ -74,12 +69,9 @@ function EmployeeCalendarPage() {
     }, {})
 
     const monthCalendars = publishedCalendars.filter((calendar) => calendar.month === monthLabel)
-    const monthDraftCalendars = allCalendars.filter((calendar) => calendar.month === monthLabel)
     const calendarStatus = monthCalendars.length > 0
         ? 'Published'
-        : monthDraftCalendars.length > 0
-            ? 'Draft'
-            : 'Not Created'
+        : 'Not Created'
 
     function getSchedulesForDay(day) {
         if (!day) return []

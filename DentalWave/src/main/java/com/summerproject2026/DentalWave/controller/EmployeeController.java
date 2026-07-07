@@ -4,6 +4,8 @@ import com.summerproject2026.DentalWave.dto.AvailabilityDto;
 import com.summerproject2026.DentalWave.dto.EmployeeDto;
 import com.summerproject2026.DentalWave.dto.CreateEmployeeDto;
 import com.summerproject2026.DentalWave.enums.WorkStatus;
+import com.summerproject2026.DentalWave.exception.DuplicateResourceException;
+import com.summerproject2026.DentalWave.exception.ResourceNotFoundException;
 import com.summerproject2026.DentalWave.repository.EmployeeRepository;
 import com.summerproject2026.DentalWave.service.EmployeeService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,8 +13,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -33,6 +39,52 @@ public class EmployeeController {
         this.employeeRepository = employeeRepository;
     }
 
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<Map<String, String>> handleResourceNotFound(ResourceNotFoundException ex) {
+        return errorResponse(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+
+    @ExceptionHandler(DuplicateResourceException.class)
+    public ResponseEntity<Map<String, String>> handleDuplicateResource(DuplicateResourceException ex) {
+        return errorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, String>> handleIllegalArgument(IllegalArgumentException ex) {
+        return errorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<Map<String, String>> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
+        String message = "Unable to create employee. Please verify the information entered and try again.";
+        String detail = ex.getMostSpecificCause() != null
+                ? ex.getMostSpecificCause().getMessage().toLowerCase()
+                : "";
+
+        if (detail.contains("username")) {
+            message = "Username is already in use.";
+        } else if (detail.contains("email")) {
+            message = "Email is already in use.";
+        }
+
+        return errorResponse(HttpStatus.BAD_REQUEST, message);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<Map<String, String>> handleAccessDenied(AccessDeniedException ex) {
+        return errorResponse(HttpStatus.FORBIDDEN, "You are not authorized to perform this action.");
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Map<String, String>> handleUnexpectedException(Exception ex) {
+        return errorResponse(HttpStatus.INTERNAL_SERVER_ERROR,
+                "An unexpected error occurred while processing the employee request.");
+    }
+
+    private ResponseEntity<Map<String, String>> errorResponse(HttpStatus status, String message) {
+        return ResponseEntity.status(status).body(Map.of("message", message));
+    }
+
     // ------------------------------------------------------------------ //
     // POST /api/employees — create
     // ------------------------------------------------------------------ //
@@ -43,10 +95,9 @@ public class EmployeeController {
      *
      * @return 201 Created with the persisted EmployeeDto
      */
-    @PreAuthorize("hasAnyRole('HR', 'ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_HR', 'ROLE_ADMIN')")
     @PostMapping
     public ResponseEntity<EmployeeDto> createEmployee(@RequestBody CreateEmployeeDto createEmployeeDto) {
-        System.out.println("EMPLOYEE CONTROLLER HIT");
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(employeeService.createEmployee(createEmployeeDto));
     }
@@ -59,8 +110,9 @@ public class EmployeeController {
     /** Returns a single employee by primary key. */
     @PreAuthorize("hasAnyRole('HR', 'ADMIN', 'MANAGER', 'ASSISTANT')")
     @GetMapping("/{id}")
-    public ResponseEntity<EmployeeDto> getEmployeeById(@PathVariable Long id) {
-        System.out.println("GET EMPLOYEE HIT: " + id);
+    public ResponseEntity<EmployeeDto> getEmployeeById(@PathVariable Long id,
+                                                       Authentication authentication) {
+        assertCanViewEmployee(id, authentication);
         return ResponseEntity.ok(employeeService.getEmployeeById(id));
     }
 
@@ -87,8 +139,20 @@ public class EmployeeController {
     @PreAuthorize("hasAnyRole('ASSISTANT', 'MANAGER', 'HR', 'ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<EmployeeDto> updateEmployee(@PathVariable Long id,
-                                                       @RequestBody EmployeeDto employeeDto) {
+                                                       @RequestBody EmployeeDto employeeDto,
+                                                       Authentication authentication) {
+        assertCanUpdateEmployee(id, authentication);
         return ResponseEntity.ok(employeeService.updateEmployee(id, employeeDto));
+    }
+
+    // ------------------------------------------------------------------ //
+    // POST /api/employees/{id}/reset-password — HR/Admin password reset
+    // ------------------------------------------------------------------ //
+
+    @PreAuthorize("hasAnyRole('HR', 'ADMIN')")
+    @PostMapping("/{id}/reset-password")
+    public ResponseEntity<String> resetEmployeePassword(@PathVariable Long id) {
+        return ResponseEntity.ok(employeeService.resetEmployeePassword(id));
     }
 
     // ------------------------------------------------------------------ //
@@ -204,5 +268,46 @@ public class EmployeeController {
         employeeService.deleteAvailability(employeeId, availabilityId);
         return ResponseEntity.ok(
                 "Availability " + availabilityId + " removed from employee " + employeeId + ".");
+    }
+
+    private void assertCanUpdateEmployee(Long employeeId, Authentication authentication) {
+        if (hasAnyAuthority(authentication, "ROLE_HR", "ROLE_ADMIN")) {
+            return;
+        }
+
+        assertOwnsEmployee(employeeId, authentication,
+                "Employees may only update their own profile.");
+    }
+
+    private void assertCanViewEmployee(Long employeeId, Authentication authentication) {
+        if (hasAnyAuthority(authentication, "ROLE_HR", "ROLE_MANAGER", "ROLE_ADMIN")) {
+            return;
+        }
+
+        assertOwnsEmployee(employeeId, authentication,
+                "Employees may only view their own profile.");
+    }
+
+    private void assertOwnsEmployee(Long employeeId, Authentication authentication, String message) {
+        EmployeeDto employee = employeeService.getEmployeeById(employeeId);
+        String principal = authentication != null ? authentication.getName() : null;
+        boolean ownsProfile = principal != null
+                && (principal.equals(employee.getUsername()) || principal.equals(employee.getEmail()));
+
+        if (!ownsProfile) {
+            throw new AccessDeniedException(message);
+        }
+    }
+
+    private boolean hasAnyAuthority(Authentication authentication, String... authorities) {
+        if (authentication == null) return false;
+        return authentication.getAuthorities().stream()
+                .anyMatch(grantedAuthority -> {
+                    String value = grantedAuthority.getAuthority();
+                    for (String authority : authorities) {
+                        if (authority.equals(value)) return true;
+                    }
+                    return false;
+                });
     }
 }

@@ -13,7 +13,7 @@ const USER_REST_API_BASE_URL = 'http://localhost:8080/api/users'
  * @returns Created UserDto
  */
 export const createUser = (user) =>
-    axios.post(USER_REST_API_BASE_URL, user)
+    axios.post(USER_REST_API_BASE_URL, user, getAuthHeader())
 
 /**
  * Retrieves a user by id.
@@ -22,7 +22,7 @@ export const createUser = (user) =>
  * @returns UserDto
  */
 export const getUserById = (id) =>
-    axios.get(`${USER_REST_API_BASE_URL}/${id}`)
+    axios.get(`${USER_REST_API_BASE_URL}/${id}`, getAuthHeader())
 
 /**
  * Retrieves the currently logged-in user's profile.
@@ -38,7 +38,7 @@ export const getCurrentUser = () =>
  * @returns List<UserDto>
  */
 export const getAllUsers = () =>
-    axios.get(USER_REST_API_BASE_URL)
+    axios.get(USER_REST_API_BASE_URL, getAuthHeader())
 
 /**
  * Updates a user.
@@ -48,7 +48,7 @@ export const getAllUsers = () =>
  * @returns Updated UserDto
  */
 export const updateUser = (id, user) =>
-    axios.put(`${USER_REST_API_BASE_URL}/${id}`, user)
+    axios.put(`${USER_REST_API_BASE_URL}/${id}`, user, getAuthHeader())
 
 /**
  * Updates the currently logged-in user's editable profile fields.
@@ -65,7 +65,7 @@ export const updateCurrentUser = (user) =>
  * @param id User id
  */
 export const deleteUser = (id) =>
-    axios.delete(`${USER_REST_API_BASE_URL}/${id}`)
+    axios.delete(`${USER_REST_API_BASE_URL}/${id}`, getAuthHeader())
 
 /**
  * Retrieves a user by email.
@@ -74,7 +74,7 @@ export const deleteUser = (id) =>
  * @returns UserDto
  */
 export const getUserByEmail = (email) =>
-    axios.get(`${USER_REST_API_BASE_URL}/email/${email}`)
+    axios.get(`${USER_REST_API_BASE_URL}/email/${email}`, getAuthHeader())
 
 /**
  * Retrieves users by role.
@@ -83,7 +83,7 @@ export const getUserByEmail = (email) =>
  * @returns List<UserDto>
  */
 export const getUsersByRole = (role) =>
-    axios.get(`${USER_REST_API_BASE_URL}/role/${role}`)
+    axios.get(`${USER_REST_API_BASE_URL}/role/${role}`, getAuthHeader())
 
 /**
  * Searches users by keyword.
@@ -95,7 +95,7 @@ export const getUsersByRole = (role) =>
  * @returns List<UserDto>
  */
 export const searchUsers = (keyword) =>
-    axios.get(`${USER_REST_API_BASE_URL}/search?keyword=${keyword}`)
+    axios.get(`${USER_REST_API_BASE_URL}/search?keyword=${keyword}`, getAuthHeader())
 
 /**
  * Enables a user account.
@@ -104,7 +104,7 @@ export const searchUsers = (keyword) =>
  * @returns Updated UserDto
  */
 export const enableUser = (id) =>
-    axios.put(`${USER_REST_API_BASE_URL}/${id}/enable`)
+    axios.put(`${USER_REST_API_BASE_URL}/${id}/enable`, null, getAuthHeader())
 
 /**
  * Disables a user account.
@@ -113,4 +113,4 @@ export const enableUser = (id) =>
  * @returns Updated UserDto
  */
 export const disableUser = (id) =>
-    axios.put(`${USER_REST_API_BASE_URL}/${id}/disable`)
+    axios.put(`${USER_REST_API_BASE_URL}/${id}/disable`, null, getAuthHeader())

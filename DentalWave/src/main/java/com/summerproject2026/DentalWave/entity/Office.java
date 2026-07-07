@@ -3,6 +3,11 @@ package com.summerproject2026.DentalWave.entity;
 import jakarta.persistence.*;
 import java.time.*;
 
+/**
+ * Represents one physical office location in the practice.
+ *
+ * Offices are used when assigning employees and building monthly schedules.
+ */
 @Entity
 @Table(name = "offices")
 public class Office {
@@ -15,8 +20,17 @@ public class Office {
     private String address;
     private String phoneNumber;
 
+    /** Default constructor required by JPA. */
     public Office() {}
 
+    /**
+     * Creates an office with basic contact information.
+     *
+     * @param id office id, usually assigned by the database
+     * @param name office display name
+     * @param address office street address
+     * @param phoneNumber office contact phone number
+     */
     public Office(Long id, String name, String address, String phoneNumber) {
         this.id = id;
         this.name = name;

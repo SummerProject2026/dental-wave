@@ -66,6 +66,12 @@ public class AvailabilityServiceImpl implements AvailabilityService {
     // Read
     // -------------------------------------------------------------------------
 
+    @Override
+    @Transactional(readOnly = true)
+    public AvailabilityDto getAvailabilityById(Long id) {
+        return availabilityMapper.mapToAvailabilityDto(findAvailabilityOrThrow(id));
+    }
+
     /**
      * Returns all availability records for a specific employee.
      * Typically returns up to 7 records (one per day of the week).

@@ -5,6 +5,7 @@ import com.summerproject2026.DentalWave.entity.User;
 import com.summerproject2026.DentalWave.exception.DuplicateResourceException;
 import com.summerproject2026.DentalWave.exception.ResourceNotFoundException;
 import com.summerproject2026.DentalWave.mapper.UserMapper;
+import com.summerproject2026.DentalWave.repository.EmployeeRepository;
 import com.summerproject2026.DentalWave.repository.RoleRepository;
 import com.summerproject2026.DentalWave.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,6 +43,9 @@ class UserServiceImplTest {
     @Mock
     private RoleRepository roleRepository;
 
+    @Mock
+    private EmployeeRepository employeeRepository;
+
     private UserServiceImpl userService;
 
     private User user;
@@ -54,6 +58,7 @@ class UserServiceImplTest {
     void setUp() {
         userService = new UserServiceImpl(
                 userRepository,
+                employeeRepository,
                 roleRepository,
                 new UserMapper()
         );

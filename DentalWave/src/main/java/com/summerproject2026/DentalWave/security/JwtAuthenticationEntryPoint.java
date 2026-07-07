@@ -18,8 +18,8 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
                          HttpServletResponse response,
                          AuthenticationException authException) throws IOException {
 
-        // Send a 401 Unauthorized error with a descriptive message
-        response.sendError(HttpServletResponse.SC_UNAUTHORIZED,
-                "Access denied: You must be logged in to access this resource.");
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json");
+        response.getWriter().write("{\"message\":\"Please log in to continue.\"}");
     }
 }

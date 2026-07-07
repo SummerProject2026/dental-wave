@@ -95,10 +95,13 @@ class AvailabilityControllerTest {
     class GetAvailabilityById {
 
         @Test
-        @DisplayName("returns 501 NOT_IMPLEMENTED")
-        void getAvailabilityById_returns501() throws Exception {
+        @DisplayName("returns 200 with the availability record")
+        void getAvailabilityById_returns200() throws Exception {
+            when(availabilityService.getAvailabilityById(1L)).thenReturn(availabilityDto);
+
             mockMvc.perform(get("/api/availability/1"))
-                    .andExpect(status().isNotImplemented());
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.id").value(1L));
         }
     }
 

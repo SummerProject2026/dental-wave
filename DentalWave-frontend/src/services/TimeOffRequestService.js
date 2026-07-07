@@ -66,7 +66,6 @@ export const updateTimeOffRequest = (requestId, request) =>
  * Used by HR on the Request Detail page (UC6).
  *
  * @param requestId Time off request id
- * @param reviewedById Id of the HR user approving the request
  * @param reviewComment Optional comment from the reviewer
  * @returns Updated TimeOffRequestDto with status APPROVED
  */
@@ -76,7 +75,7 @@ export const approveTimeOffRequest = (requestId, reviewedById, reviewComment) =>
         null,
         {
             ...getAuthHeader(),
-            params: { reviewedById, reviewComment }
+            params: { reviewComment }
         }
     )
 
@@ -85,7 +84,6 @@ export const approveTimeOffRequest = (requestId, reviewedById, reviewComment) =>
  * Used by HR on the Request Detail page (UC6).
  *
  * @param requestId Time off request id
- * @param reviewedById Id of the HR user denying the request
  * @param reviewComment Optional comment from the reviewer
  * @returns Updated TimeOffRequestDto with status DENIED
  */
@@ -95,6 +93,6 @@ export const denyTimeOffRequest = (requestId, reviewedById, reviewComment) =>
         null,
         {
             ...getAuthHeader(),
-            params: { reviewedById, reviewComment }
+            params: { reviewComment }
         }
     )

@@ -33,8 +33,6 @@ export const storeToken = (token) => {
         ? token.substring(7)
         : token
 
-    console.log('Saving token:', cleanToken)
-
     localStorage.removeItem('token')
     localStorage.setItem('token', cleanToken)
 }
@@ -130,8 +128,6 @@ export const isAssistantUser = () => {
 export const getAuthHeader = () => {
     const token = getToken()
 
-    console.log('Using token:', token)
-
     if (!token) {
         return {
             headers: {}
@@ -142,6 +138,18 @@ export const getAuthHeader = () => {
         headers: {
             Authorization: `Bearer ${token}`
         }
+    }
+}
+
+export const getAuthHeaders = () => {
+    const token = getToken()
+
+    if (!token) {
+        return {}
+    }
+
+    return {
+        Authorization: `Bearer ${token}`
     }
 }
 

@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -55,6 +56,7 @@ public class CalendarController {
     // -------------------------------------------------------------------------
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public ResponseEntity<CalendarDto> createCalendar(@RequestBody CalendarDto calendarDto) {
         CalendarDto created = calendarService.createCalendar(calendarDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
@@ -65,6 +67,7 @@ public class CalendarController {
     // -------------------------------------------------------------------------
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('HR', 'MANAGER', 'ADMIN')")
     public ResponseEntity<CalendarDto> getCalendarById(@PathVariable Long id) {
         return ResponseEntity.ok(calendarService.getCalendarById(id));
     }
@@ -74,6 +77,7 @@ public class CalendarController {
     // -------------------------------------------------------------------------
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('HR', 'MANAGER', 'ADMIN')")
     public ResponseEntity<List<CalendarDto>> getAllCalendars() {
         return ResponseEntity.ok(calendarService.getAllCalendars());
     }
@@ -83,6 +87,7 @@ public class CalendarController {
     // -------------------------------------------------------------------------
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public ResponseEntity<CalendarDto> updateCalendar(@PathVariable Long id,
                                                       @RequestBody CalendarDto calendarDto) {
         return ResponseEntity.ok(calendarService.updateCalendar(id, calendarDto));
@@ -93,6 +98,7 @@ public class CalendarController {
     // -------------------------------------------------------------------------
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public ResponseEntity<String> deleteCalendar(@PathVariable Long id) {
         calendarService.deleteCalendar(id);
         return ResponseEntity.ok("Calendar with id " + id + " deleted successfully.");
@@ -103,11 +109,13 @@ public class CalendarController {
     // -------------------------------------------------------------------------
 
     @PatchMapping("/{id}/publish")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public ResponseEntity<CalendarDto> publishCalendar(@PathVariable Long id) {
         return ResponseEntity.ok(calendarService.publishCalendar(id));
     }
 
     @PostMapping("/{id}/publish")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public ResponseEntity<CalendarDto> publishCalendarPost(@PathVariable Long id) {
         return ResponseEntity.ok(calendarService.publishCalendar(id));
     }
@@ -117,11 +125,13 @@ public class CalendarController {
     // -------------------------------------------------------------------------
 
     @PatchMapping("/{id}/unpublish")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public ResponseEntity<CalendarDto> unpublishCalendar(@PathVariable Long id) {
         return ResponseEntity.ok(calendarService.unpublishCalendar(id));
     }
 
     @PostMapping("/{id}/unpublish")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public ResponseEntity<CalendarDto> unpublishCalendarPost(@PathVariable Long id) {
         return ResponseEntity.ok(calendarService.unpublishCalendar(id));
     }
@@ -131,6 +141,7 @@ public class CalendarController {
     // -------------------------------------------------------------------------
 
     @GetMapping("/month/{month}")
+    @PreAuthorize("hasAnyRole('HR', 'MANAGER', 'ADMIN')")
     public ResponseEntity<List<CalendarDto>> getCalendarsByMonth(@PathVariable String month) {
         return ResponseEntity.ok(calendarService.getCalendarsByMonth(month));
     }
@@ -140,6 +151,7 @@ public class CalendarController {
     // -------------------------------------------------------------------------
 
     @GetMapping("/published")
+    @PreAuthorize("hasAnyRole('ASSISTANT', 'HR', 'MANAGER', 'ADMIN')")
     public ResponseEntity<List<CalendarDto>> getPublishedCalendars() {
         return ResponseEntity.ok(calendarService.getPublishedCalendars());
     }
@@ -149,6 +161,7 @@ public class CalendarController {
     // -------------------------------------------------------------------------
 
     @PostMapping("/{calendarId}/schedules")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public ResponseEntity<ScheduleDto> addSchedule(@PathVariable Long calendarId,
                                                    @RequestBody ScheduleDto scheduleDto) {
         ScheduleDto created = calendarService.addSchedule(calendarId, scheduleDto);
@@ -160,6 +173,7 @@ public class CalendarController {
     // -------------------------------------------------------------------------
 
     @DeleteMapping("/{calendarId}/schedules/{scheduleId}")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public ResponseEntity<String> removeSchedule(@PathVariable Long calendarId,
                                                  @PathVariable Long scheduleId) {
         calendarService.removeSchedule(calendarId, scheduleId);
@@ -172,6 +186,7 @@ public class CalendarController {
     // -------------------------------------------------------------------------
 
     @PostMapping("/generate")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public ResponseEntity<CalendarDto> generateCalendar(@RequestBody CalendarDto calendarDto) {
         CalendarDto generated = calendarService.generateCalendar(calendarDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(generated);
@@ -182,6 +197,7 @@ public class CalendarController {
     // -------------------------------------------------------------------------
 
     @PostMapping("/{calendarId}/employees/{employeeId}/schedule-all")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public ResponseEntity<CalendarDto> scheduleEmployeeAcrossCalendar(
             @PathVariable Long calendarId,
             @PathVariable Long employeeId) {
@@ -194,6 +210,7 @@ public class CalendarController {
     // -------------------------------------------------------------------------
 
     @DeleteMapping("/{calendarId}/employees/{employeeId}/schedule-all")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public ResponseEntity<CalendarDto> removeEmployeeFromCalendar(
             @PathVariable Long calendarId,
             @PathVariable Long employeeId) {
@@ -217,6 +234,7 @@ public class CalendarController {
      * @return 200 OK with confirmation message
      */
     @DeleteMapping("/office/{officeId}/employees/{employeeId}/dates")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public ResponseEntity<String> removeEmployeeFromScheduleOnDates(
             @PathVariable Long officeId,
             @PathVariable Long employeeId,

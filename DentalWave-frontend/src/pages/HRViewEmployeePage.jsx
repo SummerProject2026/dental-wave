@@ -1,29 +1,59 @@
 import '../App.css'
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import HRHeader from '../components/HRHeader'
+import ManagerHeader from '../components/ManagerHeader'
 import { getEmployeeById } from '../services/EmployeeService'
+import { getTimeOffRequestsByEmployee } from '../services/TimeOffRequestService'
+import { formatPhoneNumber } from '../utils/phoneUtils'
 
 function HRViewEmployeePage() {
     const { id } = useParams()
     const navigate = useNavigate()
+    const location = useLocation()
+    const isManagerView = location.pathname.startsWith('/manager')
 
     const [employee, setEmployee] = useState(null)
+    const [requests, setRequests] = useState([])
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState('')
 
     useEffect(() => {
+        setLoading(true)
+        setError('')
+
         getEmployeeById(id)
             .then((response) => {
                 setEmployee(response.data)
             })
             .catch((error) => {
                 console.error('Error loading employee:', error)
+                setError('We could not load this employee. Please return to the employee list and try again.')
+            })
+            .finally(() => {
+                setLoading(false)
+            })
+
+        getTimeOffRequestsByEmployee(id)
+            .then((response) => setRequests(response.data || []))
+            .catch((error) => {
+                console.error('Error loading employee requests:', error)
+                setRequests([])
             })
     }, [id])
 
-    if (!employee) {
+    function formatDate(dateStr) {
+        if (!dateStr) return ''
+        return String(dateStr).split('T')[0]
+    }
+
+    const Header = isManagerView ? ManagerHeader : HRHeader
+    const backPath = isManagerView ? '/manager/employees' : '/hr/employees'
+
+    if (loading) {
         return (
             <div className="hr-page">
-                <HRHeader />
+                <Header />
                 <main className="view-employee-content">
                     <p>Loading employee...</p>
                 </main>
@@ -31,9 +61,27 @@ function HRViewEmployeePage() {
         )
     }
 
+    if (error || !employee) {
+        return (
+            <div className="hr-page">
+                <Header />
+                <main className="view-employee-content">
+                    <p className="error-message">{error || 'Employee not found.'}</p>
+                    <button
+                        type="button"
+                        className="close-view-btn"
+                        onClick={() => navigate(backPath)}
+                    >
+                        Close
+                    </button>
+                </main>
+            </div>
+        )
+    }
+
     return (
         <div className="hr-page">
-            <HRHeader />
+            <Header />
 
             <main className="view-employee-page">
                 <section className="view-employee-card">
@@ -62,7 +110,7 @@ function HRViewEmployeePage() {
 
                         <div className="view-field">
                             <strong>Phone Number</strong>
-                            <span>{employee.phoneNumber || 'N/A'}</span>
+                            <span>{employee.phoneNumber ? formatPhoneNumber(employee.phoneNumber) : 'N/A'}</span>
                         </div>
 
                         <div className="view-field">
@@ -128,21 +176,27 @@ function HRViewEmployeePage() {
                             <tr>
                                 <th>Dates</th>
                                 <th>Status</th>
+                                <th>Emergency</th>
+                                <th>Submitted</th>
+                                <th>Review Comments</th>
                             </tr>
                             </thead>
 
                             <tbody>
-                            {employee.timeOffRequests?.length > 0 ? (
-                                employee.timeOffRequests.map((request) => (
+                            {requests.length > 0 ? (
+                                requests.map((request) => (
                                     <tr key={request.id}>
                                         <td>{request.startDate} - {request.endDate}</td>
                                         <td>{request.status}</td>
+                                        <td>{request.emergency ? 'Yes' : 'No'}</td>
+                                        <td>{formatDate(request.submittedAt)}</td>
+                                        <td>{request.reviewComment || ''}</td>
                                     </tr>
                                 ))
                             ) : (
                                 <tr>
                                     <td
-                                        colSpan="2"
+                                        colSpan="5"
                                         style={{
                                             textAlign: 'center',
                                             fontStyle: 'italic',
@@ -158,13 +212,15 @@ function HRViewEmployeePage() {
                     </div>
                 </section>
 
-                <button
-                    type="button"
-                    className="close-view-btn"
-                    onClick={() => navigate('/hr/employees')}
-                >
-                    Close
-                </button>
+                <div className="view-employee-actions">
+                    <button
+                        type="button"
+                        className="close-view-btn"
+                        onClick={() => navigate(backPath)}
+                    >
+                        Close
+                    </button>
+                </div>
             </main>
 
             <footer className="page-footer">© All Rights Reserved</footer>

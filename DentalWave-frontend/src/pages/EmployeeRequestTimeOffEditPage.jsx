@@ -7,6 +7,11 @@ import {
     updateTimeOffRequest,
     deleteTimeOffRequest
 } from '../services/TimeOffRequestService'
+import {
+    dateRangeContainsSunday,
+    formatDateForInput,
+    isPastDateString
+} from '../utils/timeOffDateUtils'
 
 function EmployeeRequestTimeOffEditPage() {
     const navigate = useNavigate()
@@ -21,6 +26,9 @@ function EmployeeRequestTimeOffEditPage() {
     const [reason, setReason] = useState('')
     const [status, setStatus] = useState('')
     const [employeeId, setEmployeeId] = useState(null)
+    const [reviewComment, setReviewComment] = useState('')
+    const [reviewedByName, setReviewedByName] = useState('')
+    const [reviewedAt, setReviewedAt] = useState('')
     const [errorMessage, setErrorMessage] = useState('')
 
     const [calDate, setCalDate] = useState(new Date(today.getFullYear(), today.getMonth(), 1))
@@ -50,6 +58,9 @@ function EmployeeRequestTimeOffEditPage() {
                 setToTime(request.endTime || '')
                 setReason(request.reason || '')
                 setStatus(request.status || '')
+                setReviewComment(request.reviewComment || '')
+                setReviewedByName(request.reviewedByName || '')
+                setReviewedAt(request.reviewedAt || '')
                 setRequestType(request.emergency ? 'emergency' : 'timeoff')
 
                 if (request.startDate) {
@@ -80,18 +91,16 @@ function EmployeeRequestTimeOffEditPage() {
             calDate.getFullYear() === today.getFullYear()
     }
 
-    function formatDateForInput(date) {
-        const y = date.getFullYear()
-        const m = String(date.getMonth() + 1).padStart(2, '0')
-        const d = String(date.getDate()).padStart(2, '0')
-        return `${y}-${m}-${d}`
-    }
-
     function handleDayClick(day) {
         if (!day || !canEdit) return
 
         const clickedDate = new Date(calDate.getFullYear(), calDate.getMonth(), day)
         const dateStr = formatDateForInput(clickedDate)
+
+        if (clickedDate.getDay() === 0) {
+            setErrorMessage('Sundays cannot be requested.')
+            return
+        }
 
         setFromDate(dateStr)
         setSelectedDay(day)
@@ -122,6 +131,26 @@ function EmployeeRequestTimeOffEditPage() {
 
         if (!fromDate) {
             setErrorMessage('Please enter a start date.')
+            return
+        }
+
+        if (isPastDateString(fromDate)) {
+            setErrorMessage('Cannot submit a request for a past date.')
+            return
+        }
+
+        if (toDate && toDate < fromDate) {
+            setErrorMessage('End date cannot be before start date.')
+            return
+        }
+
+        if (fromDate === toDate && fromTime && toTime && fromTime >= toTime) {
+            setErrorMessage('End time must be after start time.')
+            return
+        }
+
+        if (dateRangeContainsSunday(fromDate, toDate || fromDate)) {
+            setErrorMessage('Sundays cannot be requested.')
             return
         }
 
@@ -159,6 +188,11 @@ function EmployeeRequestTimeOffEditPage() {
                 console.error('Failed to delete request:', error)
                 setErrorMessage('Failed to delete request. Please try again.')
             })
+    }
+
+    function formatReviewedAt(value) {
+        if (!value) return ''
+        return String(value).replace('T', ' ').slice(0, 16)
     }
 
     return (
@@ -255,6 +289,20 @@ function EmployeeRequestTimeOffEditPage() {
                                 placeholder="Enter reason..."
                             />
                         </div>
+
+                        {status && status !== 'PENDING' && (
+                            <div className="employee-review-comment-box">
+                                <span className="reason-label">HR Comment:</span>
+                                <p>{reviewComment || 'No comment provided.'}</p>
+                                {(reviewedByName || reviewedAt) && (
+                                    <small>
+                                        Reviewed
+                                        {reviewedByName ? ` by ${reviewedByName}` : ''}
+                                        {reviewedAt ? ` on ${formatReviewedAt(reviewedAt)}` : ''}
+                                    </small>
+                                )}
+                            </div>
+                        )}
                     </div>
 
                     <div className="request-timeoff-right">

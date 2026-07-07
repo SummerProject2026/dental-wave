@@ -1,9 +1,15 @@
 package com.summerproject2026.DentalWave.controller;
 
 import com.summerproject2026.DentalWave.dto.NotificationDto;
+import com.summerproject2026.DentalWave.entity.Notification;
+import com.summerproject2026.DentalWave.repository.NotificationRepository;
+import com.summerproject2026.DentalWave.repository.UserRepository;
 import com.summerproject2026.DentalWave.service.NotificationService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -31,6 +37,8 @@ public class NotificationController {
 
     /** Service that contains the notification business logic */
     private final NotificationService notificationService;
+    private final NotificationRepository notificationRepository;
+    private final UserRepository userRepository;
 
     /**
      * GET /api/notifications/user/{userId}
@@ -40,8 +48,11 @@ public class NotificationController {
      * @return 200 OK with list of NotificationDtos
      */
     @GetMapping("/user/{userId}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<NotificationDto>> getNotificationsForUser(
-            @PathVariable Long userId) {
+            @PathVariable Long userId,
+            Authentication authentication) {
+        assertCanAccessUserNotifications(userId, authentication);
         return ResponseEntity.ok(notificationService.getNotificationsForUser(userId));
     }
 
@@ -53,8 +64,11 @@ public class NotificationController {
      * @return 200 OK with list of unread NotificationDtos
      */
     @GetMapping("/user/{userId}/unread")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<NotificationDto>> getUnreadNotifications(
-            @PathVariable Long userId) {
+            @PathVariable Long userId,
+            Authentication authentication) {
+        assertCanAccessUserNotifications(userId, authentication);
         return ResponseEntity.ok(notificationService.getUnreadNotifications(userId));
     }
 
@@ -67,7 +81,10 @@ public class NotificationController {
      * @return 200 OK with the count of unread notifications
      */
     @GetMapping("/user/{userId}/unread/count")
-    public ResponseEntity<Long> getUnreadCount(@PathVariable Long userId) {
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Long> getUnreadCount(@PathVariable Long userId,
+                                               Authentication authentication) {
+        assertCanAccessUserNotifications(userId, authentication);
         return ResponseEntity.ok(notificationService.getUnreadCount(userId));
     }
 
@@ -82,9 +99,12 @@ public class NotificationController {
      * @return 200 OK with list of unread NotificationDtos for the tab
      */
     @GetMapping("/user/{userId}/tab/{targetTab}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<NotificationDto>> getNotificationsByTab(
             @PathVariable Long userId,
-            @PathVariable String targetTab) {
+            @PathVariable String targetTab,
+            Authentication authentication) {
+        assertCanAccessUserNotifications(userId, authentication);
         return ResponseEntity.ok(
                 notificationService.getUnreadNotificationsByTab(userId, targetTab));
     }
@@ -97,7 +117,13 @@ public class NotificationController {
      * @return 200 OK with confirmation message
      */
     @PatchMapping("/{id}/read")
-    public ResponseEntity<String> markAsRead(@PathVariable Long id) {
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<String> markAsRead(@PathVariable Long id,
+                                             Authentication authentication) {
+        Notification notification = notificationRepository.findById(id)
+                .orElseThrow(() -> new com.summerproject2026.DentalWave.exception.ResourceNotFoundException(
+                        "Notification not found with id: " + id));
+        assertCanAccessUserNotifications(notification.getRecipient().getId(), authentication);
         notificationService.markAsRead(id);
         return ResponseEntity.ok("Notification " + id + " marked as read.");
     }
@@ -110,9 +136,39 @@ public class NotificationController {
      * @return 200 OK with confirmation message
      */
     @PatchMapping("/user/{userId}/read-all")
-    public ResponseEntity<String> markAllAsRead(@PathVariable Long userId) {
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<String> markAllAsRead(@PathVariable Long userId,
+                                                Authentication authentication) {
+        assertCanAccessUserNotifications(userId, authentication);
         notificationService.markAllAsRead(userId);
         return ResponseEntity.ok(
                 "All notifications marked as read for user " + userId + ".");
+    }
+
+    private void assertCanAccessUserNotifications(Long userId, Authentication authentication) {
+        if (hasAnyAuthority(authentication, "ROLE_HR", "ROLE_MANAGER", "ROLE_ADMIN")) {
+            return;
+        }
+
+        String principal = authentication != null ? authentication.getName() : null;
+        boolean ownsNotifications = principal != null && userRepository.findById(userId)
+                .map(user -> principal.equals(user.getUsername()) || principal.equals(user.getEmail()))
+                .orElse(false);
+
+        if (!ownsNotifications) {
+            throw new AccessDeniedException("Users may only access their own notifications.");
+        }
+    }
+
+    private boolean hasAnyAuthority(Authentication authentication, String... authorities) {
+        if (authentication == null) return false;
+        return authentication.getAuthorities().stream()
+                .anyMatch(grantedAuthority -> {
+                    String value = grantedAuthority.getAuthority();
+                    for (String authority : authorities) {
+                        if (authority.equals(value)) return true;
+                    }
+                    return false;
+                });
     }
 }

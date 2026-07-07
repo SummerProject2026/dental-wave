@@ -4,8 +4,9 @@ import com.summerproject2026.DentalWave.dto.AvailabilityDto;
 import com.summerproject2026.DentalWave.service.AvailabilityService;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -40,6 +41,7 @@ public class AvailabilityController {
      * @return 201 Created with the persisted AvailabilityDto
      */
     @PostMapping
+    @PreAuthorize("hasAnyRole('HR', 'MANAGER', 'ADMIN')")
     public ResponseEntity<AvailabilityDto> createAvailability(
             @RequestBody AvailabilityDto availabilityDto) {
         AvailabilityDto created = availabilityService.createAvailability(availabilityDto);
@@ -60,14 +62,9 @@ public class AvailabilityController {
      * @return 200 OK with the AvailabilityDto
      */
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('HR', 'MANAGER', 'ADMIN')")
     public ResponseEntity<AvailabilityDto> getAvailabilityById(@PathVariable Long id) {
-        // Because the service interface doesn't include getById directly,
-        // we fetch the employee's list by employeeId pulled from the dto.
-        // A simpler approach: add getAvailabilityById to the service.
-        // Here we call the repository indirectly by delegating to a service
-        // method that accepts the id — extend AvailabilityService if required.
-        // Placeholder: return 501 until you add getById to the service.
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+        return ResponseEntity.ok(availabilityService.getAvailabilityById(id));
     }
 
     // -------------------------------------------------------------------------
@@ -81,6 +78,7 @@ public class AvailabilityController {
      * @return 200 OK with the list of AvailabilityDtos
      */
     @GetMapping("/employee/{employeeId}")
+    @PreAuthorize("hasAnyRole('ASSISTANT', 'HR', 'MANAGER', 'ADMIN')")
     public ResponseEntity<List<AvailabilityDto>> getAvailabilityByEmployee(
             @PathVariable Long employeeId) {
         return ResponseEntity.ok(availabilityService.getAvailabilityByEmployee(employeeId));
@@ -98,6 +96,7 @@ public class AvailabilityController {
      * @return 200 OK with the updated AvailabilityDto
      */
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('HR', 'MANAGER', 'ADMIN')")
     public ResponseEntity<AvailabilityDto> updateAvailability(
             @PathVariable Long id,
             @RequestBody AvailabilityDto availabilityDto) {
@@ -115,6 +114,7 @@ public class AvailabilityController {
      * @return 200 OK with a confirmation message
      */
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('HR', 'MANAGER', 'ADMIN')")
     public ResponseEntity<String> deleteAvailability(@PathVariable Long id) {
         availabilityService.deleteAvailability(id);
         return ResponseEntity.ok("Availability record with id " + id + " deleted successfully.");

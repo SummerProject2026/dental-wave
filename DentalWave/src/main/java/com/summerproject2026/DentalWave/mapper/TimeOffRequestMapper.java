@@ -75,7 +75,8 @@ public class TimeOffRequestMapper {
                 timeOffRequest.getReviewedAt(),
                 timeOffRequest.getReviewComment(),
                 timeOffRequest.getEmergency(),
-                timeOffRequest.getSubmittedAt()
+                timeOffRequest.getSubmittedAt(),
+                timeOffRequest.getScheduleRemoved()
         );
     }
 
@@ -125,7 +126,8 @@ public class TimeOffRequestMapper {
                 timeOffRequestDto.getReviewedAt(),
                 timeOffRequestDto.getReviewComment(),
                 timeOffRequestDto.getEmergency(),
-                timeOffRequestDto.getSubmittedAt()
+                timeOffRequestDto.getSubmittedAt(),
+                timeOffRequestDto.getScheduleRemoved()
         );
     }
 }

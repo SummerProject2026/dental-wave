@@ -276,7 +276,6 @@ public class EmployeeServiceImpl implements EmployeeService {
         user.setPassword(passwordEncoder.encode(temporaryPassword));
         userRepository.save(user);
 
-        System.out.println("Password reset for employee " + id + " / user " + user.getId());
         return temporaryPassword;
     }
 

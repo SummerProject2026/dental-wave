@@ -26,6 +26,19 @@ const OFFICES = [
     { id: 3, name: 'Smithfield' }
 ]
 
+const TEAM_COLORS = [
+    '#a32626',
+    '#164f44',
+    '#2444d8',
+    '#6d3a85',
+    '#5d4a00',
+    '#0082a6',
+    '#b05a00',
+    '#2f6d1f',
+    '#8b1e55',
+    '#4a4f00'
+]
+
 function parseLocalDate(dateValue) {
     if (!dateValue) return null
 
@@ -691,6 +704,15 @@ function ManagerCalendarPage() {
         return `print-team-color-${printTeamColorByDoctor[doctorIdentifier] % 10}`
     }
 
+    function getTeamColorStyle(doctorIdentifier) {
+        const colorIndex = printTeamColorByDoctor[doctorIdentifier] ?? 0
+        const color = TEAM_COLORS[colorIndex % TEAM_COLORS.length]
+        return {
+            color,
+            borderLeftColor: color
+        }
+    }
+
     const approvedRequestsForMonth = approvedTimeOffRequests.filter((request) => {
         const start = parseLocalDate(request.startDate)
         const end = parseLocalDate(request.endDate)
@@ -803,12 +825,21 @@ function ManagerCalendarPage() {
 
                                         {schedule && (
                                             <div className="manager-day-summary">
-                                                {teams.slice(0, 3).map(([teamId, employees]) => (
-                                                    <div key={teamId} className="manager-day-summary-team">
-                                                        <strong>{getTeamName(schedule, teamId)}</strong>
-                                                        <span>{employees.map(getEmployeeName).join(', ') || 'No assistants'}</span>
-                                                    </div>
-                                                ))}
+                                                {teams.slice(0, 3).map(([teamId, employees]) => {
+                                                    const teamName = getTeamName(schedule, teamId)
+                                                    const doctorIdentifier = getDoctorIdentifier(teamName, employees)
+
+                                                    return (
+                                                        <div
+                                                            key={teamId}
+                                                            className="manager-day-summary-team"
+                                                            style={getTeamColorStyle(doctorIdentifier)}
+                                                        >
+                                                            <strong>{teamName}</strong>
+                                                            <span>{employees.map(getEmployeeName).join(', ') || 'No assistants'}</span>
+                                                        </div>
+                                                    )
+                                                })}
                                                 {teams.length > 3 && (
                                                     <span className="manager-day-more">+ {teams.length - 3} more</span>
                                                 )}
@@ -1009,13 +1040,14 @@ function ManagerCalendarPage() {
                                                                     const teamName = getTeamName(schedule, teamId)
                                                                     const assistants = getPrintableAssistants(teamName, employees)
                                                                     const doctorIdentifier = getDoctorIdentifier(teamName, employees)
+                                                                    const printTeamColorClass = getPrintTeamColorClass(doctorIdentifier)
 
                                                                     return (
                                                                         <div key={teamId} className="print-team-group">
-                                                                            <div className={`print-team-name ${getPrintTeamColorClass(doctorIdentifier)}`}>
+                                                                            <div className={`print-team-name ${printTeamColorClass}`}>
                                                                                 {doctorIdentifier}
                                                                             </div>
-                                                                            <div className="print-assistant-list">
+                                                                            <div className={`print-assistant-list ${printTeamColorClass}`}>
                                                                                 {assistants.map((employee) => (
                                                                                     <div key={employee.id}>
                                                                                         {getPrintableFirstName(employee)}

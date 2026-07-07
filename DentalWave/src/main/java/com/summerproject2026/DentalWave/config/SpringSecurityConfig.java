@@ -62,7 +62,8 @@ public class SpringSecurityConfig {
 
                 .authorizeHttpRequests(authorize -> {
 
-                    // Public authentication endpoints
+                    // Public authentication endpoints. Registration remains reachable only
+                    // so the controller can return a clear "disabled" response.
                     authorize.requestMatchers("/api/auth/login").permitAll();
                     authorize.requestMatchers("/api/auth/register").permitAll();
                     authorize.requestMatchers("/api/auth/forgot-password").permitAll();

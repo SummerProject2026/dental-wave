@@ -774,8 +774,6 @@ public class CalendarServiceImpl implements CalendarService {
                         && cal.getOffice().getId().equals(officeId))
                 .collect(Collectors.toList());
 
-        boolean anyScheduleModified = false;
-
         for (Calendar calendar : officeCalendars) {
             boolean modified = false;
 
@@ -793,7 +791,6 @@ public class CalendarServiceImpl implements CalendarService {
             }
 
             if (modified) {
-                anyScheduleModified = true;
                 calendarRepository.save(calendar);
 
                 // Notify the employee if calendar is published
@@ -815,9 +812,7 @@ public class CalendarServiceImpl implements CalendarService {
             }
         }
 
-        if (anyScheduleModified) {
-            markApprovedRequestRemovedFromSchedule(employeeId, startDate, endDate);
-        }
+        markApprovedRequestRemovedFromSchedule(employeeId, startDate, endDate);
     }
 
     private void markApprovedRequestRemovedFromSchedule(Long employeeId,
@@ -831,7 +826,9 @@ public class CalendarServiceImpl implements CalendarService {
                 .collect(Collectors.toList());
 
         for (TimeOffRequest request : matchingRequests) {
-            request.setScheduleRemoved(true);
+            if (!Boolean.TRUE.equals(request.getScheduleRemoved())) {
+                request.setScheduleRemoved(true);
+            }
         }
 
         if (!matchingRequests.isEmpty()) {

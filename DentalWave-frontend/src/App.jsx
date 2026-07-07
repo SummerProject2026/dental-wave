@@ -30,6 +30,7 @@ import {
     getAuthHeader,
     getLoggedInUserRole,
     getToken,
+    logout,
     saveLoggedInUser,
     saveLoggedInUserId,
     saveLoggedInUserName
@@ -40,6 +41,7 @@ function ProtectedRoute({ allowedRoles, children }) {
     const token = getToken()
     const [role, setRole] = useState(getLoggedInUserRole())
     const [loading, setLoading] = useState(Boolean(token) && !role)
+    const [sessionExpired, setSessionExpired] = useState(false)
 
     useEffect(() => {
         if (!token || role) {
@@ -61,9 +63,26 @@ function ProtectedRoute({ allowedRoles, children }) {
                     setRole(hydratedRole)
                 }
             })
-            .catch(() => setRole(null))
+            .catch((error) => {
+                if (error.response?.status === 401) {
+                    logout()
+                    setSessionExpired(true)
+                    return
+                }
+                setRole(null)
+            })
             .finally(() => setLoading(false))
     }, [token, role])
+
+    if (sessionExpired) {
+        return (
+            <Navigate
+                to="/login"
+                replace
+                state={{ sessionExpired: true, from: location }}
+            />
+        )
+    }
 
     if (!token) {
         return <Navigate to="/login" replace state={{ from: location }} />

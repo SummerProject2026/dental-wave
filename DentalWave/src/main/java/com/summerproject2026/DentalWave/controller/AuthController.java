@@ -12,6 +12,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 /**
  * REST controller for handling authentication requests.
  * Handles login, registration, role-based registration,
@@ -45,21 +47,17 @@ public class AuthController {
 
     /**
      * POST /api/auth/register
-     * Accepts user info and creates a new assistant account.
-     * No authentication required - open registration for assistants.
-     * New users are automatically assigned ROLE_ASSISTANT.
+     * Public registration is disabled for office pilot use.
+     * HR/Admin users should create accounts through employee management.
      *
      * @param registerDto the new user's registration information
-     * @return 201 Created with the new user details
+     * @return 403 Forbidden with a clear message
      */
     @PostMapping("/register")
-    public ResponseEntity<UserDto> register(@RequestBody RegisterDto registerDto) {
-
-        // Delegate registration logic to the auth service
-        UserDto savedUser = authService.register(registerDto);
-
-        // Return 201 Created with the new user in the response body
-        return new ResponseEntity<>(savedUser, HttpStatus.CREATED);
+    public ResponseEntity<Map<String, String>> register(@RequestBody RegisterDto registerDto) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(Map.of("message",
+                        "Public registration is disabled. Please contact HR to create an account."));
     }
 
     /**

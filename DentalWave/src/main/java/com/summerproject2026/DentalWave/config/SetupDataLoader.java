@@ -127,12 +127,8 @@ public class SetupDataLoader implements ApplicationListener<ContextRefreshedEven
      */
     @Transactional
     public Office createOfficeIfNotFound(String name, String address, String phoneNumber) {
-        System.out.println("Checking office: " + name);
-
         return officeRepository.findByName(name)
                 .orElseGet(() -> {
-                    System.out.println("Creating office: " + name);
-
                     Office office = new Office();
                     office.setName(name);
                     office.setAddress(address);

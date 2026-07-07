@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, Link, useLocation } from 'react-router-dom'
 
 import '../App.css'
 import logo from '../pictures/wake-logo.png'
@@ -26,7 +26,12 @@ function LoginPage() {
     const [username, setUsername] = useState('')
     const [password, setPassword] = useState('')
     const [showPassword, setShowPassword] = useState(false)
-    const [error, setError] = useState('')
+    const location = useLocation()
+    const [error, setError] = useState(
+        location.state?.sessionExpired
+            ? 'Your session expired. Please log in again.'
+            : ''
+    )
 
     const navigator = useNavigate()
 

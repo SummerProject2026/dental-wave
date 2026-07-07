@@ -1,12 +1,16 @@
 package com.summerproject2026.DentalWave.controller;
 
 import com.summerproject2026.DentalWave.dto.AvailabilityDto;
+import com.summerproject2026.DentalWave.dto.EmployeeDto;
 import com.summerproject2026.DentalWave.service.AvailabilityService;
+import com.summerproject2026.DentalWave.service.EmployeeService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,10 +28,13 @@ import java.util.List;
 public class AvailabilityController {
 
     private final AvailabilityService availabilityService;
+    private final EmployeeService employeeService;
 
     @Autowired
-    public AvailabilityController(AvailabilityService availabilityService) {
+    public AvailabilityController(AvailabilityService availabilityService,
+                                  EmployeeService employeeService) {
         this.availabilityService = availabilityService;
+        this.employeeService = employeeService;
     }
 
     // -------------------------------------------------------------------------
@@ -80,7 +87,9 @@ public class AvailabilityController {
     @GetMapping("/employee/{employeeId}")
     @PreAuthorize("hasAnyRole('ASSISTANT', 'HR', 'MANAGER', 'ADMIN')")
     public ResponseEntity<List<AvailabilityDto>> getAvailabilityByEmployee(
-            @PathVariable Long employeeId) {
+            @PathVariable Long employeeId,
+            Authentication authentication) {
+        assertCanAccessEmployeeAvailability(employeeId, authentication);
         return ResponseEntity.ok(availabilityService.getAvailabilityByEmployee(employeeId));
     }
 
@@ -118,5 +127,32 @@ public class AvailabilityController {
     public ResponseEntity<String> deleteAvailability(@PathVariable Long id) {
         availabilityService.deleteAvailability(id);
         return ResponseEntity.ok("Availability record with id " + id + " deleted successfully.");
+    }
+
+    private void assertCanAccessEmployeeAvailability(Long employeeId, Authentication authentication) {
+        if (hasAnyAuthority(authentication, "ROLE_HR", "ROLE_MANAGER", "ROLE_ADMIN")) {
+            return;
+        }
+
+        EmployeeDto employee = employeeService.getEmployeeById(employeeId);
+        String principal = authentication != null ? authentication.getName() : null;
+        boolean ownsAvailability = principal != null
+                && (principal.equals(employee.getUsername()) || principal.equals(employee.getEmail()));
+
+        if (!ownsAvailability) {
+            throw new AccessDeniedException("Employees may only view their own availability.");
+        }
+    }
+
+    private boolean hasAnyAuthority(Authentication authentication, String... authorities) {
+        if (authentication == null) return false;
+        return authentication.getAuthorities().stream()
+                .anyMatch(grantedAuthority -> {
+                    String value = grantedAuthority.getAuthority();
+                    for (String authority : authorities) {
+                        if (authority.equals(value)) return true;
+                    }
+                    return false;
+                });
     }
 }

@@ -10,3 +10,8 @@ dist/
 # Environment variables
 .env
 
+# Local Spring Boot configuration
+DentalWave/src/main/resources/application.properties
+DentalWave/src/main/resources/application-local.properties
+DentalWave/src/main/resources/application-*.local.properties
+DentalWave/src/test/resources/applicationTest.properties

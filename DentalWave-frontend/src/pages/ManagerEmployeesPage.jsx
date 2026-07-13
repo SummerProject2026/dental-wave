@@ -7,6 +7,7 @@ import {
     getAllCalendars,
     scheduleEmployeeAcrossCalendar
 } from '../services/CalendarService'
+import { IconEye } from '../components/Icons'
 
 const OFFICES = [
     { id: 1, name: 'Raleigh' },
@@ -199,7 +200,7 @@ function ManagerEmployeesPage() {
                                                 onClick={() => navigate(`/manager/employees/${employee.id}`)}
                                                 title="View employee"
                                             >
-                                                👁
+                                                <IconEye size={18} />
                                             </button>
                                         )}
                                     </td>

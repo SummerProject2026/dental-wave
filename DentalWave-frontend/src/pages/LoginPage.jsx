@@ -3,6 +3,7 @@ import { useNavigate, Link, useLocation } from 'react-router-dom'
 
 import '../App.css'
 import logo from '../pictures/wake-logo.png'
+import { IconEye, IconEyeOff } from '../components/Icons'
 
 import {
     loginAPICall,
@@ -122,7 +123,7 @@ function LoginPage() {
                             onClick={() => setShowPassword((prev) => !prev)}
                             aria-label={showPassword ? 'Hide password' : 'Show password'}
                         >
-                            {showPassword ? '🙈' : '👁️'}
+                            {showPassword ? <IconEyeOff /> : <IconEye />}
                         </button>
                     </div>
 

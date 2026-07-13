@@ -4,6 +4,7 @@ import ManagerHeader from '../components/ManagerHeader'
 import { useEffect, useState } from 'react'
 import { getCurrentUser, updateCurrentUser } from '../services/UserService'
 import { digitsOnly, formatPhoneNumber } from '../utils/phoneUtils'
+import { IconPencil } from '../components/Icons'
 
 function ManagerProfilePage() {
 
@@ -247,7 +248,7 @@ function ManagerProfilePage() {
                                     }}
                                     disabled={loading}
                                 >
-                                    ✏️
+                                    <IconPencil size={18} />
                                 </button>
                             )}
                         </div>

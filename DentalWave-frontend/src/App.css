@@ -6,11 +6,12 @@ body {
 
 .login-page {
   min-height: 100vh;
-  background-color: #c8cbff;
+  background: radial-gradient(circle at 15% 10%, #eef4fc 0%, #e2eaf6 45%, #d3deef 100%);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  padding: 40px 20px;
 }
 
 .login-content {
@@ -18,52 +19,64 @@ body {
   flex-direction: column;
   align-items: center;
   margin-top: 0;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 44px 52px 36px;
 }
 
 .login-logo {
-  width: 380px;
+  width: 300px;
   height: auto;
-  margin-bottom: 20px;
+  margin-bottom: 22px;
 }
 
 .login-form {
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 360px;
+  width: 320px;
   box-sizing: border-box;
 }
 
 .login-label {
-  align-self: center;
+  align-self: flex-start;
   width: 320px;
   box-sizing: border-box;
-  font-size: 32px;
-  font-weight: bold;
-  color: #2444d8;
-  font-family: Georgia, 'Times New Roman', serif;
-  margin-top: 6px;
-  margin-bottom: 3px;
-
-
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-ink-soft);
+  font-family: var(--font-sans);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-top: 18px;
+  margin-bottom: 6px;
 }
 
 .login-input {
   width: 320px;
-  height: 42px;
-  border: none;
-  border-radius: 8px;
+  height: 46px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
   padding: 0 14px;
-  font-size: 18px;
-  background-color: white;
-  color: #6f6f1f;
+  font-size: 16px;
+  background-color: var(--color-bg-alt);
+  color: var(--color-ink);
   outline: none;
   box-sizing: border-box;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.login-input:focus {
+  border-color: var(--color-primary);
+  background-color: var(--color-surface);
+  box-shadow: 0 0 0 3px var(--color-primary-light);
 }
 
 .login-input::placeholder {
-  color: #7b7b22;
-  font-family: Georgia, 'Times New Roman', serif;
+  color: var(--color-ink-faint);
+  font-family: var(--font-sans);
 }
 
 .password-input-row {
@@ -85,48 +98,67 @@ body {
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 18px;
-  padding: 4px;
-  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  color: var(--color-ink-faint);
+  transition: color 0.15s ease;
+}
+
+.password-eye-button:hover {
+  color: var(--color-primary);
 }
 
 .forgot-link {
-  font-size: 14px;
-  color: #007e96;
-  margin-top: 6px;
-  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-accent-dark);
+  margin-top: 8px;
+  margin-bottom: 0;
   width: 320px;
   text-align: right;
   box-sizing: border-box;
+  text-decoration: none;
+}
+
+.forgot-link:hover {
+  text-decoration: underline;
 }
 
 .login-button {
-  margin-top: 16px;
-  background-color: #443066;
+  margin-top: 26px;
+  background-color: var(--color-primary);
   color: white;
   border: none;
-  border-radius: 6px;
-  width: 130px;
-  height: 52px;
-  font-size: 18px;
-  font-weight: bold;
+  border-radius: var(--radius-md);
+  width: 320px;
+  height: 50px;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
   cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: background-color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
 }
 
 .login-button:hover {
-  background-color: #33244d;
+  background-color: var(--color-primary-dark);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
 }
 
 .login-footer {
-  margin-top: 24px;
-  font-size: 20px;
-  color: #777;
+  margin-top: 26px;
+  font-size: 13px;
+  color: var(--color-ink-faint);
 }
 
 .login-error {
-  color: red;
-  font-size: 14px;
-  margin-top: 15px;
+  color: var(--color-danger);
+  font-size: 13px;
+  font-weight: 600;
+  margin-top: 16px;
   margin-bottom: 0;
   text-align: center;
 }
@@ -134,32 +166,38 @@ body {
 /* ---------- Shared Employee Header ---------- */
 
 .calendar-header {
-  height: 65px;
-  background-color: white;
+  height: 68px;
+  background-color: var(--color-primary-darker);
   display: flex;
   align-items: center;
   padding: 0 32px;
+  box-shadow: var(--shadow-md);
 }
 
 .business-name {
   text-decoration: none;
-  color: black;
-  font-size: 20px;
-  font-weight: bold;
+  color: white;
+  font-size: 17px;
+  font-weight: 700;
+  font-family: var(--font-display);
+  letter-spacing: 0.01em;
+  white-space: nowrap;
 }
 
 .calendar-header nav {
   display: flex;
-  gap: 60px;
+  gap: 12px;
   flex: 1;
   justify-content: center;
 }
 
 .calendar-header nav a {
   text-decoration: none;
-  color: black;
-  font-size: 22px;
-  font-weight: bold;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 15px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: var(--radius-pill);
 }
 
 .user-icon {
@@ -173,7 +211,7 @@ body {
 
 .calendar-page {
   min-height: 100vh;
-  background-color: #c8cbff;
+  background-color: var(--color-bg);
   display: flex;
   flex-direction: column;
 }
@@ -193,63 +231,67 @@ body {
 
 .calendar-controls h2 {
   margin: 0;
-  font-size: 22px;
-  color: #2444d8;
-  font-family: Georgia, 'Times New Roman', serif;
-  font-weight: bold;
+  font-size: 20px;
+  color: var(--color-primary-dark);
+  font-family: var(--font-display);
+  font-weight: 700;
   min-width: 180px;
 }
 
 .calendar-controls button {
-  background-color: #443066;
+  background-color: var(--color-primary);
   color: white;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   width: 34px;
   height: 34px;
   font-size: 16px;
   font-weight: bold;
   cursor: pointer;
+  transition: background-color 0.15s ease;
 }
 
 .calendar-controls button:hover {
-  background-color: #33244d;
+  background-color: var(--color-primary-dark);
 }
 
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  border: 2px solid #443066;
-  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
   overflow: hidden;
-  background-color: white;
+  background-color: var(--color-surface);
+  box-shadow: var(--shadow-sm);
 }
 
 .calendar-day-header {
-  background-color: #443066;
+  background-color: var(--color-primary);
   color: white;
   text-align: center;
   padding: 10px 0;
-  font-weight: bold;
-  font-size: 15px;
+  font-weight: 700;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .calendar-day {
-  border: 1px solid #ddd;
+  border: 1px solid var(--color-border-soft);
   min-height: 100px;
   padding: 6px 10px;
   font-size: 14px;
-  color: #333;
+  color: var(--color-ink);
 }
 
 .calendar-day-today {
-  background-color: #eeeeff;
+  background-color: var(--color-primary-light);
   font-weight: bold;
-  color: #2444d8;
+  color: var(--color-primary-dark);
 }
 
 .calendar-day-empty {
-  background-color: #f9f9f9;
+  background-color: var(--color-bg-alt);
 }
 /* ---------- HR Calendar Page ---------- */
 
@@ -261,9 +303,10 @@ body {
 
 .calendar-content h1 {
   margin: 0 0 16px 0;
-  font-size: 28px;
-  color: #2444d8;
-  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 26px;
+  color: var(--color-primary-dark);
+  font-family: var(--font-display);
+  font-weight: 700;
 }
 
 .calendar-controls {
@@ -275,18 +318,18 @@ body {
 
 .calendar-controls h2 {
   margin: 0;
-  font-size: 22px;
-  color: #2444d8;
-  font-family: Georgia, 'Times New Roman', serif;
-  font-weight: bold;
+  font-size: 20px;
+  color: var(--color-primary-dark);
+  font-family: var(--font-display);
+  font-weight: 700;
   min-width: 160px;
 }
 
 .calendar-controls button {
-  background-color: #443066;
+  background-color: var(--color-primary);
   color: white;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   width: 34px;
   height: 34px;
   font-size: 16px;
@@ -295,74 +338,78 @@ body {
 }
 
 .calendar-controls button:hover {
-  background-color: #33244d;
+  background-color: var(--color-primary-dark);
 }
 
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  border: 2px solid #443066;
-  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
   overflow: hidden;
-  background-color: white;
+  background-color: var(--color-surface);
+  box-shadow: var(--shadow-sm);
 }
 
 .calendar-day-header {
-  background-color: #443066;
+  background-color: var(--color-primary);
   color: white;
   text-align: center;
   padding: 10px 0;
-  font-weight: bold;
-  font-size: 15px;
+  font-weight: 700;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .calendar-day {
-  border: 1px solid #ddd;
+  border: 1px solid var(--color-border-soft);
   min-height: 90px;
   padding: 6px 10px;
   font-size: 14px;
-  color: #333;
+  color: var(--color-ink);
   vertical-align: top;
 }
 
 /* ---------- Improved Header ---------- */
 
 .calendar-header {
-  height: 65px;
-  background: linear-gradient(135deg, #443066 0%, #2444d8 100%);
+  height: 68px;
+  background-color: var(--color-primary-darker);
   display: flex;
   align-items: center;
   padding: 0 32px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  box-shadow: var(--shadow-md);
 }
 
 .business-name {
   text-decoration: none;
   color: white;
-  font-size: 18px;
-  font-weight: bold;
+  font-size: 17px;
+  font-weight: 700;
+  font-family: var(--font-display);
   white-space: nowrap;
 }
 
 .calendar-header nav {
   display: flex;
-  gap: 40px;
+  gap: 8px;
   flex: 1;
   justify-content: center;
 }
 
 .calendar-header nav a {
   text-decoration: none;
-  color: rgba(255,255,255,0.85);
-  font-size: 18px;
-  font-weight: bold;
-  padding: 6px 14px;
-  border-radius: 6px;
-  transition: background 0.2s;
+  color: rgba(255,255,255,0.78);
+  font-size: 15px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: var(--radius-pill);
+  transition: background 0.2s, color 0.2s;
 }
 
 .calendar-header nav a:hover {
-  background-color: rgba(255,255,255,0.2);
+  background-color: rgba(255,255,255,0.14);
   color: white;
 }
 
@@ -373,18 +420,19 @@ body {
 }
 
 .logout-button {
-  background-color: rgba(255,255,255,0.15);
+  background-color: transparent;
   color: white;
-  border: 1px solid rgba(255,255,255,0.4);
-  border-radius: 6px;
-  padding: 8px 14px;
+  border: 1.5px solid rgba(255,255,255,0.4);
+  border-radius: var(--radius-pill);
+  padding: 8px 16px;
   cursor: pointer;
-  font-weight: bold;
+  font-weight: 600;
+  font-size: 14px;
   transition: background 0.2s;
 }
 
 .logout-button:hover {
-  background-color: rgba(255,255,255,0.3);
+  background-color: rgba(255,255,255,0.14);
 }
 
 /* ---------- Employee Calendar Day View ---------- */
@@ -407,21 +455,23 @@ body {
 }
 
 .employee-day-title {
-  font-size: 22px;
-  font-weight: bold;
-  color: #1a1a2e;
-  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-ink);
+  font-family: var(--font-display);
   margin: 0;
 }
 
 .employee-day-card {
-  background-color: #e8e8f0;
-  border-radius: 10px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
   padding: 16px;
   font-size: 15px;
-  color: #222;
+  color: var(--color-ink);
   line-height: 1.8;
   min-height: 100px;
+  box-shadow: var(--shadow-sm);
 }
 
 .employee-day-card p {
@@ -429,33 +479,36 @@ body {
 }
 
 .no-schedule-text {
-  color: #888;
+  color: var(--color-ink-faint);
   font-style: italic;
   text-align: center;
   padding: 20px 0;
 }
 
 .employee-day-hint {
-  color: #666;
+  color: var(--color-ink-soft);
   font-size: 14px;
   font-style: italic;
   padding-top: 20px;
 }
 
 .request-timeoff-btn {
-  background-color: #443066;
+  background-color: var(--color-primary);
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 12px 18px;
   font-size: 15px;
-  font-weight: bold;
+  font-weight: 700;
   cursor: pointer;
-  transition: background 0.2s;
+  box-shadow: var(--shadow-sm);
+  transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
 }
 
 .request-timeoff-btn:hover {
-  background-color: #33244d;
+  background-color: var(--color-primary-dark);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
 }
 
 .employee-calendar-section {
@@ -465,7 +518,7 @@ body {
 }
 
 .calendar-day-selected {
-  background-color: #dde0ff !important;
+  background-color: var(--color-primary-light) !important;
   font-weight: bold;
 }
 
@@ -478,7 +531,7 @@ body {
   display: block;
   width: 6px;
   height: 6px;
-  background-color: #2444d8;
+  background-color: var(--color-primary);
   border-radius: 50%;
   margin: 4px auto 0;
 }
@@ -488,7 +541,7 @@ body {
 }
 
 .calendar-day:hover:not(.calendar-day-empty) {
-  background-color: #f0f0ff;
+  background-color: var(--color-primary-soft);
 }
 
 .universal-calendar-summary {
@@ -502,9 +555,9 @@ body {
 }
 
 .universal-calendar-office {
-  border-left: 3px solid #443066;
+  border-left: 3px solid var(--color-primary);
   padding-left: 5px;
-  color: #1a1a2e;
+  color: var(--color-ink);
 }
 
 .universal-calendar-office strong,
@@ -516,7 +569,7 @@ body {
 }
 
 .universal-calendar-office strong {
-  color: #a32626;
+  color: var(--color-danger-dark);
 }
 
 .universal-calendar-layout {
@@ -534,9 +587,10 @@ body {
 
 .universal-calendar-main h1 {
   margin: 0;
-  font-size: 28px;
-  color: #2444d8;
-  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 26px;
+  color: var(--color-primary-dark);
+  font-family: var(--font-display);
+  font-weight: 700;
 }
 
 .universal-calendar-heading {
@@ -548,35 +602,38 @@ body {
 }
 
 .universal-status-badge {
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   padding: 6px 14px;
-  font-size: 13px;
-  font-weight: 800;
-  color: #2e1a47;
-  background-color: white;
-  border: 1px solid rgba(68, 48, 102, 0.18);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-ink);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
 }
 
 .universal-status-badge.published {
-  color: #155c35;
-  background-color: #e3f8ec;
+  color: var(--color-success-dark);
+  background-color: var(--color-success-bg);
+  border-color: transparent;
 }
 
 .universal-status-badge.draft {
-  color: #6b4a00;
-  background-color: #fff3c9;
+  color: var(--color-warning);
+  background-color: var(--color-warning-bg);
+  border-color: transparent;
 }
 
 .universal-status-badge.not-created {
-  color: #5f5f6b;
-  background-color: #f1f1f5;
+  color: var(--color-ink-soft);
+  background-color: var(--color-bg-alt);
+  border-color: transparent;
 }
 
 .universal-calendar-empty-message {
   margin: 0 0 14px;
-  color: #2e1a47;
+  color: var(--color-ink);
   font-size: 15px;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .universal-calendar-grid .calendar-day {
@@ -592,15 +649,15 @@ body {
 }
 
 .calendar-day-has-published-schedule {
-  background-color: #fbfbff;
+  background-color: var(--color-bg-alt);
 }
 
 .calendar-day-has-published-schedule:hover {
-  background-color: #f0f0ff;
+  background-color: var(--color-primary-soft);
 }
 
 .universal-calendar-total {
-  color: #666;
+  color: var(--color-ink-faint);
   font-size: 10px;
   font-weight: 700;
 }
@@ -610,50 +667,53 @@ body {
   max-height: calc(100vh - 170px);
   overflow-y: auto;
   flex-shrink: 0;
-  background-color: white;
-  border-radius: 10px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
   padding: 18px;
   box-sizing: border-box;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--shadow-md);
 }
 
 .universal-day-panel h2 {
   margin: 0;
-  font-size: 24px;
-  color: #2444d8;
-  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 22px;
+  color: var(--color-primary-dark);
+  font-family: var(--font-display);
+  font-weight: 700;
 }
 
 .universal-day-panel-month {
   margin: 4px 0 16px;
-  color: #555;
-  font-weight: 700;
+  color: var(--color-ink-soft);
+  font-weight: 600;
 }
 
 .universal-location-card {
-  border: 1px solid #e2e2e8;
-  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
   padding: 12px;
   margin-bottom: 14px;
-  background-color: #fff;
+  background-color: var(--color-surface);
 }
 
 .universal-location-card h3 {
   margin: 0 0 10px;
-  color: #a32626;
-  font-size: 18px;
-  font-family: Georgia, 'Times New Roman', serif;
+  color: var(--color-danger-dark);
+  font-size: 17px;
+  font-family: var(--font-display);
+  font-weight: 600;
 }
 
 .universal-team-block {
-  border-left: 4px solid #443066;
+  border-left: 4px solid var(--color-primary);
   padding-left: 10px;
   margin-bottom: 12px;
 }
 
 .universal-team-block h4 {
   margin: 0 0 4px;
-  color: #2e1a47;
+  color: var(--color-ink);
   font-size: 15px;
 }
 
@@ -667,7 +727,7 @@ body {
   display: flex;
   justify-content: space-between;
   gap: 10px;
-  border-bottom: 1px solid #eeeeee;
+  border-bottom: 1px solid var(--color-border-soft);
   padding: 5px 0;
   font-size: 14px;
 }
@@ -677,7 +737,7 @@ body {
 }
 
 .universal-team-block small {
-  color: #777;
+  color: var(--color-ink-faint);
   text-align: right;
   text-transform: uppercase;
   font-size: 11px;
@@ -686,16 +746,16 @@ body {
 .universal-team-block p,
 .universal-empty-day,
 .universal-day-hint {
-  color: #666;
+  color: var(--color-ink-soft);
   font-size: 14px;
   line-height: 1.4;
 }
 
 .universal-schedule-notes {
   margin: 8px 0 0;
-  color: #2e1a47;
+  color: var(--color-ink);
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .employee-universal-day-panel {
@@ -707,7 +767,7 @@ body {
 
 .employee-requests-page {
   min-height: 100vh;
-  background-color: #c8cbff;
+  background-color: var(--color-bg);
   display: flex;
   flex-direction: column;
 }
@@ -719,48 +779,52 @@ body {
 }
 
 .page-title {
-  font-size: 32px;
-  color: #2444d8;
-  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 28px;
+  color: var(--color-primary-dark);
+  font-family: var(--font-display);
+  font-weight: 700;
   margin: 0 0 8px 0;
 }
 
 .page-title-underline {
   border: none;
-  border-top: 2px solid #2444d8;
+  border-top: 2px solid var(--color-border);
   margin: 0 0 24px 0;
   width: 320px;
 }
 
 .error-message {
-  color: red;
+  color: var(--color-danger);
   font-size: 14px;
+  font-weight: 600;
   margin-bottom: 12px;
   white-space: pre-line;
 }
 
 .field-error {
-  color: red;
+  color: var(--color-danger);
   font-size: 12px;
   margin-top: 2px;
   display: block;
 }
 
 .new-request-btn {
-  background-color: #443066;
+  background-color: var(--color-primary);
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 10px 20px;
   font-size: 15px;
-  font-weight: bold;
+  font-weight: 700;
   cursor: pointer;
   margin-bottom: 20px;
-  transition: background 0.2s;
+  box-shadow: var(--shadow-sm);
+  transition: background 0.2s, transform 0.1s;
 }
 
 .new-request-btn:hover {
-  background-color: #33244d;
+  background-color: var(--color-primary-dark);
+  transform: translateY(-1px);
 }
 
 .requests-table-container {
@@ -771,21 +835,24 @@ body {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  background-color: white;
-  border-radius: 14px;
+  background-color: var(--color-surface);
+  border-radius: var(--radius-lg);
   overflow: hidden;
-  box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--color-border);
 }
 
 .requests-table th {
-  background-color: #443066;
+  background-color: var(--color-primary);
   color: white;
   height: 52px;
   text-align: center;
   vertical-align: middle;
-  font-size: 17px;
-  font-weight: bold;
-  border-right: 2px solid #5a3f82;
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  border-right: 1px solid rgba(255,255,255,0.14);
 }
 
 .requests-table th:last-child {
@@ -796,10 +863,10 @@ body {
   height: 55px;
   text-align: center;
   vertical-align: middle;
-  font-size: 16px;
-  color: #222;
-  border-right: 1px solid #e0e0e0;
-  border-bottom: 1px solid #e0e0e0;
+  font-size: 15px;
+  color: var(--color-ink);
+  border-right: 1px solid var(--color-border-soft);
+  border-bottom: 1px solid var(--color-border-soft);
 }
 
 .requests-table td:last-child {
@@ -816,12 +883,12 @@ body {
 }
 
 .request-row:hover {
-  background-color: #f0f0ff;
+  background-color: var(--color-primary-soft);
 }
 
 .empty-requests-message {
   text-align: center;
-  color: #888;
+  color: var(--color-ink-faint);
   font-size: 15px;
   padding: 30px !important;
   height: auto !important;
@@ -831,7 +898,7 @@ body {
 
 .request-timeoff-page {
   min-height: 100vh;
-  background-color: #c8cbff;
+  background-color: var(--color-bg);
   display: flex;
   flex-direction: column;
 }
@@ -845,15 +912,16 @@ body {
 }
 
 .request-timeoff-title {
-  font-size: 30px;
-  font-weight: bold;
-  color: #1a1a2e;
+  font-size: 26px;
+  font-weight: 700;
+  font-family: var(--font-display);
+  color: var(--color-ink);
   margin: 0 0 4px 0;
 }
 
 .request-timeoff-divider {
   border: none;
-  border-top: 2px solid #1a1a2e;
+  border-top: 2px solid var(--color-border);
   margin: 0 0 28px 0;
   width: 380px;
 }
@@ -878,39 +946,39 @@ body {
 }
 
 .request-type-label {
-  font-size: 16px;
-  font-weight: bold;
-  color: #1a1a2e;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-ink);
 }
 
 .request-type-btn {
   padding: 8px 20px;
-  border-radius: 20px;
-  border: 2px solid #ccc;
-  font-size: 15px;
-  font-weight: bold;
+  border-radius: var(--radius-pill);
+  border: 1.5px solid var(--color-border);
+  font-size: 14px;
+  font-weight: 700;
   cursor: pointer;
-  background-color: white;
-  color: #555;
+  background-color: var(--color-surface);
+  color: var(--color-ink-soft);
   transition: all 0.2s;
 }
 
 .request-type-btn.active-timeoff {
-  background-color: white;
-  border-color: #443066;
-  color: #443066;
+  background-color: var(--color-primary-light);
+  border-color: var(--color-primary);
+  color: var(--color-primary-dark);
 }
 
 .request-type-btn.active-emergency {
-  background-color: #e83030;
-  border-color: #e83030;
+  background-color: var(--color-danger);
+  border-color: var(--color-danger);
   color: white;
 }
 
 .time-section-label {
-  font-size: 16px;
-  font-weight: bold;
-  color: #1a1a2e;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-ink);
   margin-bottom: 8px;
 }
 
@@ -922,26 +990,26 @@ body {
 }
 
 .time-row label {
-  font-size: 15px;
-  color: #333;
+  font-size: 14px;
+  color: var(--color-ink-soft);
   width: 45px;
 }
 
 .time-input {
-  height: 34px;
+  height: 36px;
   width: 130px;
-  border: none;
-  border-radius: 6px;
-  background-color: white;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-surface);
   padding: 0 10px;
   font-size: 14px;
   box-sizing: border-box;
 }
 
 .reason-label {
-  font-size: 16px;
-  font-weight: bold;
-  color: #1a1a2e;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-ink);
   margin-bottom: 8px;
   display: block;
 }
@@ -949,24 +1017,29 @@ body {
 .reason-textarea {
   width: 100%;
   height: 130px;
-  border: none;
-  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
   padding: 12px;
   font-size: 15px;
   resize: none;
   box-sizing: border-box;
-  background-color: white;
-  color: #333;
+  background-color: var(--color-surface);
+  color: var(--color-ink);
   outline: none;
+}
+
+.reason-textarea:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-light);
 }
 
 .employee-review-comment-box {
   margin-top: 18px;
-  background-color: white;
-  border-left: 5px solid #443066;
-  border-radius: 10px;
+  background-color: var(--color-primary-soft);
+  border-left: 4px solid var(--color-primary);
+  border-radius: var(--radius-md);
   padding: 14px 16px;
-  color: #1a1a2e;
+  color: var(--color-ink);
   box-sizing: border-box;
 }
 
@@ -977,7 +1050,7 @@ body {
 }
 
 .employee-review-comment-box small {
-  color: #666;
+  color: var(--color-ink-soft);
   font-weight: 600;
 }
 
@@ -986,10 +1059,11 @@ body {
 }
 
 .mini-calendar-card {
-  background-color: white;
-  border-radius: 14px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
   padding: 20px 24px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: var(--shadow-sm);
 }
 
 .mini-calendar-controls {
@@ -1004,16 +1078,16 @@ body {
   border: none;
   font-size: 18px;
   cursor: pointer;
-  color: #443066;
+  color: var(--color-primary);
   font-weight: bold;
 }
 
 .mini-calendar-controls select {
-  border: 1px solid #ddd;
-  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
   padding: 4px 8px;
   font-size: 14px;
-  background-color: white;
+  background-color: var(--color-surface);
 }
 
 .mini-calendar-grid {
@@ -1026,7 +1100,7 @@ body {
 .mini-cal-header {
   font-size: 12px;
   font-weight: bold;
-  color: #888;
+  color: var(--color-ink-faint);
   padding: 4px 0;
 }
 
@@ -1035,25 +1109,25 @@ body {
   padding: 6px 4px;
   border-radius: 50%;
   cursor: pointer;
-  color: #333;
+  color: var(--color-ink);
 }
 
 .mini-cal-day:hover {
-  background-color: #eeeeff;
+  background-color: var(--color-primary-soft);
 }
 
 .mini-cal-day.selected {
-  background-color: #eeeeff;
-  color: #2444d8;
-  border: 2px solid #443066;
-  border-radius: 8px;
+  background-color: var(--color-primary-light);
+  color: var(--color-primary-dark);
+  border: 2px solid var(--color-primary);
+  border-radius: var(--radius-sm);
   font-weight: 700;
   box-sizing: border-box;
 }
 
 .mini-cal-day.today {
   font-weight: bold;
-  color: #2444d8;
+  color: var(--color-primary-dark);
 }
 
 .mini-cal-day.empty {
@@ -1061,7 +1135,7 @@ body {
 }
 
 .mini-cal-day.cal-day-disabled {
-  color: #bbb;
+  color: var(--color-ink-faint);
   cursor: not-allowed;
   background-color: transparent;
 }
@@ -1078,42 +1152,44 @@ body {
 }
 
 .submit-request-btn {
-  background-color: #443066;
+  background-color: var(--color-primary);
   color: white;
   border: none;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   padding: 14px 36px;
-  font-size: 17px;
-  font-weight: bold;
+  font-size: 16px;
+  font-weight: 700;
   cursor: pointer;
-  transition: background 0.2s;
+  box-shadow: var(--shadow-sm);
+  transition: background 0.2s, transform 0.1s;
 }
 
 .submit-request-btn:hover {
-  background-color: #33244d;
+  background-color: var(--color-primary-dark);
+  transform: translateY(-1px);
 }
 
 .cancel-request-btn {
-  background-color: #e83030;
+  background-color: var(--color-danger);
   color: white;
   border: none;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   padding: 14px 36px;
-  font-size: 17px;
-  font-weight: bold;
+  font-size: 16px;
+  font-weight: 700;
   cursor: pointer;
   transition: background 0.2s;
 }
 
 .cancel-request-btn:hover {
-  background-color: #c02020;
+  background-color: var(--color-danger-dark);
 }
 
 /* ---------- Employee Profile Page ---------- */
 
 .profile-page {
   min-height: 100vh;
-  background-color: #c8cbff;
+  background-color: var(--color-bg);
   display: flex;
   flex-direction: column;
 }
@@ -1131,7 +1207,7 @@ body {
 }
 
 .profile-logo {
-  width: 250px;
+  width: 220px;
   height: auto;
 }
 
@@ -1148,26 +1224,27 @@ body {
 }
 
 .tooth-icon {
-  width: 115px;
-  height: 115px;
+  width: 110px;
+  height: 110px;
   border-radius: 50%;
-  background-color: #999cff;
+  background-color: var(--color-primary-light);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 65px;
+  font-size: 58px;
 }
 
 .profile-top h3 {
   margin: 0 0 8px 0;
-  font-size: 28px;
-  color: black;
+  font-size: 26px;
+  font-family: var(--font-display);
+  color: var(--color-ink);
 }
 
 .profile-top p {
   margin: 0;
-  font-size: 20px;
-  color: #555;
+  font-size: 17px;
+  color: var(--color-ink-soft);
 }
 
 .profile-form {
@@ -1192,55 +1269,66 @@ body {
 }
 
 .profile-row span {
-  font-size: 20px;
-  font-weight: bold;
-  color: black;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-ink-soft);
   text-align: right;
   padding-right: 15px;
 }
 
 .profile-row input {
   width: 230px;
-  height: 36px;
-  border: none;
-  border-radius: 8px;
-  background-color: white;
+  height: 38px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-surface);
   padding: 0 10px;
   box-sizing: border-box;
-  font-size: 16px;
+  font-size: 15px;
+  color: var(--color-ink);
 }
 
 .edit-profile-button {
   background: none;
-  border: none;
-  font-size: 34px;
+  border: 1px solid var(--color-border);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-pill);
   cursor: pointer;
   align-self: center;
   margin-top: 20px;
+  color: var(--color-primary);
+  transition: background 0.15s, border-color 0.15s;
 }
 
 .edit-profile-button:hover {
-  transform: scale(1.1);
+  background-color: var(--color-primary-light);
+  border-color: var(--color-primary);
 }
 
 /* ---------- Employee Edit Profile Page ---------- */
 
 .save-profile-button {
-  background-color: #443066;
+  background-color: var(--color-primary);
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   width: 130px;
-  height: 54px;
-  font-size: 20px;
-  font-weight: bold;
+  height: 50px;
+  font-size: 16px;
+  font-weight: 700;
   cursor: pointer;
   align-self: center;
   margin-top: 40px;
+  box-shadow: var(--shadow-sm);
+  transition: background 0.2s;
 }
 
 .save-profile-button:hover {
-  background-color: #33244d;
+  background-color: var(--color-primary-dark);
 }
 
 .profile-action-row {
@@ -1255,19 +1343,19 @@ body {
 }
 
 .cancel-profile-button {
-  background-color: #e5e5e5;
-  color: #1a1a2e;
-  border: none;
-  border-radius: 8px;
+  background-color: var(--color-bg-alt);
+  color: var(--color-ink);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
   width: 130px;
-  height: 54px;
-  font-size: 20px;
-  font-weight: bold;
+  height: 50px;
+  font-size: 16px;
+  font-weight: 700;
   cursor: pointer;
 }
 
 .cancel-profile-button:hover {
-  background-color: #d6d6d6;
+  background-color: var(--color-border-soft);
 }
 
 .save-profile-button:disabled,
@@ -1278,8 +1366,8 @@ body {
 }
 
 .profile-row input[readonly] {
-  background-color: #eeeeee;
-  color: #555;
+  background-color: var(--color-bg-alt);
+  color: var(--color-ink-soft);
   cursor: not-allowed;
 }
 
@@ -1287,7 +1375,7 @@ body {
 
 .hr-page {
   min-height: 100vh;
-  background-color: #c8cbff;
+  background-color: var(--color-bg);
   display: flex;
   flex-direction: column;
 }
@@ -1299,10 +1387,11 @@ body {
 }
 
 .hr-page-title {
-  font-size: 32px;
+  font-size: 28px;
   margin: 0 0 20px 0;
-  color: #2444d8;
-  font-family: Georgia, 'Times New Roman', serif;
+  color: var(--color-primary-dark);
+  font-family: var(--font-display);
+  font-weight: 700;
   text-align: left;
 }
 
@@ -1317,11 +1406,11 @@ body {
 .employee-filter-select {
   height: 42px;
   border: none;
-  border-radius: 8px 0 0 8px;
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
   padding: 0 14px;
-  font-size: 16px;
-  font-weight: bold;
-  background-color: #443066;
+  font-size: 15px;
+  font-weight: 700;
+  background-color: var(--color-primary);
   color: white;
   cursor: pointer;
   outline: none;
@@ -1335,14 +1424,14 @@ body {
 .employee-search-row input {
   height: 42px;
   width: 260px;
-  border: none;
-  border-radius: 0 8px 8px 0;
+  border: 1px solid var(--color-border);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
   padding: 0 14px;
-  font-size: 16px;
-  background-color: white;
-  color: black;
+  font-size: 15px;
+  background-color: var(--color-surface);
+  color: var(--color-ink);
   outline: none;
-  border-left: 2px solid #c8cbff;
+  border-left: none;
   box-sizing: border-box;
 }
 
@@ -1358,50 +1447,54 @@ body {
 }
 
 .new-employee-btn {
-  background-color: #12b85f;
+  background-color: var(--color-success);
   color: white;
   border: none;
-  border-radius: 7px;
+  border-radius: var(--radius-sm);
   padding: 9px 18px;
-  font-size: 15px;
-  font-weight: bold;
+  font-size: 14px;
+  font-weight: 700;
   cursor: pointer;
+  box-shadow: var(--shadow-sm);
   transition: background 0.2s;
 }
 
 .new-employee-btn:hover {
-  background-color: #0ea350;
+  background-color: var(--color-success-dark);
 }
 
 .employee-table {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  background-color: white;
-  border-radius: 14px;
+  background-color: var(--color-surface);
+  border-radius: var(--radius-lg);
   overflow: hidden;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--color-border);
 }
 
 .employee-table th {
-  background-color: #443066;
+  background-color: var(--color-primary);
   color: white;
   height: 55px;
   text-align: center;
   vertical-align: middle;
-  border-right: 2px solid #5a3f82;
-  font-size: 18px;
-  font-weight: bold;
+  border-right: 1px solid rgba(255,255,255,0.14);
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
 .employee-table td {
   height: 58px;
   text-align: center;
   vertical-align: middle;
-  border-right: 1px solid #e0e0e0;
-  border-bottom: 1px solid #e0e0e0;
-  font-size: 17px;
-  color: #222;
+  border-right: 1px solid var(--color-border-soft);
+  border-bottom: 1px solid var(--color-border-soft);
+  font-size: 16px;
+  color: var(--color-ink);
 }
 
 .employee-table th:last-child,
@@ -1414,7 +1507,7 @@ body {
 }
 
 .employee-table tbody tr:hover {
-  background-color: #f0f0ff;
+  background-color: var(--color-primary-soft);
 }
 
 .employee-actions {
@@ -1427,19 +1520,25 @@ body {
 .employee-action-btn {
   border: none;
   background: transparent;
-  font-size: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  border-radius: var(--radius-sm);
+  color: var(--color-ink-soft);
   cursor: pointer;
-  transition: transform 0.15s;
+  transition: background 0.15s, color 0.15s;
 }
 
 .employee-action-btn:hover {
-  transform: scale(1.2);
+  background-color: var(--color-primary-soft);
+  color: var(--color-primary-dark);
 }
 
 .empty-table-message {
   text-align: center;
-  color: #888;
-  font-size: 16px;
+  color: var(--color-ink-faint);
+  font-size: 15px;
   padding: 30px !important;
   height: auto !important;
 }
@@ -1447,8 +1546,8 @@ body {
 .page-footer {
   text-align: center;
   padding: 20px;
-  color: gray;
-  font-size: 16px;
+  color: var(--color-ink-faint);
+  font-size: 14px;
 }
 
 /* ---------- HR Add Employee Page ---------- */
@@ -1460,13 +1559,15 @@ body {
 }
 
 .add-employee-card {
-  background-color: rgba(255, 255, 255, 0.3);
-  border-radius: 14px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
   padding: 24px 35px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  box-shadow: var(--shadow-sm);
 }
 
 .form-section {
@@ -1476,14 +1577,14 @@ body {
 }
 
 .form-section h2 {
-  color: #2444d8;
-  font-size: 18px;
-  font-family: Georgia, 'Times New Roman', serif;
-  font-weight: bold;
+  color: var(--color-primary-dark);
+  font-size: 16px;
+  font-family: var(--font-display);
+  font-weight: 700;
   margin: 0 0 12px 0;
   text-align: left;
-  border-bottom: 2px solid #2444d8;
-  padding-bottom: 4px;
+  border-bottom: 2px solid var(--color-border);
+  padding-bottom: 6px;
 }
 
 .form-row {
@@ -1491,24 +1592,26 @@ body {
   flex-direction: column;
   align-items: flex-start;
   margin-bottom: 12px;
-  color: #1a1a2e;
-  font-weight: bold;
+  color: var(--color-ink);
+  font-weight: 600;
 }
 
 .form-row label {
-  font-size: 13px;
+  font-size: 12px;
   margin-bottom: 4px;
-  color: #1a1a2e;
+  color: var(--color-ink-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
 .form-row input,
 .form-row select {
   width: 190px;
-  height: 32px;
-  border: none;
-  border-radius: 6px;
-  background-color: white;
-  color: #333;
+  height: 34px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-bg-alt);
+  color: var(--color-ink);
   font-size: 14px;
   padding: 0 8px;
   box-sizing: border-box;
@@ -1516,7 +1619,9 @@ body {
 
 .form-row input:focus,
 .form-row select:focus {
-  outline: 2px solid #443066;
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-light);
 }
 
 .details-grid {
@@ -1535,7 +1640,7 @@ body {
   padding: 4px 8px;
   font-size: 14px;
   font-weight: normal;
-  color: #1a1a2e;
+  color: var(--color-ink);
   border: none;
   background: transparent;
   height: auto;
@@ -1544,7 +1649,7 @@ body {
 .office-table input[type="checkbox"] {
   width: 16px;
   height: 16px;
-  accent-color: #443066;
+  accent-color: var(--color-primary);
   cursor: pointer;
 }
 
@@ -1559,36 +1664,37 @@ body {
 
 .cancel-employee-btn {
   width: 110px;
-  height: 36px;
-  border: none;
-  border-radius: 20px;
-  font-weight: bold;
+  height: 38px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  font-weight: 700;
   cursor: pointer;
-  background-color: #ddd;
-  color: #333;
+  background-color: var(--color-bg-alt);
+  color: var(--color-ink);
   font-size: 14px;
   transition: background 0.2s;
 }
 
 .cancel-employee-btn:hover {
-  background-color: #ccc;
+  background-color: var(--color-border-soft);
 }
 
 .save-employee-btn {
   width: 110px;
-  height: 36px;
+  height: 38px;
   border: none;
-  border-radius: 20px;
-  font-weight: bold;
+  border-radius: var(--radius-pill);
+  font-weight: 700;
   cursor: pointer;
-  background-color: #12b85f;
+  background-color: var(--color-success);
   color: white;
   font-size: 14px;
+  box-shadow: var(--shadow-sm);
   transition: background 0.2s;
 }
 
 .save-employee-btn:hover {
-  background-color: #0ea350;
+  background-color: var(--color-success-dark);
 }
 
 /* ---------- Header Page ---------- */
@@ -1600,17 +1706,18 @@ body {
 }
 
 .logout-button {
-  background-color: #443066;
+  background-color: transparent;
   color: white;
-  border: none;
-  border-radius: 6px;
-  padding: 8px 14px;
+  border: 1.5px solid rgba(255,255,255,0.4);
+  border-radius: var(--radius-pill);
+  padding: 8px 16px;
   cursor: pointer;
-  font-weight: bold;
+  font-weight: 600;
+  font-size: 14px;
 }
 
 .logout-button:hover {
-  background-color: #33244d;
+  background-color: rgba(255,255,255,0.14);
 }
 
 /* ---------- HR View Employee page ---------- */
@@ -1620,35 +1727,44 @@ body {
 }
 
 .view-employee-card {
-  background: white;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
   padding: 30px;
   display: grid;
   grid-template-columns: 3fr 2fr;
   gap: 45px;
   min-height: 620px;
+  box-shadow: var(--shadow-sm);
 }
 
 .view-employee-left h2,
 .view-employee-right h2 {
-  font-size: 1.5rem;
+  font-size: 1.4rem;
+  font-family: var(--font-display);
+  font-weight: 700;
   margin: 0 0 8px;
-  color: black;
+  color: var(--color-primary-dark);
 }
 
 .view-line {
-  border-bottom: 3px solid black;
+  border-bottom: 2px solid var(--color-border);
   margin-bottom: 18px;
 }
 
 .view-field {
   margin-bottom: 16px;
-  color: black;
+  color: var(--color-ink);
   text-align: left;
 }
 
 .view-field strong {
   display: block;
   text-align: left;
+  color: var(--color-ink-soft);
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
 .view-field span,
@@ -1674,13 +1790,14 @@ body {
 .view-timeoff-table {
   width: 100%;
   border-collapse: collapse;
-  background: #d9d9d9;
-  color: black;
+  background: var(--color-surface);
+  color: var(--color-ink);
+  border: 1px solid var(--color-border);
 }
 
 .view-timeoff-table th,
 .view-timeoff-table td {
-  border: 3px solid black;
+  border: 1px solid var(--color-border);
   padding: 10px;
   text-align: left;
   height: 55px;
@@ -1695,21 +1812,26 @@ body {
 }
 
 .reset-password-btn {
-  background: #443066;
+  background: var(--color-primary);
   color: white;
   border: none;
-  border-radius: 20px;
+  border-radius: var(--radius-pill);
   padding: 10px 28px;
-  font-weight: bold;
+  font-weight: 700;
   cursor: pointer;
+  box-shadow: var(--shadow-sm);
+}
+
+.reset-password-btn:hover {
+  background: var(--color-primary-dark);
 }
 
 .temporary-password-box {
   margin-top: 18px;
   padding: 12px;
-  border-radius: 8px;
-  background: #eeeeff;
-  color: #1a1a2e;
+  border-radius: var(--radius-sm);
+  background: var(--color-primary-light);
+  color: var(--color-ink);
   font-weight: 600;
 }
 
@@ -1730,7 +1852,7 @@ body {
   position: fixed;
   inset: 0;
   z-index: 1000;
-  background: rgba(26, 26, 46, 0.45);
+  background: rgba(15, 20, 30, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1740,18 +1862,19 @@ body {
 
 .modal-box {
   width: min(560px, 100%);
-  background: white;
-  color: #1a1a2e;
-  border-radius: 12px;
+  background: var(--color-surface);
+  color: var(--color-ink);
+  border-radius: var(--radius-lg);
   padding: 24px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  box-shadow: var(--shadow-lg);
   box-sizing: border-box;
 }
 
 .modal-box h2 {
   margin-top: 0;
-  color: #2444d8;
-  font-family: Georgia, 'Times New Roman', serif;
+  color: var(--color-primary-dark);
+  font-family: var(--font-display);
+  font-weight: 700;
 }
 
 .modal-actions {
@@ -1764,16 +1887,16 @@ body {
 
 .modal-actions button {
   border: none;
-  border-radius: 20px;
+  border-radius: var(--radius-pill);
   padding: 10px 18px;
   font-weight: 700;
   cursor: pointer;
-  background-color: #d9d9d9;
-  color: #1a1a2e;
+  background-color: var(--color-bg-alt);
+  color: var(--color-ink);
 }
 
 .modal-actions button:nth-child(2) {
-  background-color: #2e1a47;
+  background-color: var(--color-primary);
   color: white;
 }
 
@@ -1785,12 +1908,18 @@ body {
 .close-view-btn {
   display: block;
   margin: 30px auto 0;
-  background: #14b86a;
+  background: var(--color-success);
+  color: white;
   border: none;
-  border-radius: 20px;
+  border-radius: var(--radius-pill);
   padding: 10px 55px;
-  font-weight: bold;
+  font-weight: 700;
   cursor: pointer;
+  box-shadow: var(--shadow-sm);
+}
+
+.close-view-btn:hover {
+  background: var(--color-success-dark);
 }
 
 .view-details-grid {
@@ -1811,27 +1940,35 @@ body {
 /* ---------- HR Edit Employee page ---------- */
 
 .deactivate-employee-btn {
-  background-color: #ff1f1f;
-  color: black;
+  background-color: var(--color-danger);
+  color: white;
   border: none;
-  border-radius: 20px;
+  border-radius: var(--radius-pill);
   padding: 10px 45px;
-  font-weight: bold;
+  font-weight: 700;
   cursor: pointer;
   display: block;
   margin: 20px auto 0;
 }
 
+.deactivate-employee-btn:hover {
+  background-color: var(--color-danger-dark);
+}
+
 .activate-employee-btn {
-  background-color: #16c46b;
-  color: black;
+  background-color: var(--color-success);
+  color: white;
   border: none;
-  border-radius: 20px;
+  border-radius: var(--radius-pill);
   padding: 10px 45px;
-  font-weight: bold;
+  font-weight: 700;
   cursor: pointer;
   display: block;
   margin: 20px auto 0;
+}
+
+.activate-employee-btn:hover {
+  background-color: var(--color-success-dark);
 }
 
 /* ---------- Manager Calendar Page ---------- */
@@ -1853,10 +1990,10 @@ body {
 }
 
 .manager-location-title {
-  font-size: 22px;
-  color: #2444d8;
-  font-family: Georgia, 'Times New Roman', serif;
-  font-weight: bold;
+  font-size: 20px;
+  color: var(--color-primary-dark);
+  font-family: var(--font-display);
+  font-weight: 700;
   margin: 0 0 10px 0;
   cursor: pointer;
 }
@@ -1865,17 +2002,19 @@ body {
   list-style: none;
   padding: 0;
   margin: 0;
-  background-color: rgba(255,255,255,0.4);
-  border-radius: 10px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
   overflow: hidden;
+  box-shadow: var(--shadow-sm);
 }
 
 .manager-location-item {
   padding: 14px 20px;
-  font-size: 16px;
-  color: #222;
+  font-size: 15px;
+  color: var(--color-ink);
   cursor: pointer;
-  border-bottom: 1px solid rgba(0,0,0,0.08);
+  border-bottom: 1px solid var(--color-border-soft);
   transition: background 0.15s;
 }
 
@@ -1884,13 +2023,13 @@ body {
 }
 
 .manager-location-item:hover {
-  background-color: rgba(255,255,255,0.6);
+  background-color: var(--color-primary-soft);
 }
 
 .manager-location-item.active {
-  color: #2444d8;
-  font-weight: bold;
-  background-color: rgba(255,255,255,0.7);
+  color: var(--color-primary-dark);
+  font-weight: 700;
+  background-color: var(--color-primary-light);
 }
 
 .manager-calendar-section {
@@ -1916,32 +2055,32 @@ body {
 }
 
 .hr-requests-search-row label {
-  font-size: 20px;
-  font-weight: bold;
-  color: #1a1a2e;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-ink);
 }
 
 .hr-requests-search-row input {
   height: 42px;
   width: 220px;
-  border: none;
-  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
   padding: 0 14px;
-  font-size: 16px;
-  background-color: white;
-  color: black;
+  font-size: 15px;
+  background-color: var(--color-surface);
+  color: var(--color-ink);
   outline: none;
 }
 
 .hr-requests-search-row select {
   height: 42px;
   width: 180px;
-  border: none;
-  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
   padding: 0 14px;
-  font-size: 16px;
-  background-color: white;
-  color: black;
+  font-size: 15px;
+  background-color: var(--color-surface);
+  color: var(--color-ink);
   outline: none;
   cursor: pointer;
 }
@@ -1954,58 +2093,58 @@ body {
 /* ---------- Edit Schedule Button ---------- */
 
 .edit-schedule-btn {
-  background-color: #443066;
+  background-color: var(--color-primary);
   color: white;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   padding: 7px 14px;
-  font-size: 14px;
-  font-weight: bold;
+  font-size: 13px;
+  font-weight: 700;
   cursor: pointer;
   transition: background 0.2s;
 }
 
 .edit-schedule-btn:hover {
-  background-color: #33244d;
+  background-color: var(--color-primary-dark);
 }
 
 /* ---------- Manager Employees Page ---------- */
 
 .manager-employee-tabs {
   display: flex;
-  gap: 16px;
+  gap: 12px;
   margin-bottom: 24px;
 }
 
 .manager-tab-btn {
   padding: 10px 28px;
   border: none;
-  border-radius: 10px;
-  font-size: 17px;
-  font-weight: bold;
+  border-radius: var(--radius-pill);
+  font-size: 15px;
+  font-weight: 700;
   cursor: pointer;
-  opacity: 0.6;
+  opacity: 0.55;
   transition: opacity 0.2s, transform 0.1s;
 }
 
 .manager-tab-btn.active {
   opacity: 1;
-  transform: scale(1.04);
+  transform: scale(1.03);
 }
 
 .tab-employee {
-  background-color: #b0b8ff;
-  color: #1a1a2e;
+  background-color: var(--color-primary-light);
+  color: var(--color-primary-dark);
 }
 
 .tab-new {
-  background-color: #6ee7b7;
-  color: #1a1a2e;
+  background-color: var(--color-success-bg);
+  color: var(--color-success-dark);
 }
 
 .tab-removed {
-  background-color: #fca5a5;
-  color: #1a1a2e;
+  background-color: var(--color-danger-bg);
+  color: var(--color-danger-dark);
 }
 
 .manager-employee-search {
@@ -2016,20 +2155,20 @@ body {
 }
 
 .manager-employee-search label {
-  font-size: 20px;
-  font-weight: bold;
-  color: #1a1a2e;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-ink);
 }
 
 .manager-employee-search input {
   height: 38px;
   width: 220px;
-  border: none;
-  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
   padding: 0 14px;
-  font-size: 16px;
-  background-color: white;
-  color: black;
+  font-size: 15px;
+  background-color: var(--color-surface);
+  color: var(--color-ink);
   outline: none;
 }
 
@@ -2043,24 +2182,33 @@ body {
 }
 
 .back-request-btn {
-  background-color: #3f51b5;
+  background-color: var(--color-primary);
   color: white;
   border: none;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   padding: 14px 36px;
   font-weight: 700;
   cursor: pointer;
+  box-shadow: var(--shadow-sm);
+}
+
+.back-request-btn:hover {
+  background-color: var(--color-primary-dark);
 }
 
 .delete-request-btn {
   display: block;
   margin: 18px auto 0;
-  background-color: #b00020;
+  background-color: var(--color-danger);
   color: white;
   border: none;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   padding: 12px 28px;
   cursor: pointer;
+}
+
+.delete-request-btn:hover {
+  background-color: var(--color-danger-dark);
 }
 
 /* HR Request Detail Page */
@@ -2073,19 +2221,21 @@ body {
 }
 
 .request-detail-card {
-  background-color: #ffffff;
-  border-radius: 12px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
   padding: 32px 40px;
   width: 100%;
   max-width: 900px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-md);
 }
 
 .request-detail-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  font-size: 16px;
+  font-size: 15px;
+  color: var(--color-ink-soft);
 }
 
 .request-detail-header p {
@@ -2098,13 +2248,13 @@ body {
 
 .request-detail-card hr {
   border: none;
-  border-top: 2px solid #1a1a2e;
+  border-top: 2px solid var(--color-border);
   margin: 16px 0 24px 0;
 }
 
 .emergency-badge {
-  color: #b00020;
-  font-weight: 600;
+  color: var(--color-danger-dark);
+  font-weight: 700;
   white-space: nowrap;
 }
 
@@ -2113,31 +2263,33 @@ body {
 }
 
 .request-detail-section h3 {
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-ink);
   margin: 0 0 6px 0;
 }
 
 .request-detail-section p {
   margin: 2px 0;
   font-size: 15px;
+  color: var(--color-ink);
 }
 
 .reason-readonly {
-  background-color: #f5f5f5;
-  border-radius: 6px;
+  background-color: var(--color-bg-alt);
+  border-radius: var(--radius-sm);
   padding: 10px 12px;
   font-size: 14px;
-  color: #444;
+  color: var(--color-ink-soft);
   margin: 0;
 }
 
 .request-detail-section .reason-textarea {
   width: 100%;
   min-height: 60px;
-  background-color: #f5f5f5;
+  background-color: var(--color-bg-alt);
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   padding: 12px;
   font-size: 14px;
   font-family: inherit;
@@ -2150,7 +2302,7 @@ body {
   justify-content: space-between;
   font-size: 14px;
   margin: 16px 0 24px 0;
-  color: #1a1a2e;
+  color: var(--color-ink-soft);
 }
 
 .request-detail-actions {
@@ -2163,27 +2315,28 @@ body {
 .reject-request-btn,
 .cancel-request-btn {
   border: none;
-  border-radius: 20px;
+  border-radius: var(--radius-pill);
   padding: 10px 28px;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
   cursor: pointer;
   transition: opacity 0.15s ease;
 }
 
 .approve-request-btn {
-  background-color: #4caf50;
+  background-color: var(--color-success);
   color: #ffffff;
 }
 
 .reject-request-btn {
-  background-color: #8b1e2c;
+  background-color: var(--color-danger-dark);
   color: #ffffff;
 }
 
 .cancel-request-btn {
-  background-color: #d9d9d9;
-  color: #1a1a2e;
+  background-color: var(--color-bg-alt);
+  color: var(--color-ink);
+  border: 1px solid var(--color-border);
 }
 
 .approve-request-btn:hover,
@@ -2202,7 +2355,7 @@ body {
 }
 
 .notification-badge {
-  background-color: #b00020;
+  background-color: var(--color-danger);
   color: white;
   font-size: 11px;
   font-weight: 700;
@@ -2221,10 +2374,20 @@ body {
 .notification-bell-btn {
   background: none;
   border: none;
-  font-size: 22px;
   cursor: pointer;
   position: relative;
-  padding: 4px 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 8px;
+  color: rgba(255, 255, 255, 0.85);
+  border-radius: var(--radius-pill);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.notification-bell-btn:hover {
+  background-color: rgba(255, 255, 255, 0.14);
+  color: white;
 }
 
 .bell-badge {
@@ -2244,8 +2407,8 @@ body {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  border: 1.5px solid white;
-  background-color: rgba(255, 255, 255, 0.15);
+  border: 1.5px solid rgba(255,255,255,0.6);
+  background-color: rgba(255, 255, 255, 0.16);
   color: white;
   display: flex;
   align-items: center;
@@ -2261,17 +2424,18 @@ body {
   width: 11px;
   height: 11px;
   border-radius: 50%;
-  background-color: #b00020;
-  border: 1.5px solid #33244d;
+  background-color: var(--color-danger);
+  border: 1.5px solid var(--color-primary-darker);
 }
 
 .notification-dropdown {
   position: absolute;
   top: 110%;
   right: 0;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
   width: 280px;
   max-height: 320px;
   overflow-y: auto;
@@ -2280,14 +2444,14 @@ body {
 
 .notification-item {
   padding: 12px 16px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--color-border-soft);
   font-size: 14px;
-  color: #1a1a2e;
+  color: var(--color-ink);
   cursor: pointer;
 }
 
 .notification-item:hover {
-  background-color: #f5f5f5;
+  background-color: var(--color-bg-alt);
 }
 
 .notification-item:last-child {
@@ -2297,14 +2461,14 @@ body {
 .notification-item-empty {
   padding: 16px;
   font-size: 14px;
-  color: #888;
+  color: var(--color-ink-faint);
   text-align: center;
 }
 .new-calendar-btn {
   margin-left: auto;
-  background-color: #2e1a47;
+  background-color: var(--color-primary);
   color: white;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   padding: 8px 16px;
   font-size: 14px;
   font-weight: 600;
@@ -2321,12 +2485,13 @@ body {
 }
 
 .manager-new-calendar-card {
-  background-color: white;
-  border-radius: 12px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
   padding: 24px 32px;
   width: 100%;
   max-width: 400px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-md);
 }
 
 .new-calendar-top-row {
@@ -2338,7 +2503,7 @@ body {
 .add-calendar-link {
   background: none;
   border: none;
-  color: #2e1a47;
+  color: var(--color-primary-dark);
   font-weight: 600;
   font-size: 14px;
   cursor: default;
@@ -2355,8 +2520,8 @@ body {
 .new-calendar-date-picker select {
   width: 100%;
   padding: 8px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
   font-size: 14px;
   margin-top: 4px;
 }
@@ -2364,7 +2529,7 @@ body {
 .new-calendar-location label {
   font-weight: 600;
   font-size: 14px;
-  color: #2e1a47;
+  color: var(--color-ink);
 }
 
 .new-calendar-date-picker {
@@ -2381,7 +2546,7 @@ body {
 .save-draft-btn,
 .publish-btn {
   border: none;
-  border-radius: 20px;
+  border-radius: var(--radius-pill);
   padding: 10px 24px;
   font-size: 14px;
   font-weight: 700;
@@ -2389,12 +2554,13 @@ body {
 }
 
 .save-draft-btn {
-  background-color: #d9d9d9;
-  color: #1a1a2e;
+  background-color: var(--color-bg-alt);
+  color: var(--color-ink);
+  border: 1px solid var(--color-border);
 }
 
 .publish-btn {
-  background-color: #2e1a47;
+  background-color: var(--color-primary);
   color: white;
 }
 
@@ -2405,11 +2571,11 @@ body {
 
 .calendar-day-has-schedule {
   cursor: pointer;
-  background-color: #f0f0ff;
+  background-color: var(--color-primary-soft);
 }
 
 .calendar-day-schedule-marker {
-  color: #2e1a47;
+  color: var(--color-primary-dark);
   font-size: 10px;
   margin-top: 4px;
 }
@@ -2420,10 +2586,10 @@ body {
 
 .new-calendar-btn {
   margin-left: auto;
-  background-color: #2e1a47;
+  background-color: var(--color-primary);
   color: white;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   padding: 8px 16px;
   font-size: 14px;
   font-weight: 600;
@@ -2431,22 +2597,22 @@ body {
 }
 
 .new-calendar-btn:hover {
-  opacity: 0.9;
+  background-color: var(--color-primary-dark);
 }
 
 .edit-pencil-btn {
   margin-left: auto;
   background: none;
-  border: 1px solid #2e1a47;
-  border-radius: 6px;
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-sm);
   padding: 6px 12px;
   font-size: 14px;
   cursor: pointer;
-  color: #2e1a47;
+  color: var(--color-primary-dark);
 }
 
 .edit-pencil-btn:hover {
-  background-color: #f0f0ff;
+  background-color: var(--color-primary-soft);
 }
 
 .calendar-day-editable {
@@ -2454,17 +2620,17 @@ body {
 }
 
 .calendar-day-editable:hover {
-  background-color: #f5f5ff;
+  background-color: var(--color-primary-soft);
 }
 
 .calendar-published-badge {
   display: inline-block;
-  background-color: #4caf50;
+  background-color: var(--color-success);
   color: white;
   font-size: 12px;
   font-weight: 600;
   padding: 2px 10px;
-  border-radius: 12px;
+  border-radius: var(--radius-pill);
   margin-bottom: 8px;
 }
 
@@ -2480,7 +2646,7 @@ body {
   max-width: 700px;
   width: 100%;
   text-align: right;
-  color: #2e1a47;
+  color: var(--color-ink);
   font-weight: 600;
   font-size: 14px;
   margin-bottom: 8px;
@@ -2499,8 +2665,9 @@ body {
 }
 
 .build-mini-calendar-card {
-  background-color: white;
-  border-radius: 12px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
   padding: 24px 28px;
   width: 480px;
   box-shadow: none;
@@ -2513,13 +2680,13 @@ body {
   gap: 12px;
   margin-bottom: 12px;
   font-size: 18px;
-  color: #1a1a2e;
+  color: var(--color-ink);
 }
 
 .mini-calendar-controls button {
   background: none;
-  border: 1px solid #ccc;
-  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
   cursor: pointer;
   padding: 4px 12px;
   font-size: 16px;
@@ -2535,7 +2702,7 @@ body {
   font-size: 13px;
   font-weight: 600;
   text-align: center;
-  color: #888;
+  color: var(--color-ink-faint);
   padding-bottom: 6px;
 }
 
@@ -2543,12 +2710,12 @@ body {
   font-size: 15px;
   text-align: right;
   padding: 12px 8px;
-  border-radius: 6px;
-  color: #ccc;
+  border-radius: var(--radius-sm);
+  color: var(--color-border);
 }
 
 .mini-cal-day:not(.empty) {
-  color: #1a1a2e;
+  color: var(--color-ink);
 }
 
 .mini-cal-day.empty {
@@ -2560,7 +2727,7 @@ body {
 }
 
 .mini-cal-day.calendar-day-editable:hover {
-  background-color: #f0f0ff;
+  background-color: var(--color-primary-soft);
 }
 
 .mini-cal-day.calendar-day-has-schedule {
@@ -2574,7 +2741,7 @@ body {
   border: none;
   cursor: pointer;
   font-size: 20px;
-  color: #2e1a47;
+  color: var(--color-primary-dark);
 }
 
 .build-page-actions {
@@ -2582,50 +2749,6 @@ body {
   align-items: center;
   gap: 12px;
   margin-top: 16px;
-}.build-new-calendar-label-btn {
-   align-self: flex-end;
-   max-width: 700px;
-   width: 100%;
-   text-align: right;
-   background: none;
-   border: none;
-   color: #2e1a47;
-   font-weight: 600;
-   font-size: 14px;
-   margin-bottom: 8px;
-   cursor: pointer;
- }
-
-.build-new-calendar-label-btn:hover {
-  text-decoration: underline;
-}
-
-.mini-cal-day-selected {
-  outline: 2px solid #2e1a47;
-}
-
-.day-teams-panel {
-  background-color: white;
-  border-radius: 12px;
-  padding: 20px 24px;
-  margin-top: 16px;
-  width: 480px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.day-teams-panel h3 {
-  margin: 0 0 12px 0;
-  font-size: 16px;
-  color: #1a1a2e;
-}
-
-.day-team-block {
-  margin-bottom: 12px;
-}
-
-.day-team-block ul {
-  margin: 4px 0 0 0;
-  padding-left: 20px;
 }
 .build-new-calendar-label-btn {
   align-self: flex-end;
@@ -2634,7 +2757,7 @@ body {
   text-align: right;
   background: none;
   border: none;
-  color: #2e1a47;
+  color: var(--color-primary-dark);
   font-weight: 600;
   font-size: 14px;
   margin-bottom: 8px;
@@ -2646,22 +2769,23 @@ body {
 }
 
 .mini-cal-day-selected {
-  outline: 2px solid #2e1a47;
+  outline: 2px solid var(--color-primary-dark);
 }
 
 .day-teams-panel {
-  background-color: white;
-  border-radius: 12px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
   padding: 20px 24px;
   margin-top: 16px;
   width: 480px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
 }
 
 .day-teams-panel h3 {
   margin: 0 0 12px 0;
   font-size: 16px;
-  color: #1a1a2e;
+  color: var(--color-ink);
 }
 
 .day-team-block {
@@ -2685,7 +2809,7 @@ body {
 .team-remove-btn {
   background: none;
   border: none;
-  color: #b00020;
+  color: var(--color-danger-dark);
   cursor: pointer;
   font-size: 13px;
 }
@@ -2693,8 +2817,8 @@ body {
 .team-add-select {
   width: 100%;
   padding: 6px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
   font-size: 13px;
 }
 
@@ -2709,13 +2833,13 @@ body {
   background: none;
   border: none;
   cursor: pointer;
-  color: #555;
+  color: var(--color-ink-soft);
   font-size: 14px;
   padding: 0 2px;
 }
 
 .team-rename-btn:hover {
-  color: #443066;
+  color: var(--color-primary);
 }
 
 .team-rename-row {
@@ -2728,16 +2852,16 @@ body {
 .team-rename-input {
   flex: 1;
   padding: 4px 8px;
-  border: 1px solid #443066;
-  border-radius: 4px;
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-sm);
   font-size: 13px;
 }
 
 .team-rename-save-btn {
-  background-color: #443066;
+  background-color: var(--color-primary);
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   padding: 4px 10px;
   cursor: pointer;
   font-size: 12px;
@@ -2747,18 +2871,20 @@ body {
   background: none;
   border: none;
   cursor: pointer;
-  color: #b00020;
+  color: var(--color-danger-dark);
   font-size: 14px;
 }
 
 .calendar-day-sunday {
-  color: #bbb;
+  color: var(--color-ink-faint);
   cursor: not-allowed !important;
   pointer-events: none;
 }
 
 .forgot-title {
-  color: #2323c9;
+  color: var(--color-primary-dark);
+  font-family: var(--font-display);
+  font-weight: 700;
   margin-bottom: 4px;
 }
 
@@ -2766,20 +2892,21 @@ body {
   max-width: 420px;
   text-align: center;
   font-size: 14px;
-  color: #444;
+  color: var(--color-ink-soft);
   margin-bottom: 16px;
 }
 
 .success-message {
-  color: #1a7a2e;
+  color: var(--color-success-dark);
   font-size: 14px;
+  font-weight: 600;
   text-align: center;
 }
 
 .back-to-login-btn {
   background: none;
   border: none;
-  color: #2323c9;
+  color: var(--color-primary-dark);
   text-decoration: underline;
   cursor: pointer;
   font-size: 14px;
@@ -2802,18 +2929,20 @@ body {
 
 .manager-builder-title-block h1 {
   margin: 0;
-  color: #2444d8;
-  font-family: Georgia, 'Times New Roman', serif;
-  font-size: 30px;
+  color: var(--color-primary-dark);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 26px;
 }
 
 .manager-builder-title-block p {
   display: inline-block;
   margin: 8px 0 0 0;
   padding: 4px 14px;
-  border-radius: 14px;
-  background-color: white;
-  color: #2e1a47;
+  border-radius: var(--radius-pill);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-ink);
   font-weight: 700;
 }
 
@@ -2821,8 +2950,8 @@ body {
   display: block;
   margin-top: 8px;
   max-width: 520px;
-  color: #2e1a47;
-  font-weight: 700;
+  color: var(--color-ink-soft);
+  font-weight: 600;
 }
 
 .manager-builder-controls {
@@ -2836,7 +2965,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  color: #2e1a47;
+  color: var(--color-ink);
   font-weight: 700;
   font-size: 13px;
 }
@@ -2844,11 +2973,11 @@ body {
 .manager-builder-controls input,
 .manager-builder-controls select {
   height: 38px;
-  border: none;
-  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
   padding: 0 10px;
-  background-color: white;
-  color: #1a1a2e;
+  background-color: var(--color-surface);
+  color: var(--color-ink);
   font-size: 14px;
 }
 
@@ -2865,10 +2994,11 @@ body {
 
 .manager-month-card,
 .manager-day-editor-panel {
-  background-color: white;
-  border-radius: 12px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
   padding: 18px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--shadow-sm);
 }
 
 .manager-month-nav {
@@ -2883,8 +3013,9 @@ body {
   margin: 0;
   min-width: 190px;
   text-align: center;
-  color: #1a1a2e;
-  font-family: Georgia, 'Times New Roman', serif;
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-weight: 700;
 }
 
 .manager-month-nav button,
@@ -2893,8 +3024,8 @@ body {
 .manager-editor-team-title button,
 .manager-editor-assistant-list button {
   border: none;
-  border-radius: 6px;
-  background-color: #443066;
+  border-radius: var(--radius-sm);
+  background-color: var(--color-primary);
   color: white;
   font-weight: 700;
   cursor: pointer;
@@ -2911,33 +3042,34 @@ body {
 
 .manager-calendar-empty-message {
   margin-bottom: 12px;
-  color: #b00020;
+  color: var(--color-danger-dark);
   font-weight: 700;
 }
 
 .manager-month-grid {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
-  border-top: 2px solid #443066;
-  border-left: 2px solid #443066;
+  border-top: 1px solid var(--color-border);
+  border-left: 1px solid var(--color-border);
   overflow: hidden;
+  border-radius: var(--radius-sm);
 }
 
 .manager-month-day-header {
-  background-color: #443066;
+  background-color: var(--color-primary);
   color: white;
   text-align: center;
   font-weight: 700;
   padding: 8px 0;
-  border-right: 1px solid #5a3f82;
+  border-right: 1px solid rgba(255,255,255,0.14);
 }
 
 .manager-month-day {
   min-height: 122px;
   border: none;
-  border-right: 1px solid #d5d5d5;
-  border-bottom: 1px solid #d5d5d5;
-  background-color: white;
+  border-right: 1px solid var(--color-border-soft);
+  border-bottom: 1px solid var(--color-border-soft);
+  background-color: var(--color-surface);
   padding: 8px;
   text-align: left;
   vertical-align: top;
@@ -2950,31 +3082,31 @@ body {
 }
 
 .manager-month-day-empty {
-  background-color: #f5f5f8;
+  background-color: var(--color-bg-alt);
 }
 
 .manager-month-day-today {
-  background-color: #eef0ff;
+  background-color: var(--color-primary-soft);
 }
 
 .manager-month-day-selected {
-  outline: 3px solid #2444d8;
+  outline: 3px solid var(--color-primary);
   outline-offset: -3px;
 }
 
 .manager-month-day-closed {
-  color: #aaa;
-  background-color: #fafafa;
+  color: var(--color-ink-faint);
+  background-color: var(--color-bg-alt);
 }
 
 .manager-month-day-scheduled:hover {
-  background-color: #f5f5ff;
+  background-color: var(--color-primary-soft);
 }
 
 .manager-month-date {
   display: block;
   font-weight: 700;
-  color: #1a1a2e;
+  color: var(--color-ink);
   margin-bottom: 5px;
 }
 
@@ -2986,9 +3118,9 @@ body {
 
 .manager-day-summary-team {
   min-width: 0;
-  border-left: 3px solid #443066;
+  border-left: 3px solid var(--color-primary);
   padding-left: 5px;
-  color: #1a1a2e;
+  color: var(--color-ink);
   font-size: 12px;
   line-height: 1.2;
 }
@@ -3003,12 +3135,12 @@ body {
 }
 
 .manager-day-summary em {
-  color: #a32626;
+  color: var(--color-danger-dark);
   font-size: 12px;
 }
 
 .manager-day-more {
-  color: #2444d8;
+  color: var(--color-primary-dark);
   font-weight: 700;
   font-size: 12px;
 }
@@ -3030,15 +3162,16 @@ body {
 
 .manager-day-editor-header h3 {
   margin: 0;
-  color: #2444d8;
-  font-family: Georgia, 'Times New Roman', serif;
-  font-size: 22px;
+  color: var(--color-primary-dark);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 20px;
 }
 
 .manager-day-editor-header p {
   margin: 4px 0 0 0;
-  color: #555;
-  font-weight: 700;
+  color: var(--color-ink-soft);
+  font-weight: 600;
 }
 
 .manager-add-team-row {
@@ -3050,15 +3183,15 @@ body {
 
 .manager-add-team-row input,
 .manager-notes-editor textarea {
-  border: 1px solid #ccc;
-  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
   padding: 9px 10px;
   font-size: 14px;
 }
 
 .manager-editor-team-card {
-  border: 1px solid #dedede;
-  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
   padding: 12px;
   margin-bottom: 12px;
 }
@@ -3072,8 +3205,8 @@ body {
 }
 
 .manager-editor-team-title strong {
-  color: #a32626;
-  font-size: 18px;
+  color: var(--color-danger-dark);
+  font-size: 17px;
 }
 
 .manager-editor-team-title div {
@@ -3093,17 +3226,17 @@ body {
   justify-content: space-between;
   gap: 8px;
   padding: 5px 0;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--color-border-soft);
 }
 
 .manager-editor-assistant-list small {
   display: block;
-  color: #777;
+  color: var(--color-ink-faint);
 }
 
 .manager-empty-editor-note {
-  color: #666;
-  font-weight: 700;
+  color: var(--color-ink-soft);
+  font-weight: 600;
   line-height: 1.5;
 }
 
@@ -3112,7 +3245,7 @@ body {
   flex-direction: column;
   gap: 6px;
   margin: 10px 0;
-  color: #2e1a47;
+  color: var(--color-ink);
   font-weight: 700;
 }
 
@@ -3122,14 +3255,19 @@ body {
 }
 
 .print-schedule-btn {
-  background-color: #2444d8;
+  background-color: var(--color-primary);
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 10px 20px;
   font-size: 15px;
-  font-weight: bold;
+  font-weight: 700;
   cursor: pointer;
+  box-shadow: var(--shadow-sm);
+}
+
+.print-schedule-btn:hover {
+  background-color: var(--color-primary-dark);
 }
 
 .print-schedule-btn:disabled {

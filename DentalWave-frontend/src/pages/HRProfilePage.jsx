@@ -4,6 +4,7 @@ import HRHeader from '../components/HRHeader'
 import { useEffect, useState } from 'react'
 import { getCurrentUser, updateCurrentUser } from '../services/UserService'
 import { digitsOnly, formatPhoneNumber } from '../utils/phoneUtils'
+import { IconPencil } from '../components/Icons'
 
 function HRProfilePage() {
 
@@ -246,7 +247,7 @@ function HRProfilePage() {
                                     }}
                                     disabled={loading}
                                 >
-                                    ✏️
+                                    <IconPencil size={18} />
                                 </button>
                             )}
                         </div>

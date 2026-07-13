@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { logout, getLoggedInUserId } from '../services/AuthService'
 import { getUnreadNotifications, markAsRead } from '../services/NotificationService'
 import UserAvatar from './UserAvatar'
+import { IconBell } from './Icons'
 
 function EmployeeHeader() {
 
@@ -72,7 +73,7 @@ function EmployeeHeader() {
             <div className="header-actions">
                 <div className="notification-bell-wrapper">
                     <button className="notification-bell-btn" onClick={handleBellClick}>
-                        🔔
+                        <IconBell size={20} />
                         {totalUnreadCount > 0 && (
                             <span className="notification-badge bell-badge">
                                 {totalUnreadCount}

@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import HRHeader from '../components/HRHeader'
 import { getAllEmployees } from '../services/EmployeeService'
+import { IconEye, IconPencil } from '../components/Icons'
 
 function HREmployeesPage() {
     const navigate = useNavigate()
@@ -98,7 +99,7 @@ function HREmployeesPage() {
                                             onClick={() => navigate(`/hr/employees/${employee.id}`)}
                                             title="View employee"
                                         >
-                                            👁
+                                            <IconEye size={18} />
                                         </button>
 
                                         <button
@@ -107,7 +108,7 @@ function HREmployeesPage() {
                                             onClick={() => navigate(`/hr/employees/${employee.id}/edit`)}
                                             title="Edit Employee"
                                         >
-                                            ✏️
+                                            <IconPencil size={16} />
                                         </button>
                                     </td>
                                 </tr>

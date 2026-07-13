@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getEmployeeById } from '../services/EmployeeService'
 import { formatPhoneNumber } from '../utils/phoneUtils'
+import { IconPencil } from '../components/Icons'
 
 /**
  * EmployeeProfilePage
@@ -178,7 +179,7 @@ function EmployeeProfilePage() {
                                 className="edit-profile-button"
                                 onClick={() => navigate('/employee/profile/edit')}
                             >
-                                ✏️
+                                <IconPencil size={18} />
                             </button>
 
                         </div>

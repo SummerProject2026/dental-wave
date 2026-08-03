@@ -1,94 +1,106 @@
 import '../App.css'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import ManagerHeader from '../components/ManagerHeader'
-import { createCalendar } from '../services/CalendarService'
+import { generateCalendar, getAllCalendars } from '../services/CalendarService'
 import { getLoggedInUserId } from '../services/AuthService'
 import { getAllOffices } from '../services/OfficeService'
+import { getResources, getReusableTeams } from '../services/ManagerSchedulerService'
 
-// Office name → id mapping. Matches the offices already seeded in the database.
-const OFFICES = [
-    { id: 1, name: 'Raleigh' },
-    { id: 2, name: 'Garner' },
-    { id: 3, name: 'Smithfield' }
-]
+function formatDate(date) {
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+}
 
 function ManagerNewCalendarPage() {
     const navigate = useNavigate()
-
     const today = new Date()
-    const [selectedMonth, setSelectedMonth] = useState(today.getMonth())
-    const [selectedYear, setSelectedYear] = useState(today.getFullYear())
-    const [offices, setOffices] = useState(OFFICES)
-    const [selectedOfficeId, setSelectedOfficeId] = useState('')
+    const [monthValue, setMonthValue] = useState(
+        `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`
+    )
+    const [offices, setOffices] = useState([])
+    const [counts, setCounts] = useState({ doctors: 0, assistants: 0, teams: 0 })
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
 
-    const monthNames = [
-        'January', 'February', 'March', 'April', 'May', 'June',
-        'July', 'August', 'September', 'October', 'November', 'December'
-    ]
+    const monthDate = useMemo(() => {
+        const [year, month] = monthValue.split('-').map(Number)
+        return new Date(year, month - 1, 1)
+    }, [monthValue])
+    const monthLabel = monthDate.toLocaleDateString('en-US', {
+        month: 'long',
+        year: 'numeric'
+    })
 
     useEffect(() => {
-        getAllOffices()
-            .then((response) => {
-                const loadedOffices = response.data || []
-                if (loadedOffices.length === 0) return
-
-                setOffices(loadedOffices)
-                setSelectedOfficeId((currentOfficeId) => currentOfficeId || loadedOffices[0].id)
+        Promise.all([
+            getAllOffices(),
+            getResources('DOCTOR'),
+            getResources('ASSISTANT'),
+            getReusableTeams()
+        ])
+            .then(([officeResponse, doctorResponse, assistantResponse, teamResponse]) => {
+                setOffices(officeResponse.data || [])
+                setCounts({
+                    doctors: (doctorResponse.data || []).filter((item) => item.active).length,
+                    assistants: (assistantResponse.data || []).filter((item) => item.active).length,
+                    teams: (teamResponse.data || []).filter((item) => item.active).length
+                })
             })
-            .catch((err) => {
-                console.error('Failed to load offices', err)
-                setSelectedOfficeId((currentOfficeId) => currentOfficeId || OFFICES[0].id)
-            })
+            .catch(() => setError('Unable to load the scheduling setup. Please try again.'))
     }, [])
 
-    function getMonthLabel() {
-        return `${monthNames[selectedMonth]} ${selectedYear}`
-    }
-
-    function getStartAndEndDates() {
-        const start = new Date(selectedYear, selectedMonth, 1)
-        const end = new Date(selectedYear, selectedMonth + 1, 0)
-
-        const format = (d) => {
-            const y = d.getFullYear()
-            const m = String(d.getMonth() + 1).padStart(2, '0')
-            const day = String(d.getDate()).padStart(2, '0')
-            return `${y}-${m}-${day}`
-        }
-
-        return { startDate: format(start), endDate: format(end) }
-    }
-
-    async function handleSave(published) {
+    async function handleGenerate() {
         setError('')
-        if (!selectedOfficeId) {
-            setError('Select a location before creating a calendar.')
+
+        if (offices.length === 0) {
+            setError('Add at least one office before generating a schedule.')
+            return
+        }
+        if (counts.doctors === 0 || counts.assistants === 0) {
+            setError('Add at least one active doctor and assistant before generating a schedule.')
             return
         }
 
         setLoading(true)
-
-        const { startDate, endDate } = getStartAndEndDates()
-        const createdById = getLoggedInUserId()
-
-        const calendarToCreate = {
-            month: getMonthLabel(),
-            startCalendarDate: startDate,
-            endCalendarDate: endDate,
-            published,
-            createdById,
-            officeId: selectedOfficeId
-        }
-
         try {
-            const response = await createCalendar(calendarToCreate)
-            navigate(`/manager/calendar/${response.data.id}/edit`)
-        } catch (err) {
-            console.error('Failed to create calendar', err)
-            setError('Failed to create calendar. Please try again.')
+            const existingResponse = await getAllCalendars()
+            const existing = (existingResponse.data || []).filter(
+                (calendar) => calendar.month === monthLabel
+            )
+
+            if (existing.length > 0) {
+                navigate(`/manager/schedule?month=${monthValue}&existing=1`)
+                return
+            }
+
+            const createdById = getLoggedInUserId()
+            const startDate = formatDate(monthDate)
+            const endDate = formatDate(new Date(
+                monthDate.getFullYear(),
+                monthDate.getMonth() + 1,
+                0
+            ))
+
+            await Promise.all(offices.map((office) =>
+                generateCalendar({
+                    month: monthLabel,
+                    startCalendarDate: startDate,
+                    endCalendarDate: endDate,
+                    createdById,
+                    officeId: office.id
+                })
+            ))
+
+            navigate(`/manager/schedule?month=${monthValue}&generated=1`)
+        } catch (requestError) {
+            console.error('Failed to generate monthly draft', requestError)
+            setError(
+                requestError.response?.data?.message
+                || 'The monthly draft could not be generated. Check your doctors, assistants, teams, and office assignments.'
+            )
         } finally {
             setLoading(false)
         }
@@ -96,83 +108,66 @@ function ManagerNewCalendarPage() {
 
     return (
         <div className="calendar-page">
-
             <ManagerHeader />
+            <main className="schedule-setup-shell">
+                <header className="schedule-setup-heading">
+                    <p className="eyebrow">Create monthly schedule</p>
+                    <h1>Generate a starting draft</h1>
+                    <p>Choose a month to create an editable draft for every location.</p>
+                </header>
 
-            <main className="manager-new-calendar-content">
+                <ol className="schedule-flow-steps" aria-label="Schedule creation steps">
+                    <li className="active"><span>1</span><strong>Choose month</strong></li>
+                    <li><span>2</span><strong>Review each day</strong></li>
+                    <li><span>3</span><strong>Publish</strong></li>
+                </ol>
 
-                <div className="manager-new-calendar-card">
+                <section className="schedule-setup-card">
+                    <label className="schedule-month-field">
+                        Month to schedule
+                        <input
+                            type="month"
+                            value={monthValue}
+                            min={`${today.getFullYear() - 1}-01`}
+                            max={`${today.getFullYear() + 2}-12`}
+                            onChange={(event) => setMonthValue(event.target.value)}
+                        />
+                    </label>
 
-                    <div className="new-calendar-top-row">
-                        <span></span>
-                        <button className="add-calendar-link" disabled>
-                            + New calendar
-                        </button>
+                    <div className="schedule-generation-summary">
+                        <p><strong>{monthLabel}</strong> will use your current scheduling setup:</p>
+                        <div>
+                            <span><strong>{counts.doctors}</strong> active doctors</span>
+                            <span><strong>{counts.assistants}</strong> active assistants</span>
+                            <span><strong>{counts.teams}</strong> reusable teams</span>
+                            <span><strong>{offices.length}</strong> locations</span>
+                        </div>
                     </div>
 
-                    <div className="new-calendar-body">
+                    <p className="schedule-random-note">You can adjust any day before publishing.</p>
 
-                        <div className="new-calendar-location">
-                            <label>Location ▾</label>
-                            <select
-                                value={selectedOfficeId}
-                                onChange={(e) => setSelectedOfficeId(Number(e.target.value))}
-                            >
-                                {offices.map((office) => (
-                                    <option key={office.id} value={office.id}>
-                                        {office.name}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
+                    {error && <p className="error-message">{error}</p>}
 
-                        <div className="new-calendar-date-picker">
-                            <select
-                                value={selectedMonth}
-                                onChange={(e) => setSelectedMonth(Number(e.target.value))}
-                            >
-                                {monthNames.map((name, index) => (
-                                    <option key={name} value={index}>{name}</option>
-                                ))}
-                            </select>
-
-                            <select
-                                value={selectedYear}
-                                onChange={(e) => setSelectedYear(Number(e.target.value))}
-                            >
-                                {[today.getFullYear() - 1, today.getFullYear(), today.getFullYear() + 1].map((y) => (
-                                    <option key={y} value={y}>{y}</option>
-                                ))}
-                            </select>
-                        </div>
-
-                        {error && <p className="error-message">{error}</p>}
-
-                    </div>
-
-                    <div className="new-calendar-actions">
+                    <div className="schedule-setup-actions">
                         <button
+                            type="button"
                             className="save-draft-btn"
-                            onClick={() => handleSave(false)}
+                            onClick={() => navigate('/manager/dashboard')}
                             disabled={loading}
                         >
-                            Save as Draft
+                            Cancel
                         </button>
                         <button
+                            type="button"
                             className="publish-btn"
-                            onClick={() => handleSave(true)}
-                            disabled={loading}
+                            onClick={handleGenerate}
+                            disabled={loading || !monthValue}
                         >
-                            Publish
+                            {loading ? 'Generating draft…' : 'Generate editable draft'}
                         </button>
                     </div>
-
-                </div>
-
+                </section>
             </main>
-
-            <footer className="page-footer">© All Rights Reserved</footer>
-
         </div>
     )
 }

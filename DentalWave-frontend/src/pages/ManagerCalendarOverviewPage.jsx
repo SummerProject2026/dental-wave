@@ -16,7 +16,7 @@ function getEmployeeName(employee) {
     return `${employee.firstName || ''} ${employee.lastName || ''}`.trim()
 }
 
-function ManagerCalendarOverviewPage() {
+function ManagerCalendarOverviewPage({ printMode = false }) {
 
     const today = new Date()
     const [currentDate, setCurrentDate] = useState(new Date(today.getFullYear(), today.getMonth(), 1))
@@ -128,6 +128,7 @@ function ManagerCalendarOverviewPage() {
             <ManagerHeader />
 
             <main className="manager-calendar-layout">
+                {printMode && <button className="lite-button print-trigger" onClick={() => window.print()}>Print landscape schedule</button>}
 
                 <aside className="manager-sidebar">
                     <div className="manager-location-section">

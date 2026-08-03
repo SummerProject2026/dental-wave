@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { getToken } from './AuthService'
+import { getToken, logout } from './AuthService'
 
 /**
  * Axios Request Interceptor
@@ -48,6 +48,26 @@ axios.interceptors.request.use(
      * @returns Rejected promise
      */
     function (error) {
+        return Promise.reject(error)
+    }
+)
+
+// A cached role is not proof that the JWT is still valid. If the backend
+// rejects a protected request, clear the stale session and require a fresh
+// login instead of leaving the manager on a broken page.
+axios.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        const isUnauthorized = error.response?.status === 401
+        const isLoginRequest = error.config?.url?.includes('/api/auth/login')
+
+        const suppressAuthRedirect = error.config?.skipAuthRedirect === true
+
+        if (isUnauthorized && !isLoginRequest && !suppressAuthRedirect) {
+            logout()
+            window.location.replace('/login?session=expired')
+        }
+
         return Promise.reject(error)
     }
 )

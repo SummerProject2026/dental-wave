@@ -313,3 +313,34 @@ assistant-scheduler/
 - Maven Central (find dependencies): [search.maven.org](https://search.maven.org)
 - PostgreSQL docs: [postgresql.org/docs](https://www.postgresql.org/docs/)
 - TablePlus: [tableplus.com](https://tableplus.com)
+# Manager Scheduler Lite
+
+The `manager-scheduler-lite` branch is a focused scheduling tool for Jackie and other office scheduling managers. It keeps DentalWave's secure JWT login and existing calendar persistence while hiding employee self-service and HR workflows from the visible application.
+
+Supported workflow: log in as a manager, maintain doctors and assistants as scheduling resources, create reusable teams, create or reopen an office/month schedule, adjust daily assignments, save or finalize it, and print the monthly view in landscape format.
+
+Major features include a manager dashboard, doctor and assistant resource management without mandatory login accounts, relational reusable teams, the existing monthly schedule builder, draft/finalized status, and a dedicated print route. Public registration, assistant availability/login pages, time-off submission, notifications, HR workflows, and role-selection pages are intentionally excluded from this branch's visible routes.
+
+## Run locally
+
+Backend (Java 21 and PostgreSQL required):
+
+```bash
+cd DentalWave
+cp src/main/resources/application-example.properties src/main/resources/application-local.properties
+./mvnw spring-boot:run -Dspring-boot.run.profiles=local
+```
+
+Frontend (Node.js required):
+
+```bash
+cd DentalWave-frontend
+npm install
+npm run dev
+```
+
+Configure the database URL, username, password, JWT secret/expiration, and mail settings described in `DentalWave/src/main/resources/application-example.properties`. Initial manager accounts are created through the existing setup loader/configuration or by an administrator; public `/api/auth/register` intentionally returns 403. The account must have `ROLE_MANAGER` or `ROLE_ADMIN`.
+
+To test printing, open **Print Schedule**, choose the desired month/location, click **Print landscape schedule**, select Letter paper and Landscape orientation, and verify the preview is a single readable monthly page with no navigation or controls.
+
+Implementation details and the pre-change test baseline are in [docs/manager-scheduler-lite-architecture.md](docs/manager-scheduler-lite-architecture.md). Use [docs/manager-scheduler-lite-manual-test.md](docs/manager-scheduler-lite-manual-test.md) for acceptance testing.

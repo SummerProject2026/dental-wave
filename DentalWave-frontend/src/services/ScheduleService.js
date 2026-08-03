@@ -118,6 +118,33 @@ export const removeEmployeeFromTeam = (scheduleId, teamId, employeeId) =>
         getAuthHeader()
     )
 
+export const assignResourceToTeam = (scheduleId, teamId, resourceId) =>
+    axios.post(
+        `${SCHEDULE_REST_API_BASE_URL}/${scheduleId}/teams/${teamId}/resources/${resourceId}`,
+        null,
+        getAuthHeader()
+    )
+
+export const removeResourceFromTeam = (scheduleId, teamId, resourceId) =>
+    axios.delete(
+        `${SCHEDULE_REST_API_BASE_URL}/${scheduleId}/teams/${teamId}/resources/${resourceId}`,
+        getAuthHeader()
+    )
+
+export const updateEmployeePartialDayNote = (scheduleId, teamId, employeeId, note) =>
+    axios.put(
+        `${SCHEDULE_REST_API_BASE_URL}/${scheduleId}/teams/${teamId}/employees/${employeeId}/partial-day`,
+        { note },
+        getAuthHeader()
+    )
+
+export const updateResourcePartialDayNote = (scheduleId, teamId, resourceId, note) =>
+    axios.put(
+        `${SCHEDULE_REST_API_BASE_URL}/${scheduleId}/teams/${teamId}/resources/${resourceId}/partial-day`,
+        { note },
+        getAuthHeader()
+    )
+
 /**
  * Publishes a schedule.
  *

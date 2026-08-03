@@ -28,8 +28,10 @@ function LoginPage() {
     const [password, setPassword] = useState('')
     const [showPassword, setShowPassword] = useState(false)
     const location = useLocation()
+    const sessionExpired = location.state?.sessionExpired
+        || new URLSearchParams(location.search).get('session') === 'expired'
     const [error, setError] = useState(
-        location.state?.sessionExpired
+        sessionExpired
             ? 'Your session expired. Please log in again.'
             : ''
     )
@@ -65,16 +67,10 @@ function LoginPage() {
             // Store employee id for employee-specific pages
             sessionStorage.setItem('employeeId', employeeId)
 
-            if (role === 'ROLE_HR') {
-                navigator('/hr/calendar')
-            } else if (role === 'ROLE_MANAGER') {
-                navigator('/manager/calendar')
-            } else if (role === 'ROLE_ADMIN') {
-                navigator('/admin')
-            } else if (role === 'ROLE_ASSISTANT') {
-                navigator('/employee/calendar')
+            if (role === 'ROLE_MANAGER' || role === 'ROLE_ADMIN') {
+                navigator('/manager/dashboard')
             } else {
-                navigator('/calendar')
+                setError('This scheduling tool is available only to managers and administrators.')
             }
 
         } catch (error) {

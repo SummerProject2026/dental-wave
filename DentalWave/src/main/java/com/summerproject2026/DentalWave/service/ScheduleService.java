@@ -113,6 +113,17 @@ public interface ScheduleService {
      */
     ScheduleDto removeEmployeeFromTeam(Long scheduleId, Long userId, Long employeeId);
 
+    ScheduleDto assignResourceToTeam(Long scheduleId, Long teamId, Long resourceId);
+
+    ScheduleDto removeResourceFromTeam(Long scheduleId, Long teamId, Long resourceId);
+
+    ScheduleDto updateAssignmentPartialDayNote(
+            Long scheduleId,
+            Long teamId,
+            Long assignmentId,
+            boolean schedulingResource,
+            String note);
+
     /**
      * Marks a schedule as published.
      *

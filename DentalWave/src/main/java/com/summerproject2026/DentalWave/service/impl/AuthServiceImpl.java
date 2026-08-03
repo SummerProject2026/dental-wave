@@ -112,6 +112,13 @@ public class AuthServiceImpl implements AuthService {
                 .map(Role::getName)
                 .orElse(null);
 
+        if (!"ROLE_MANAGER".equals(role) && !"ROLE_ADMIN".equals(role)) {
+            SecurityContextHolder.clearContext();
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.FORBIDDEN,
+                    "Manager Scheduler Lite is available only to managers and administrators.");
+        }
+
         // Build the JWT response with all user details
         JwtAuthResponse jwtAuthResponse = new JwtAuthResponse();
         jwtAuthResponse.setAccessToken(token);

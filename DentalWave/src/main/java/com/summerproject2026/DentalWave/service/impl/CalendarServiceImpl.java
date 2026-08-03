@@ -10,6 +10,7 @@ import com.summerproject2026.DentalWave.entity.Employee;
 import com.summerproject2026.DentalWave.entity.Office;
 import com.summerproject2026.DentalWave.entity.Schedule;
 import com.summerproject2026.DentalWave.entity.ScheduleTeam;
+import com.summerproject2026.DentalWave.entity.SchedulingResource;
 import com.summerproject2026.DentalWave.entity.TimeOffRequest;
 import com.summerproject2026.DentalWave.entity.User;
 import com.summerproject2026.DentalWave.enums.NotificationType;
@@ -20,10 +21,13 @@ import com.summerproject2026.DentalWave.repository.EmployeeRepository;
 import com.summerproject2026.DentalWave.repository.OfficeRepository;
 import com.summerproject2026.DentalWave.repository.ScheduleRepository;
 import com.summerproject2026.DentalWave.repository.ScheduleTeamRepository;
+import com.summerproject2026.DentalWave.repository.SchedulingResourceRepository;
 import com.summerproject2026.DentalWave.repository.TimeOffRequestRepository;
 import com.summerproject2026.DentalWave.repository.UserRepository;
 import com.summerproject2026.DentalWave.service.CalendarService;
 import com.summerproject2026.DentalWave.service.NotificationService;
+import com.summerproject2026.DentalWave.service.DoctorRuleResolutionService;
+import com.summerproject2026.DentalWave.dto.DoctorAssignmentDto;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -41,6 +45,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.Collections;
 import java.util.stream.Collectors;
 
 /**
@@ -60,6 +65,10 @@ public class CalendarServiceImpl implements CalendarService {
     private final UserRepository userRepository;
     private final OfficeRepository officeRepository;
     private final EmployeeRepository employeeRepository;
+    @Autowired
+    private SchedulingResourceRepository schedulingResourceRepository;
+    @Autowired
+    private DoctorRuleResolutionService doctorRuleResolver;
     private final TimeOffRequestRepository timeOffRequestRepository;
     private final CalendarMapper calendarMapper;
     private final ScheduleMapper scheduleMapper;
@@ -298,21 +307,39 @@ public class CalendarServiceImpl implements CalendarService {
         calendar.setOffice(office);
 
         List<Employee> allAssistants = getSchedulableAssistants();
+        List<SchedulingResource> localDoctors = schedulingResourceRepository == null
+                ? List.of()
+                : schedulingResourceRepository.findByTypeAndActiveTrue(SchedulingResource.Type.DOCTOR);
+        List<SchedulingResource> localAssistants = schedulingResourceRepository == null
+                ? List.of()
+                : schedulingResourceRepository.findByTypeAndActiveTrue(SchedulingResource.Type.ASSISTANT);
         GenerationContext generationContext = buildGenerationContext(calendarDto.getMonth());
 
         LocalDate current = calendarDto.getStartCalendarDate();
         LocalDate end = calendarDto.getEndCalendarDate();
 
         while (!current.isAfter(end)) {
-            List<String> teamNames = getDefaultTeamNamesForOfficeDay(office.getName(), current.getDayOfWeek());
+            LocalDate scheduleDate = current;
+            List<SchedulingResource> doctorsForDay = localDoctors.stream()
+                    .filter(doctor -> doctorBelongsAtOffice(doctor, office, scheduleDate))
+                    .toList();
+            List<String> teamNames = doctorsForDay.isEmpty()
+                    ? getDefaultTeamNamesForOfficeDay(office.getName(), scheduleDate.getDayOfWeek())
+                    : doctorsForDay.stream()
+                            .map(doctor -> "Dr. " + doctor.getDisplayName())
+                            .toList();
             if (!teamNames.isEmpty()) {
-                Schedule schedule = buildScheduleForDay(
-                        current,
-                        office,
-                        teamNames,
-                        allAssistants,
-                        generationContext,
-                        calendarDto.getMonth());
+                Schedule schedule = !localAssistants.isEmpty()
+                        ? buildLocalResourceScheduleForDay(
+                                scheduleDate, office, teamNames, localAssistants,
+                                calendarDto.getMonth())
+                        : buildScheduleForDay(
+                                scheduleDate,
+                                office,
+                                teamNames,
+                                allAssistants,
+                                generationContext,
+                                calendarDto.getMonth());
                 calendar.addSchedule(schedule);
             }
             current = current.plusDays(1);
@@ -320,6 +347,89 @@ public class CalendarServiceImpl implements CalendarService {
 
         Calendar saved = calendarRepository.save(calendar);
         return calendarMapper.mapToCalendarDto(saved);
+    }
+
+    /**
+     * Builds a local-only schedule and distributes assistants without assigning
+     * anyone to two doctors on the same date. Each doctor receives up to five;
+     * when staffing permits, every doctor receives at least four.
+     */
+    private Schedule buildLocalResourceScheduleForDay(
+            LocalDate date,
+            Office office,
+            List<String> teamNames,
+            List<SchedulingResource> assistants,
+            String month) {
+        Schedule schedule = new Schedule();
+        schedule.setDate(date);
+        schedule.setStartTime(LocalTime.of(8, 0));
+        schedule.setEndTime(LocalTime.of(17, 0));
+        schedule.setPublished(false);
+
+        List<ScheduleTeam> teams = teamNames.stream().map(name -> {
+            ScheduleTeam team = new ScheduleTeam();
+            team.setName(name);
+            team.setSchedule(schedule);
+            return team;
+        }).collect(Collectors.toCollection(ArrayList::new));
+
+        Set<Long> alreadyAssigned = getResourceIdsAssignedOnDate(month, date);
+        List<SchedulingResource> available = assistants.stream()
+                .filter(SchedulingResource::isActive)
+                .filter(assistant -> isResourceAssignedToOffice(assistant, office))
+                .filter(assistant -> !alreadyAssigned.contains(assistant.getId()))
+                .collect(Collectors.toCollection(ArrayList::new));
+        Collections.shuffle(available);
+
+        int maximumAssignments = Math.min(available.size(), teams.size() * 5);
+        for (int index = 0; index < maximumAssignments; index++) {
+            teams.get(index % teams.size()).getResources().add(available.get(index));
+        }
+
+        schedule.setTeams(teams);
+        return schedule;
+    }
+
+    private Set<Long> getResourceIdsAssignedOnDate(String month, LocalDate date) {
+        return calendarRepository.findByMonth(month).stream()
+                .flatMap(calendar -> calendar.getSchedules().stream())
+                .filter(schedule -> date.equals(schedule.getDate()))
+                .flatMap(schedule -> schedule.getTeams().stream())
+                .flatMap(team -> team.getResources().stream())
+                .map(SchedulingResource::getId)
+                .collect(Collectors.toSet());
+    }
+
+    private boolean isResourceAssignedToOffice(SchedulingResource resource, Office office) {
+        if (resource.getOffices() != null && !resource.getOffices().isEmpty()) {
+            return resource.getOffices().stream()
+                    .anyMatch(value -> value.getId().equals(office.getId()));
+        }
+        return resource.getDefaultOffice() == null
+                || resource.getDefaultOffice().getId().equals(office.getId());
+    }
+
+    private boolean worksOnDay(SchedulingResource doctor, DayOfWeek dayOfWeek) {
+        if (dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY) {
+            return false;
+        }
+        if (doctor.getNormalWorkdays() == null || doctor.getNormalWorkdays().isBlank()) {
+            return dayOfWeek != DayOfWeek.FRIDAY;
+        }
+        return doctor.getNormalWorkdays().toLowerCase()
+                .contains(dayOfWeek.name().toLowerCase());
+    }
+
+    private boolean doctorBelongsAtOffice(
+            SchedulingResource doctor, Office office, LocalDate date) {
+        if (doctorRuleResolver != null) {
+            DoctorAssignmentDto assignment = doctorRuleResolver.resolve(doctor, date);
+            if (!assignment.isFallback()) {
+                return assignment.isWorking() && office.getId().equals(assignment.getOfficeId());
+            }
+        }
+        return isResourceAssignedToOffice(doctor, office)
+                && worksOnDay(doctor, date.getDayOfWeek());
     }
 
     private Schedule buildScheduleForDay(LocalDate date,
@@ -901,9 +1011,12 @@ public class CalendarServiceImpl implements CalendarService {
             }
 
             Set<Long> employeesOnThisSchedule = new HashSet<>();
+            Set<Long> resourcesOnThisSchedule = new HashSet<>();
 
             for (ScheduleTeam team : schedule.getTeams()) {
-                if (team.getEmployees() == null || team.getEmployees().isEmpty()) {
+                boolean noEmployees = team.getEmployees() == null || team.getEmployees().isEmpty();
+                boolean noResources = team.getResources() == null || team.getResources().isEmpty();
+                if (noEmployees && noResources) {
                     if (!isPlaceholderTeam(team.getName())) {
                         issues.add("Team " + team.getName() + " on " + dateLabel
                                 + " has no assistants assigned.");
@@ -944,6 +1057,36 @@ public class CalendarServiceImpl implements CalendarService {
 
                     if (isDoubleBookedOutsideSchedule(employee.getId(), schedule)) {
                         issues.add(employeeName + " is double-booked on " + dateLabel + ".");
+                    }
+                }
+
+                if (team.getResources() == null) continue;
+                for (SchedulingResource resource : team.getResources()) {
+                    if (resource == null || resource.getId() == null) {
+                        issues.add("An invalid local assistant assignment exists on " + dateLabel + ".");
+                        continue;
+                    }
+                    String resourceName = resource.getDisplayName() == null
+                            ? "Assistant " + resource.getId()
+                            : resource.getDisplayName();
+                    if (resource.getType() != SchedulingResource.Type.ASSISTANT) {
+                        issues.add(resourceName + " is not an assistant but is assigned on "
+                                + dateLabel + ".");
+                    }
+                    if (!resource.isActive()) {
+                        issues.add(resourceName + " is inactive but scheduled on " + dateLabel + ".");
+                    }
+                    if (!resourcesOnThisSchedule.add(resource.getId())) {
+                        issues.add(resourceName + " is assigned more than once on " + dateLabel + ".");
+                    }
+                    if (!isResourceAssignedToOffice(resource, calendar.getOffice())) {
+                        String officeName = calendar.getOffice() != null
+                                ? calendar.getOffice().getName() : "this office";
+                        issues.add(resourceName + " is not assigned to " + officeName
+                                + " but is scheduled on " + dateLabel + ".");
+                    }
+                    if (isResourceDoubleBookedOutsideSchedule(resource.getId(), schedule)) {
+                        issues.add(resourceName + " is double-booked on " + dateLabel + ".");
                     }
                 }
             }
@@ -1035,6 +1178,17 @@ public class CalendarServiceImpl implements CalendarService {
                 .flatMap(schedule -> schedule.getTeams().stream())
                 .flatMap(team -> team.getEmployees().stream())
                 .anyMatch(employee -> employee.getId().equals(employeeId));
+    }
+
+    private boolean isResourceDoubleBookedOutsideSchedule(
+            Long resourceId, Schedule currentSchedule) {
+        if (resourceId == null || currentSchedule.getDate() == null) return false;
+        return scheduleRepository.findByDate(currentSchedule.getDate()).stream()
+                .filter(schedule -> currentSchedule.getId() == null
+                        || !currentSchedule.getId().equals(schedule.getId()))
+                .flatMap(schedule -> schedule.getTeams().stream())
+                .flatMap(team -> team.getResources().stream())
+                .anyMatch(resource -> resource.getId().equals(resourceId));
     }
 
     private String getEmployeeDisplayName(Employee employee) {

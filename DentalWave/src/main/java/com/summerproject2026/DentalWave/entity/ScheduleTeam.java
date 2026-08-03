@@ -6,7 +6,9 @@ import lombok.Setter;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Represents a named team within a schedule.
@@ -41,4 +43,30 @@ public class ScheduleTeam {
             inverseJoinColumns = @JoinColumn(name = "employee_id")
     )
     private List<Employee> employees = new ArrayList<>();
+
+    /**
+     * Lightweight local-only scheduling resources. These assistants do not
+     * require login accounts and are used by Manager Scheduler Lite.
+     */
+    @ManyToMany
+    @JoinTable(
+            name = "schedule_team_resources",
+            joinColumns = @JoinColumn(name = "team_id"),
+            inverseJoinColumns = @JoinColumn(name = "resource_id")
+    )
+    private List<SchedulingResource> resources = new ArrayList<>();
+
+    /**
+     * Optional per-day notes for individual team assignments.
+     * Keys use "employee:{id}" or "resource:{id}" so account-backed and
+     * local-only assistants can safely share the same numeric id.
+     */
+    @ElementCollection
+    @CollectionTable(
+            name = "schedule_team_assignment_notes",
+            joinColumns = @JoinColumn(name = "team_id")
+    )
+    @MapKeyColumn(name = "assignment_key", length = 80)
+    @Column(name = "partial_day_note", nullable = false, length = 40)
+    private Map<String, String> assignmentNotes = new HashMap<>();
 }

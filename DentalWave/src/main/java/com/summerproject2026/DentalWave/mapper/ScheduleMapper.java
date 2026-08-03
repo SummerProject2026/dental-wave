@@ -4,6 +4,8 @@ import com.summerproject2026.DentalWave.dto.EmployeeDto;
 import com.summerproject2026.DentalWave.dto.ScheduleDto;
 import com.summerproject2026.DentalWave.entity.Schedule;
 import com.summerproject2026.DentalWave.entity.ScheduleTeam;
+import com.summerproject2026.DentalWave.entity.SchedulingResource;
+import com.summerproject2026.DentalWave.enums.WorkStatus;
 import com.summerproject2026.DentalWave.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -71,8 +73,23 @@ public class ScheduleMapper {
             Map<Long, String> teamNamesMap = new LinkedHashMap<>();
             for (ScheduleTeam team : schedule.getTeams()) {
                 List<EmployeeDto> employeeDtos = team.getEmployees().stream()
-                        .map(employeeMapper::mapToEmployeeDto)
+                        .map(employee -> {
+                            EmployeeDto employeeDto = employeeMapper.mapToEmployeeDto(employee);
+                            employeeDto.setPartialDayNote(
+                                    team.getAssignmentNotes().get("employee:" + employee.getId())
+                            );
+                            return employeeDto;
+                        })
                         .collect(Collectors.toList());
+                employeeDtos.addAll(team.getResources().stream()
+                        .map(resource -> {
+                            EmployeeDto resourceDto = mapSchedulingResource(resource);
+                            resourceDto.setPartialDayNote(
+                                    team.getAssignmentNotes().get("resource:" + resource.getId())
+                            );
+                            return resourceDto;
+                        })
+                        .toList());
                 teamsMap.put(team.getId(), employeeDtos);
                 teamNamesMap.put(team.getId(), team.getName());
             }
@@ -118,5 +135,16 @@ public class ScheduleMapper {
         }
 
         return schedule;
+    }
+
+    private EmployeeDto mapSchedulingResource(SchedulingResource resource) {
+        EmployeeDto dto = new EmployeeDto();
+        dto.setId(resource.getId());
+        dto.setFirstName(resource.getDisplayName());
+        dto.setLastName("");
+        dto.setPosition(resource.getType().name());
+        dto.setStatus(resource.isActive() ? WorkStatus.ACTIVE : WorkStatus.INACTIVE);
+        dto.setSchedulingResource(true);
+        return dto;
     }
 }

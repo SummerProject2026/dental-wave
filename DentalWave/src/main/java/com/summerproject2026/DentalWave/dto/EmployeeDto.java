@@ -62,6 +62,12 @@ public class EmployeeDto {
     /** Pulled from User.phoneNumber */
     private String phoneNumber;
 
+    /** True when this member is a local scheduling resource without a login account. */
+    private boolean schedulingResource;
+
+    /** Optional note for this specific scheduled day, e.g. AM, PM, or out 2-3. */
+    private String partialDayNote;
+
     public EmployeeDto() {}
 
     public EmployeeDto(Long id, Long userId, String firstName, String lastName,
@@ -136,4 +142,14 @@ public class EmployeeDto {
 
     public String getPhoneNumber() { return phoneNumber; }
     public void setPhoneNumber(String phoneNumber) { this.phoneNumber = phoneNumber; }
+
+    public boolean isSchedulingResource() { return schedulingResource; }
+    public void setSchedulingResource(boolean schedulingResource) {
+        this.schedulingResource = schedulingResource;
+    }
+
+    public String getPartialDayNote() { return partialDayNote; }
+    public void setPartialDayNote(String partialDayNote) {
+        this.partialDayNote = partialDayNote;
+    }
 }

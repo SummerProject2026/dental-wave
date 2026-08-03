@@ -4,9 +4,12 @@ import com.summerproject2026.DentalWave.dto.ScheduleDto;
 import com.summerproject2026.DentalWave.service.impl.ScheduleServiceImpl;
 import com.summerproject2026.DentalWave.exception.ResourceNotFoundException;
 import com.summerproject2026.DentalWave.mapper.ScheduleMapper;
+import com.summerproject2026.DentalWave.entity.Employee;
 import com.summerproject2026.DentalWave.entity.Schedule;
+import com.summerproject2026.DentalWave.entity.ScheduleTeam;
 import com.summerproject2026.DentalWave.repository.EmployeeRepository;
 import com.summerproject2026.DentalWave.repository.ScheduleRepository;
+import com.summerproject2026.DentalWave.repository.ScheduleTeamRepository;
 import com.summerproject2026.DentalWave.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -39,6 +42,9 @@ class ScheduleServiceImplTest {
 
     @Mock
     private EmployeeRepository employeeRepository;
+
+    @Mock
+    private ScheduleTeamRepository scheduleTeamRepository;
 
     @Mock
     private UserRepository userRepository;
@@ -406,6 +412,53 @@ class ScheduleServiceImplTest {
 
             // Verify empty list returned
             assertThat(results).isEmpty();
+        }
+    }
+
+    @Nested
+    @DisplayName("updateAssignmentPartialDayNote")
+    class UpdateAssignmentPartialDayNote {
+
+        @Test
+        @DisplayName("saves a normalized note for an assigned employee")
+        void savesPartialDayNote() {
+            Employee employee = new Employee();
+            employee.setId(8L);
+            ScheduleTeam team = new ScheduleTeam();
+            team.setId(20L);
+            team.setSchedule(schedule);
+            team.setEmployees(new ArrayList<>(List.of(employee)));
+            schedule.setTeams(new ArrayList<>(List.of(team)));
+
+            when(scheduleRepository.findById(1L)).thenReturn(Optional.of(schedule));
+            when(scheduleTeamRepository.findById(20L)).thenReturn(Optional.of(team));
+            when(scheduleMapper.mapToScheduleDto(schedule)).thenReturn(scheduleDto);
+
+            scheduleService.updateAssignmentPartialDayNote(
+                    1L, 20L, 8L, false, "  out   2-3  ");
+
+            assertThat(team.getAssignmentNotes())
+                    .containsEntry("employee:8", "out 2-3");
+            verify(scheduleTeamRepository).save(team);
+        }
+
+        @Test
+        @DisplayName("rejects notes longer than forty characters")
+        void rejectsLongPartialDayNote() {
+            Employee employee = new Employee();
+            employee.setId(8L);
+            ScheduleTeam team = new ScheduleTeam();
+            team.setId(20L);
+            team.setSchedule(schedule);
+            team.setEmployees(new ArrayList<>(List.of(employee)));
+
+            when(scheduleRepository.findById(1L)).thenReturn(Optional.of(schedule));
+            when(scheduleTeamRepository.findById(20L)).thenReturn(Optional.of(team));
+
+            assertThatThrownBy(() -> scheduleService.updateAssignmentPartialDayNote(
+                    1L, 20L, 8L, false, "x".repeat(41)))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("40 characters");
         }
     }
 

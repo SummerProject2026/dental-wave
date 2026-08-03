@@ -2,6 +2,7 @@ package com.summerproject2026.DentalWave.controller;
 
 import com.summerproject2026.DentalWave.dto.ScheduleDto;
 import com.summerproject2026.DentalWave.dto.EmployeeDto;
+import com.summerproject2026.DentalWave.dto.PartialDayNoteRequest;
 import com.summerproject2026.DentalWave.service.EmployeeService;
 import com.summerproject2026.DentalWave.service.ScheduleService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 /**
  * REST controller exposing schedule management endpoints.
@@ -38,6 +40,12 @@ public class ScheduleController {
                               EmployeeService employeeService) {
         this.scheduleService = scheduleService;
         this.employeeService = employeeService;
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, String>> handleIllegalArgument(
+            IllegalArgumentException exception) {
+        return ResponseEntity.badRequest().body(Map.of("message", exception.getMessage()));
     }
 
     // -------------------------------------------------------------------------
@@ -217,6 +225,48 @@ public class ScheduleController {
                                                               @PathVariable Long employeeId) {
         return ResponseEntity.ok(
                 scheduleService.removeEmployeeFromTeam(scheduleId, userId, employeeId));
+    }
+
+    @PostMapping("/{scheduleId}/teams/{teamId}/resources/{resourceId}")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+    public ResponseEntity<ScheduleDto> assignResourceToTeam(@PathVariable Long scheduleId,
+                                                            @PathVariable Long teamId,
+                                                            @PathVariable Long resourceId) {
+        return ResponseEntity.ok(
+                scheduleService.assignResourceToTeam(scheduleId, teamId, resourceId));
+    }
+
+    @DeleteMapping("/{scheduleId}/teams/{teamId}/resources/{resourceId}")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+    public ResponseEntity<ScheduleDto> removeResourceFromTeam(@PathVariable Long scheduleId,
+                                                              @PathVariable Long teamId,
+                                                              @PathVariable Long resourceId) {
+        return ResponseEntity.ok(
+                scheduleService.removeResourceFromTeam(scheduleId, teamId, resourceId));
+    }
+
+    @PutMapping("/{scheduleId}/teams/{teamId}/employees/{employeeId}/partial-day")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+    public ResponseEntity<ScheduleDto> updateEmployeePartialDayNote(
+            @PathVariable Long scheduleId,
+            @PathVariable Long teamId,
+            @PathVariable Long employeeId,
+            @RequestBody PartialDayNoteRequest request) {
+        return ResponseEntity.ok(scheduleService.updateAssignmentPartialDayNote(
+                scheduleId, teamId, employeeId, false,
+                request == null ? null : request.note()));
+    }
+
+    @PutMapping("/{scheduleId}/teams/{teamId}/resources/{resourceId}/partial-day")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+    public ResponseEntity<ScheduleDto> updateResourcePartialDayNote(
+            @PathVariable Long scheduleId,
+            @PathVariable Long teamId,
+            @PathVariable Long resourceId,
+            @RequestBody PartialDayNoteRequest request) {
+        return ResponseEntity.ok(scheduleService.updateAssignmentPartialDayNote(
+                scheduleId, teamId, resourceId, true,
+                request == null ? null : request.note()));
     }
 
     // -------------------------------------------------------------------------

@@ -13,6 +13,7 @@ import ManagerResourcesPage from './pages/ManagerResourcesPage'
 import ManagerTeamsPage from './pages/ManagerTeamsPage'
 import DoctorSchedulePatternsPage from './pages/DoctorSchedulePatternsPage'
 import { getAuthHeader, getLoggedInUserRole, getToken, logout, saveLoggedInUser, saveLoggedInUserId, saveLoggedInUserName } from './services/AuthService'
+import { apiUrl } from './services/apiConfig'
 
 function ProtectedRoute({ children }) {
   const location = useLocation()
@@ -21,7 +22,7 @@ function ProtectedRoute({ children }) {
   const [loading, setLoading] = useState(Boolean(token) && !role)
   useEffect(() => {
     if (!token || role) return
-    axios.get('http://localhost:8080/api/users/me', getAuthHeader()).then(response => {
+    axios.get(apiUrl('/api/users/me'), getAuthHeader()).then(response => {
       const user=response.data||{}; const hydratedRole=Array.isArray(user.roles)?user.roles[0]:null
       if(hydratedRole){saveLoggedInUser(user.username,hydratedRole);saveLoggedInUserId(user.id);saveLoggedInUserName(user.firstName,user.lastName);setRole(hydratedRole)}
     }).catch(()=>{logout();setRole(null)}).finally(()=>setLoading(false))

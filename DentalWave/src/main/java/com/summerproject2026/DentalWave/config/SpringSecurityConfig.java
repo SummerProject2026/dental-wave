@@ -2,7 +2,8 @@ package com.summerproject2026.DentalWave.config;
 
 import com.summerproject2026.DentalWave.security.JwtAuthenticationEntryPoint;
 import com.summerproject2026.DentalWave.security.JwtAuthenticationFilter;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -20,6 +21,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
+import java.util.Arrays;
 
 /**
  * Configures Spring Security authentication, authorization,
@@ -27,14 +29,17 @@ import java.util.List;
  */
 @Configuration
 @EnableMethodSecurity
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class SpringSecurityConfig {
 
     // Handles unauthorized access attempts
-    private JwtAuthenticationEntryPoint authenticationEntryPoint;
+    private final JwtAuthenticationEntryPoint authenticationEntryPoint;
 
     // Intercepts requests and validates JWT tokens
-    private JwtAuthenticationFilter authenticationFilter;
+    private final JwtAuthenticationFilter authenticationFilter;
+
+    @Value("${app.cors-allowed-origins:http://localhost:5173}")
+    private String corsAllowedOrigins;
 
     /**
      * Creates a BCrypt password encoder used to hash passwords
@@ -114,9 +119,10 @@ public class SpringSecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
 
         // Allow requests from the React/Vite frontend
-        configuration.setAllowedOrigins(
-                List.of("http://localhost:5173")
-        );
+        configuration.setAllowedOrigins(Arrays.stream(corsAllowedOrigins.split(","))
+                .map(String::trim)
+                .filter(origin -> !origin.isBlank())
+                .toList());
 
         // Allow common HTTP methods used by the frontend
         configuration.setAllowedMethods(

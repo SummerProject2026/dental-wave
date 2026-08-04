@@ -1,0 +1,448 @@
+.manager-calendar-print {
+    display: none;
+}
+
+@media print {
+    @page {
+        size: Letter landscape;
+        margin: 0.25in;
+    }
+
+    *,
+    *::before,
+    *::after {
+        box-sizing: border-box;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    html,
+    body,
+    #root {
+        width: 100%;
+        height: auto;
+        margin: 0;
+        padding: 0;
+        overflow: visible;
+        background: #fff;
+    }
+
+    .calendar-page > *,
+    .manager-schedule-builder > * {
+        display: none !important;
+    }
+
+    .calendar-page > .manager-schedule-builder,
+    .manager-schedule-builder > .manager-calendar-print {
+        display: flex !important;
+    }
+
+    .calendar-page,
+    .manager-schedule-builder {
+        width: 100%;
+        height: 8in;
+        min-height: 0;
+        max-width: none;
+        margin: 0;
+        padding: 0;
+        overflow: visible;
+        background: #fff;
+    }
+
+    .manager-schedule-builder {
+        align-items: center;
+        justify-content: center;
+    }
+
+    .manager-calendar-print {
+        flex-direction: column;
+        width: 100%;
+        height: 7.55in;
+        max-height: 7.55in;
+        margin: 0 auto;
+        padding: 0;
+        overflow: visible;
+        color: #111;
+        font-family: Arial, Helvetica, sans-serif;
+        break-inside: avoid-page;
+        page-break-inside: avoid;
+        page-break-after: avoid;
+    }
+
+    .print-calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        flex: 1 1 auto;
+        width: 100%;
+        height: 100%;
+        max-height: 100%;
+        min-width: 0;
+        min-height: 0;
+        border-top: 1.5px solid #111;
+        border-left: 1.5px solid #111;
+        overflow: visible;
+    }
+
+    .print-week-count-4 .print-calendar-grid {
+        grid-template-rows: 0.2in repeat(4, minmax(0, 1fr));
+    }
+
+    .print-week-count-5 .print-calendar-grid {
+        grid-template-rows: 0.2in repeat(5, minmax(0, 1fr));
+    }
+
+    .print-week-count-6 .print-calendar-grid {
+        grid-template-rows: 0.2in repeat(6, minmax(0, 1fr));
+    }
+
+    .print-week-count-4.print-header-notes-fallback .print-calendar-grid {
+        grid-template-rows: auto repeat(4, minmax(0, 1fr));
+    }
+
+    .print-week-count-5.print-header-notes-fallback .print-calendar-grid {
+        grid-template-rows: auto repeat(5, minmax(0, 1fr));
+    }
+
+    .print-week-count-6.print-header-notes-fallback .print-calendar-grid {
+        grid-template-rows: auto repeat(6, minmax(0, 1fr));
+    }
+
+    .print-day-header {
+        min-width: 0;
+        border-right: 1.5px solid #111;
+        border-bottom: 1.5px solid #111;
+        font-size: 8pt;
+        font-weight: 800;
+        line-height: 0.18in;
+        text-align: center;
+        text-transform: uppercase;
+    }
+
+    .print-day-header-with-month {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 6px;
+        padding: 0 5px;
+    }
+
+    .print-month-label {
+        font-family: Georgia, 'Times New Roman', serif;
+        font-size: 9pt;
+        font-weight: 800;
+        text-transform: none;
+        white-space: nowrap;
+    }
+
+    .print-header-note-summary {
+        display: flex;
+        flex: 1 0 100%;
+        flex-wrap: wrap;
+        gap: 1px 6px;
+        padding: 1px 3px;
+        background: #fff21e;
+        font-size: 5.5pt;
+        font-weight: 500;
+        line-height: 1.05;
+        text-align: left;
+        text-transform: none;
+    }
+
+    .print-day-cell {
+        position: relative;
+        min-width: 0;
+        min-height: 0;
+        padding: 3px 13px 2px 3px;
+        border-right: 1.5px solid #111;
+        border-bottom: 1.5px solid #111;
+        overflow: hidden;
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+
+    .print-day-empty {
+        background: #f7f7f7;
+    }
+
+    .print-day-number {
+        position: absolute;
+        z-index: 2;
+        top: 0;
+        right: 0;
+        width: 13px;
+        height: 13px;
+        border-left: 1px solid #555;
+        border-bottom: 1px solid #555;
+        background: #fff;
+        font-size: 7pt;
+        font-weight: 700;
+        line-height: 12px;
+        text-align: center;
+    }
+
+    .print-office-stack {
+        display: flex;
+        gap: 3px;
+        width: 100%;
+        height: 100%;
+        min-width: 0;
+        overflow: hidden;
+    }
+
+    .print-office-block {
+        display: flex;
+        flex: 1 1 0;
+        flex-direction: column;
+        width: 0;
+        min-width: 0;
+        margin: 0;
+        overflow: hidden;
+    }
+
+    .print-office-team-count-1 { flex-grow: 1; }
+    .print-office-team-count-2 { flex-grow: 2; }
+    .print-office-team-count-3 { flex-grow: 3; }
+    .print-office-team-count-4 { flex-grow: 4; }
+
+    .print-office-block + .print-office-block {
+        padding-left: 3px;
+        border-left: 1px solid #777;
+    }
+
+    .print-office-name {
+        flex: none;
+        width: 100%;
+        min-width: 0;
+        margin: 0 0 2px;
+        padding: 1px 2px;
+        border-bottom: 1px solid #555;
+        background: #edf2f3;
+        color: #111;
+        font-size: 8pt;
+        font-weight: 900;
+        line-height: 1.05;
+        overflow: hidden;
+        overflow-wrap: normal;
+        text-align: left;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    .print-team-list {
+        display: flex;
+        flex: 1 1 auto;
+        gap: 3px;
+        min-width: 0;
+        overflow: hidden;
+    }
+
+    .print-team-group {
+        flex: 1 1 0;
+        width: 0;
+        min-width: 0;
+        margin: 0;
+        padding-left: 2px;
+        border-left: 1px dotted #aaa;
+        overflow: hidden;
+    }
+
+    .print-team-group:first-child {
+        padding-left: 0;
+        border-left: 0;
+    }
+
+    .print-team-name {
+        min-width: 0;
+        margin: 0 0 1px;
+        font-size: 9pt;
+        font-weight: 900;
+        line-height: 1;
+        overflow: hidden;
+        overflow-wrap: normal;
+        text-align: center;
+        white-space: nowrap;
+    }
+
+    .print-assistant-list {
+        min-width: 0;
+        font-size: 9pt;
+        line-height: 1.05;
+        overflow: hidden;
+    }
+
+    .print-assistant-list div {
+        min-width: 0;
+        max-width: 100%;
+        overflow: hidden;
+        overflow-wrap: normal;
+        word-break: normal;
+        white-space: normal;
+    }
+
+    .print-assistant-name {
+        display: inline-block;
+        max-width: 100%;
+        overflow: hidden;
+        overflow-wrap: normal;
+        vertical-align: top;
+        white-space: nowrap;
+        word-break: normal;
+    }
+
+    .print-assistant-name-long {
+        font-family: 'Arial Narrow', Arial, Helvetica, sans-serif;
+        font-size: 7.75pt;
+        letter-spacing: -0.02em;
+    }
+
+    .print-assistant-name-very-long {
+        font-family: 'Arial Narrow', Arial, Helvetica, sans-serif;
+        font-size: 7pt;
+        letter-spacing: -0.04em;
+    }
+
+    .print-assistant-partial strong {
+        font-weight: 900;
+    }
+
+    .print-day-density-medium {
+        padding-top: 2px;
+        padding-bottom: 1px;
+    }
+
+    .print-day-density-medium .print-office-stack,
+    .print-day-density-high .print-office-stack,
+    .print-day-density-medium .print-team-list,
+    .print-day-density-high .print-team-list {
+        gap: 2px;
+    }
+
+    .print-day-density-medium .print-assistant-list {
+        font-size: 8.5pt;
+        line-height: 1.02;
+    }
+
+    .print-day-density-high {
+        padding: 2px 12px 1px 2px;
+    }
+
+    .print-day-density-high .print-office-name {
+        margin-bottom: 1px;
+        font-size: 7pt;
+    }
+
+    .print-day-density-high .print-team-name {
+        font-size: 8pt;
+    }
+
+    .print-day-density-high .print-assistant-list {
+        font-size: 7.75pt;
+        line-height: 1;
+    }
+
+    .print-day-notes-cell {
+        padding: 2px;
+        background: #f7f7f7;
+    }
+
+    .print-notes-span-1 { grid-column: span 1; }
+    .print-notes-span-2 { grid-column: span 2; }
+    .print-notes-span-3 { grid-column: span 3; }
+    .print-notes-span-4 { grid-column: span 4; }
+
+    .print-unused-month-label {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        color: #111;
+        font-family: Georgia, 'Times New Roman', serif;
+        font-size: 14pt;
+        font-weight: 800;
+    }
+
+    .print-day-notes-cell .print-unused-month-label {
+        justify-content: flex-start;
+        height: auto;
+        margin-bottom: 2px;
+        padding: 1px 3px;
+        font-size: 9pt;
+    }
+
+    .print-empty-notes-box {
+        display: flex;
+        align-items: baseline;
+        flex-wrap: wrap;
+        gap: 2px 10px;
+        width: 100%;
+        min-width: 0;
+        height: auto;
+        min-height: 0;
+        margin: 0;
+        padding: 2px 5px;
+        border: 1px solid #b5a900;
+        background: #fff21e;
+        color: #111;
+        font-size: 6.5pt;
+        line-height: 1.08;
+        overflow: hidden;
+    }
+
+    .print-day-notes-heading {
+        flex: none;
+        margin: 0;
+        font-size: 7pt;
+        font-weight: 900;
+        white-space: nowrap;
+    }
+
+    .print-day-notes-list {
+        display: flex;
+        flex: 1 1 auto;
+        flex-wrap: wrap;
+        gap: 1px 12px;
+        min-width: 0;
+    }
+
+    .print-day-notes-list span,
+    .print-time-off-list span {
+        min-width: 0;
+        overflow-wrap: anywhere;
+    }
+
+    .print-time-off-heading {
+        flex: none;
+        margin: 0;
+        font-size: 7pt;
+        white-space: nowrap;
+    }
+
+    .print-time-off-section,
+    .print-time-off-list {
+        display: flex;
+        align-items: baseline;
+        flex-wrap: wrap;
+        gap: 1px 10px;
+        min-width: 0;
+    }
+
+    .print-time-off-section {
+        flex: 1 1 auto;
+        padding-left: 8px;
+        border-left: 1px solid #8f8500;
+    }
+
+    .print-team-color-0 { color: #7b2020; }
+    .print-team-color-1 { color: #164f44; }
+    .print-team-color-2 { color: #243d96; }
+    .print-team-color-3 { color: #623675; }
+    .print-team-color-4 { color: #554700; }
+    .print-team-color-5 { color: #006b82; }
+    .print-team-color-6 { color: #8a4800; }
+    .print-team-color-7 { color: #315d24; }
+    .print-team-color-8 { color: #781d4a; }
+    .print-team-color-9 { color: #444800; }
+}

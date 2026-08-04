@@ -1,10 +1,11 @@
 import axios from 'axios'
 import { getAuthHeader } from './AuthService'
+import { apiUrl } from './apiConfig'
 
 /**
  * Base URL for Notification endpoints.
  */
-const NOTIFICATION_REST_API_BASE_URL = 'http://localhost:8080/api/notifications'
+const NOTIFICATION_REST_API_BASE_URL = apiUrl('/api/notifications')
 
 /**
  * Gets the count of unread notifications for a user.

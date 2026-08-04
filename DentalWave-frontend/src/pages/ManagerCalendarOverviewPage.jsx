@@ -229,7 +229,14 @@ function ManagerCalendarOverviewPage({ printMode = false }) {
                                                         <ul>
                                                             {team.employees.map((employee) => (
                                                                 <li key={employee.id}>
-                                                                    <span>{getEmployeeName(employee)}</span>
+                                                                    <span>
+                                                                        {getEmployeeName(employee)}
+                                                                        {employee.partialDayNote && (
+                                                                            <strong className="calendar-assistant-note">
+                                                                                {` (${employee.partialDayNote})`}
+                                                                            </strong>
+                                                                        )}
+                                                                    </span>
                                                                     <small>{employee.position || 'Assistant'}</small>
                                                                 </li>
                                                             ))}

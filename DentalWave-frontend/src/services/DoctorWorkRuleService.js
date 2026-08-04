@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { getAuthHeader } from './AuthService'
-const RULES='http://localhost:8080/api/doctor-work-rules', ROTATIONS='http://localhost:8080/api/schedule-rotation-groups'
+import { apiUrl } from './apiConfig'
+const RULES=apiUrl('/api/doctor-work-rules'), ROTATIONS=apiUrl('/api/schedule-rotation-groups')
 export const getDoctorRules=id=>axios.get(`${RULES}/doctor/${id}`,getAuthHeader())
 const patternConfig=()=>({...getAuthHeader(),skipAuthRedirect:true})
 export const createDoctorRule=value=>axios.post(RULES,value,patternConfig())

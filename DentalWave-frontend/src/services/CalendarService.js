@@ -1,10 +1,11 @@
 import axios from 'axios'
 import { getAuthHeader } from './AuthService'
+import { apiUrl } from './apiConfig'
 
 /**
  * Base URL for Calendar endpoints.
  */
-const CALENDAR_REST_API_BASE_URL = 'http://localhost:8080/api/calendars'
+const CALENDAR_REST_API_BASE_URL = apiUrl('/api/calendars')
 
 /**
  * Creates a new calendar.

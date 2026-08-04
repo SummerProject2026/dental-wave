@@ -2,6 +2,7 @@ import '../App.css'
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import ManagerHeader from '../components/ManagerHeader'
+import PrintableSchedule from '../components/PrintableSchedule'
 import {
     getAllCalendars,
     generateCalendar,
@@ -25,6 +26,12 @@ import { getAllTimeOffRequests } from '../services/TimeOffRequestService'
 import { getLoggedInUserId } from '../services/AuthService'
 import { getAllOffices } from '../services/OfficeService'
 import { getResources } from '../services/ManagerSchedulerService'
+import {
+    buildPrintWeeks,
+    createDoctorPrintAbbreviationMap,
+    getDoctorPrintAbbreviation,
+    sortOfficePrintSchedules
+} from '../utils/printScheduleUtils'
 
 const OFFICES = [
     { id: 1, name: 'Raleigh' },
@@ -596,7 +603,7 @@ function ManagerCalendarPage() {
         if (!partialDayEditor) return
         const note = partialDayEditor.note.trim()
         if (note.length > 40) {
-            setError('Partial-day details must be 40 characters or fewer.')
+            setError('Assistant notes must be 40 characters or fewer.')
             return
         }
 
@@ -680,15 +687,14 @@ function ManagerCalendarPage() {
     function getOfficePrintSchedules(date) {
         const dateKey = getDateKey(date)
 
-        return monthCalendars
+        const officeSchedules = monthCalendars
             .map((calendar) => ({
                 officeName: officeNameById[calendar.officeId] || calendar.officeName || 'Office',
                 schedule: getScheduleForDate(calendar, dateKey)
             }))
-            .filter(({ officeName, schedule }) => {
-                if (!schedule) return false
-                return date.getDay() === 2 || officeName.toLowerCase() !== 'smithfield'
-            })
+            .filter(({ schedule }) => Boolean(schedule))
+
+        return sortOfficePrintSchedules(officeSchedules)
     }
 
     function getTeamName(schedule, teamId) {
@@ -696,7 +702,7 @@ function ManagerCalendarPage() {
         return schedule.teamNames?.[teamIdNum] || `Team ${teamId}`
     }
 
-    function getDoctorIdentifier(teamName, employees) {
+    function getDoctorPrintName(teamName, employees) {
         const doctor = employees.find((employee) =>
             String(employee.position || '').toLowerCase().includes('doctor')
         )
@@ -713,11 +719,24 @@ function ManagerCalendarPage() {
             .replace(/[^a-zA-Z\s-]/g, ' ')
             .trim()
 
-        if (!cleaned) return teamName
+        return cleaned || teamName
+    }
 
-        const parts = cleaned.split(/\s+/).filter(Boolean)
-        const lastName = parts[parts.length - 1]
-        return lastName[0].toUpperCase()
+    const doctorPrintAbbreviations = createDoctorPrintAbbreviationMap(
+        monthCalendars.flatMap((calendar) => (calendar.schedules || [])
+            .flatMap((schedule) => Object.entries(schedule.teams || {})
+                .map(([teamId, teamEmployees]) => getDoctorPrintName(
+                    getTeamName(schedule, teamId), teamEmployees
+                ))
+                .filter((name) => name !== 'NO DR')
+            )
+        )
+    )
+
+    function getDoctorIdentifier(teamName, teamEmployees) {
+        const doctorName = getDoctorPrintName(teamName, teamEmployees)
+        if (doctorName === 'NO DR') return doctorName
+        return getDoctorPrintAbbreviation(doctorName, doctorPrintAbbreviations)
     }
 
     function getPrintableAssistants(teamName, employees) {
@@ -730,33 +749,7 @@ function ManagerCalendarPage() {
         return employee.firstName || getEmployeeName(employee).split(/\s+/)[0] || ''
     }
 
-    function getPrintWeeks() {
-        const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1)
-        const lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0)
-        const firstMonday = new Date(firstDay)
-        const offsetToMonday = (firstDay.getDay() + 6) % 7
-        firstMonday.setDate(firstDay.getDate() - offsetToMonday)
-
-        const weeks = []
-        const cursor = new Date(firstMonday)
-
-        while (cursor <= lastDay || cursor.getDay() !== 1) {
-            const week = [1, 2, 3, 4].map((weekdayOffset) => {
-                const day = new Date(cursor)
-                day.setDate(cursor.getDate() + weekdayOffset - 1)
-                return day
-            })
-
-            weeks.push(week)
-            cursor.setDate(cursor.getDate() + 7)
-
-            if (cursor > lastDay && cursor.getMonth() !== currentDate.getMonth()) break
-        }
-
-        return weeks
-    }
-
-    const printWeeks = getPrintWeeks()
+    const printWeeks = buildPrintWeeks(year, currentDate.getMonth())
     const printMonthLabel = `${monthName} '${String(year).slice(-2)}`
     const printDates = printWeeks.flat()
     const leadingPrintEmptyDates = []
@@ -767,9 +760,9 @@ function ManagerCalendarPage() {
         leadingPrintEmptyDates.push(date)
     }
 
-    for (let i = printDates.length - 1; i >= 0; i--) {
-        if (printDates[i].getMonth() === currentDate.getMonth()) break
-        trailingPrintEmptyDates.unshift(printDates[i])
+    for (let index = printDates.length - 1; index >= 0; index -= 1) {
+        if (printDates[index].getMonth() === currentDate.getMonth()) break
+        trailingPrintEmptyDates.unshift(printDates[index])
     }
 
     const printEmptyDates = leadingPrintEmptyDates.length >= trailingPrintEmptyDates.length
@@ -1078,8 +1071,8 @@ function ManagerCalendarPage() {
                                                                                 disabled={loading}
                                                                             >
                                                                                 {employee.partialDayNote
-                                                                                    ? 'Edit hours'
-                                                                                    : 'Partial day'}
+                                                                                    ? 'Edit note'
+                                                                                    : 'Add note'}
                                                                             </button>
                                                                         )}
                                                                         <button
@@ -1101,11 +1094,11 @@ function ManagerCalendarPage() {
                                                                 {isEditingPartialDay && (
                                                                     <div className="partial-day-editor">
                                                                         <label>
-                                                                            Partial-day details
+                                                                            Assistant note
                                                                             <input
                                                                                 value={partialDayEditor.note}
                                                                                 maxLength={40}
-                                                                                placeholder="AM, PM, or out 2-3"
+                                                                                placeholder="Example: out@2"
                                                                                 autoFocus
                                                                                 onChange={(event) =>
                                                                                     setPartialDayEditor({
@@ -1202,136 +1195,24 @@ function ManagerCalendarPage() {
                     </aside>
                 </section>
 
-                <section className="manager-calendar-print" aria-hidden="true">
-                    <div className="print-calendar-title-row">
-                        <h1>{monthName} {year}</h1>
-                        <span>Manager Monthly Schedule</span>
-                    </div>
-
-                    <div
-                        className="print-calendar-grid"
-                        style={{ gridTemplateRows: `0.18in repeat(${printWeeks.length}, minmax(0, 1fr))` }}
-                    >
-                        {['Monday', 'Tuesday', 'Wednesday', 'Thursday'].map((dayName) => (
-                            <div key={dayName} className="print-day-header">{dayName}</div>
-                        ))}
-
-                        {printWeeks.map((week) =>
-                            week.map((date) => {
-                                const inMonth = date.getMonth() === currentDate.getMonth()
-                                const dateKey = getDateKey(date)
-                                const showMonthLabel = !inMonth && dateKey === printMonthLabelDateKey
-                                const showNotes = !inMonth && (
-                                    dateKey === printNotesStartDateKey ||
-                                    (!printNotesStartDateKey && showMonthLabel)
-                                )
-                                const officeSchedules = inMonth ? getOfficePrintSchedules(date) : []
-
-                                if (printSkippedNotesDateKeys.has(dateKey)) return null
-
-                                return (
-                                    <div
-                                        key={dateKey}
-                                        className={`print-day-cell ${!inMonth ? 'print-day-empty' : ''} ${showNotes ? 'print-day-notes-cell' : ''}`}
-                                        style={showNotes ? { gridColumn: `span ${printNotesSpan}` } : undefined}
-                                    >
-                                        {showMonthLabel && (
-                                            <div className="print-unused-month-label">
-                                                {printMonthLabel}
-                                            </div>
-                                        )}
-                                        {showNotes && (
-                                            <div className="print-unused-notes-box">
-                                                <strong className="print-day-notes-heading">
-                                                    Day Notes
-                                                </strong>
-                                                <div className="print-day-notes-list">
-                                                    {printableDayNotes.length > 0 ? (
-                                                        printableDayNotes.map((entry) => (
-                                                            <span key={entry.id}>
-                                                                <b>
-                                                                    {entry.date.getMonth() + 1}/
-                                                                    {entry.date.getDate()}
-                                                                    {' '}
-                                                                    {entry.officeName}:
-                                                                </b>
-                                                                {' '}
-                                                                {entry.note}
-                                                            </span>
-                                                        ))
-                                                    ) : (
-                                                        <span>No day notes.</span>
-                                                    )}
-                                                </div>
-
-                                                {approvedRequestsForMonth.length > 0 && (
-                                                    <>
-                                                        <strong className="print-time-off-heading">
-                                                            Approved Time Off
-                                                        </strong>
-                                                        <div className="print-time-off-list">
-                                                            {approvedRequestsForMonth.map((request) => (
-                                                                <span key={request.id}>
-                                                                    {request.employeeName || request.employeeFullName || `Employee ${request.employeeId}`}{' '}
-                                                                    {request.startDate} - {request.endDate}
-                                                                </span>
-                                                            ))}
-                                                        </div>
-                                                    </>
-                                                )}
-                                            </div>
-                                        )}
-                                        {inMonth && (
-                                            <>
-                                                <span className="print-day-number">{date.getDate()}</span>
-                                                <div className="print-office-stack">
-                                                    {officeSchedules.map(({ officeName, schedule }) => (
-                                                        <div key={`${officeName}-${schedule.id}`} className="print-office-block">
-                                                            <div className="print-office-name">{officeName}</div>
-                                                            <div className="print-team-list">
-                                                                {Object.entries(schedule.teams || {}).map(([teamId, employees]) => {
-                                                                    const teamName = getTeamName(schedule, teamId)
-                                                                    const assistants = getPrintableAssistants(teamName, employees)
-                                                                    const doctorIdentifier = getDoctorIdentifier(teamName, employees)
-                                                                    const printTeamColorClass = getPrintTeamColorClass(doctorIdentifier)
-
-                                                                    return (
-                                                                        <div key={teamId} className="print-team-group">
-                                                                            <div className={`print-team-name ${printTeamColorClass}`}>
-                                                                                {doctorIdentifier}
-                                                                            </div>
-                                                                            <div className={`print-assistant-list ${printTeamColorClass}`}>
-                                                                                {assistants.map((employee) => (
-                                                                                    <div
-                                                                                        key={`${employee.schedulingResource ? 'resource' : 'employee'}-${employee.id}`}
-                                                                                        className={employee.partialDayNote
-                                                                                            ? 'print-assistant-partial'
-                                                                                            : undefined}
-                                                                                    >
-                                                                                        {getPrintableFirstName(employee)}
-                                                                                        {employee.partialDayNote && (
-                                                                                            <strong>
-                                                                                                {` — ${employee.partialDayNote}`}
-                                                                                            </strong>
-                                                                                        )}
-                                                                                    </div>
-                                                                                ))}
-                                                                            </div>
-                                                                        </div>
-                                                                    )
-                                                                })}
-                                                            </div>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </>
-                                        )}
-                                    </div>
-                                )
-                            })
-                        )}
-                    </div>
-                </section>
+                <PrintableSchedule
+                    monthIndex={currentDate.getMonth()}
+                    weeks={printWeeks}
+                    monthLabel={printMonthLabel}
+                    monthLabelDateKey={printMonthLabelDateKey}
+                    notesStartDateKey={printNotesStartDateKey}
+                    notesSpan={printNotesSpan}
+                    skippedNotesDateKeys={printSkippedNotesDateKeys}
+                    printableDayNotes={printableDayNotes}
+                    approvedRequests={approvedRequestsForMonth}
+                    getDateKey={getDateKey}
+                    getOfficeSchedules={getOfficePrintSchedules}
+                    getTeamName={getTeamName}
+                    getDoctorIdentifier={getDoctorIdentifier}
+                    getPrintableAssistants={getPrintableAssistants}
+                    getPrintableFirstName={getPrintableFirstName}
+                    getTeamColorClass={getPrintTeamColorClass}
+                />
 
             </main>
 

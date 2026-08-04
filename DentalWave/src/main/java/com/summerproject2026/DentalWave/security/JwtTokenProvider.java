@@ -7,6 +7,7 @@ import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
+import jakarta.annotation.PostConstruct;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
@@ -22,6 +23,22 @@ public class JwtTokenProvider {
     // Token expiration time loaded from applicationTest.properties
     @Value("${app.jwt-expiration-milliseconds}")
     private long jwtExpirationDate;
+
+    @PostConstruct
+    void validateConfiguration() {
+        byte[] decodedSecret;
+        try {
+            decodedSecret = Decoders.BASE64.decode(jwtSecret);
+        } catch (RuntimeException exception) {
+            throw new IllegalStateException("JWT_SECRET must be valid Base64.", exception);
+        }
+        if (decodedSecret.length < 32) {
+            throw new IllegalStateException("JWT_SECRET must decode to at least 32 bytes.");
+        }
+        if (jwtExpirationDate <= 0) {
+            throw new IllegalStateException("JWT_EXPIRATION_MS must be greater than zero.");
+        }
+    }
 
     // Generates a JWT token after successful authentication
     public String generateToken(Authentication authentication) {

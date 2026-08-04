@@ -1,10 +1,11 @@
 import axios from 'axios'
 import { getAuthHeader } from './AuthService'
+import { apiUrl } from './apiConfig'
 
 /**
  * Base URL for User endpoints.
  */
-const USER_REST_API_BASE_URL = 'http://localhost:8080/api/users'
+const USER_REST_API_BASE_URL = apiUrl('/api/users')
 
 /**
  * Creates a new user.

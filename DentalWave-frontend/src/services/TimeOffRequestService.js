@@ -1,10 +1,11 @@
 import axios from 'axios'
 import { getAuthHeader } from './AuthService'
+import { apiUrl } from './apiConfig'
 
 /**
  * Base URL for Time Off Request endpoints.
  */
-const TIME_OFF_REQUEST_REST_API_BASE_URL = 'http://localhost:8080/api/time-off-requests'
+const TIME_OFF_REQUEST_REST_API_BASE_URL = apiUrl('/api/time-off-requests')
 
 /**
  * Retrieves all time off requests for one employee.

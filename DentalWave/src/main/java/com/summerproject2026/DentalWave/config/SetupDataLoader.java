@@ -6,6 +6,7 @@ import com.summerproject2026.DentalWave.repository.RoleRepository;
 import com.summerproject2026.DentalWave.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -19,6 +20,7 @@ import java.util.Arrays;
 
 // Runs on startup to create roles and default admin user in the database
 @Component
+@ConditionalOnProperty(name = "app.seed-data", havingValue = "true")
 @RequiredArgsConstructor
 public class SetupDataLoader implements ApplicationListener<ContextRefreshedEvent> {
 

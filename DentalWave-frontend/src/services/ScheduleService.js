@@ -1,10 +1,11 @@
 import axios from 'axios'
 import { getAuthHeader } from './AuthService'
+import { apiUrl } from './apiConfig'
 
 /**
  * Base URL for Schedule endpoints.
  */
-const SCHEDULE_REST_API_BASE_URL = 'http://localhost:8080/api/schedules'
+const SCHEDULE_REST_API_BASE_URL = apiUrl('/api/schedules')
 
 /**
  * Creates a new schedule.
@@ -163,7 +164,7 @@ export const publishSchedule = (scheduleId) =>
  */
 export const createTeam = (scheduleId, name) =>
     axios.post(
-        'http://localhost:8080/api/schedule-teams',
+        apiUrl('/api/schedule-teams'),
         { name, scheduleId, employees: [] },
         getAuthHeader()
     )
@@ -177,7 +178,7 @@ export const createTeam = (scheduleId, name) =>
  */
 export const renameTeam = (teamId, name) =>
     axios.put(
-        `http://localhost:8080/api/schedule-teams/${teamId}/name`,
+        apiUrl(`/api/schedule-teams/${teamId}/name`),
         null,
         { ...getAuthHeader(), params: { name } }
     )
@@ -189,4 +190,4 @@ export const renameTeam = (teamId, name) =>
  * @returns {Promise<axios.AxiosResponse<any>>}
  */
 export const deleteTeam = (teamId) =>
-    axios.delete(`http://localhost:8080/api/schedule-teams/${teamId}`, getAuthHeader())
+    axios.delete(apiUrl(`/api/schedule-teams/${teamId}`), getAuthHeader())

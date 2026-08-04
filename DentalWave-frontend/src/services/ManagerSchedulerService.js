@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { getAuthHeader } from './AuthService'
-const API = 'http://localhost:8080/api/manager'
+import { apiUrl } from './apiConfig'
+const API = apiUrl('/api/manager')
 export const getResources = (type) => axios.get(`${API}/resources`, { ...getAuthHeader(), params: { type } })
 export const createResource = (value) => axios.post(`${API}/resources`, value, getAuthHeader())
 export const updateResource = (id, value) => axios.put(`${API}/resources/${id}`, value, getAuthHeader())

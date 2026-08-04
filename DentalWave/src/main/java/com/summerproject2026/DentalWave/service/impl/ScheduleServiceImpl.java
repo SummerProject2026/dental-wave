@@ -259,7 +259,7 @@ public class ScheduleServiceImpl implements ScheduleService {
         String normalized = note == null ? "" : note.trim().replaceAll("\\s+", " ");
         if (normalized.length() > 40) {
             throw new IllegalArgumentException(
-                    "Partial-day details must be 40 characters or fewer.");
+                    "Assistant notes must be 40 characters or fewer.");
         }
 
         String assignmentKey =

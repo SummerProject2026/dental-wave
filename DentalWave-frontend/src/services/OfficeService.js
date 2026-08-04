@@ -1,7 +1,8 @@
 import axios from 'axios'
 import { getAuthHeader } from './AuthService'
+import { apiUrl } from './apiConfig'
 
-const OFFICE_REST_API_BASE_URL = 'http://localhost:8080/api/offices'
+const OFFICE_REST_API_BASE_URL = apiUrl('/api/offices')
 
 export const getAllOffices = () =>
     axios.get(OFFICE_REST_API_BASE_URL, getAuthHeader())

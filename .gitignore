@@ -9,9 +9,17 @@ dist/
 
 # Environment variables
 .env
+.env.*
+!.env.example
+*.log
 
 # Local Spring Boot configuration
-DentalWave/src/main/resources/application.properties
 DentalWave/src/main/resources/application-local.properties
 DentalWave/src/main/resources/application-*.local.properties
 DentalWave/src/test/resources/applicationTest.properties
+
+# Local databases and packaged output
+*.db
+*.mv.db
+*.trace.db
+DentalWave/target/

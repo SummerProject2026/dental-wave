@@ -8,8 +8,11 @@ import com.summerproject2026.DentalWave.dto.RegisterDto;
 import com.summerproject2026.DentalWave.dto.UserDto;
 import com.summerproject2026.DentalWave.exception.DuplicateResourceException;
 import com.summerproject2026.DentalWave.repository.UserRepository;
+import com.summerproject2026.DentalWave.repository.RoleRepository;
+import com.summerproject2026.DentalWave.entity.Role;
 import com.summerproject2026.DentalWave.service.AuthService;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -27,6 +30,19 @@ class AuthControllerTest {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private RoleRepository roleRepository;
+
+    @BeforeEach
+    void ensureTestRolesExist() {
+        ensureRole("ROLE_ASSISTANT");
+        ensureRole("ROLE_MANAGER");
+    }
+
+    private void ensureRole(String name) {
+        roleRepository.findByName(name).orElseGet(() -> roleRepository.save(new Role(null, name)));
+    }
+
     /**
      * Valid login should return a JWT token.
      */
@@ -42,7 +58,7 @@ class AuthControllerTest {
                 "Admin", "User", username,
                 email, "1234567890", password);
 
-        authService.register(registerDto);
+        authService.registerWithRole(registerDto, "ROLE_MANAGER");
 
         LoginDto loginDto = new LoginDto(username, password);
 

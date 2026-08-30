@@ -16,6 +16,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 
 import java.util.List;
 import java.util.Map;
@@ -73,6 +74,13 @@ public class EmployeeController {
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<Map<String, String>> handleAccessDenied(AccessDeniedException ex) {
         return errorResponse(HttpStatus.FORBIDDEN, "You are not authorized to perform this action.");
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<Map<String, String>> handleMissingRequestParameter(
+            MissingServletRequestParameterException ex) {
+        return errorResponse(HttpStatus.BAD_REQUEST,
+                "Missing required request parameter: " + ex.getParameterName());
     }
 
     @ExceptionHandler(Exception.class)

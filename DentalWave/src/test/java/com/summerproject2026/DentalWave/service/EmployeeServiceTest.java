@@ -7,6 +7,7 @@ import com.summerproject2026.DentalWave.dto.EmployeeDto;
 import com.summerproject2026.DentalWave.entity.Availability;
 import com.summerproject2026.DentalWave.entity.Employee;
 import com.summerproject2026.DentalWave.entity.Office;
+import com.summerproject2026.DentalWave.entity.Role;
 import com.summerproject2026.DentalWave.entity.User;
 import com.summerproject2026.DentalWave.enums.WorkStatus;
 import com.summerproject2026.DentalWave.exception.ResourceNotFoundException;
@@ -15,6 +16,8 @@ import com.summerproject2026.DentalWave.mapper.EmployeeMapper;
 import com.summerproject2026.DentalWave.repository.AvailabilityRepository;
 import com.summerproject2026.DentalWave.repository.EmployeeRepository;
 import com.summerproject2026.DentalWave.repository.OfficeRepository;
+import com.summerproject2026.DentalWave.repository.RoleRepository;
+import com.summerproject2026.DentalWave.repository.ScheduleTeamRepository;
 import com.summerproject2026.DentalWave.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -23,6 +26,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -48,8 +52,11 @@ class EmployeeServiceImplTest {
     @Mock private UserRepository         userRepository;
     @Mock private OfficeRepository       officeRepository;
     @Mock private AvailabilityRepository availabilityRepository;
+    @Mock private ScheduleTeamRepository scheduleTeamRepository;
     @Mock private EmployeeMapper         employeeMapper;
     @Mock private AvailabilityMapper     availabilityMapper;
+    @Mock private PasswordEncoder        passwordEncoder;
+    @Mock private RoleRepository         roleRepository;
 
     @InjectMocks
     private EmployeeServiceImpl employeeService;
@@ -60,6 +67,7 @@ class EmployeeServiceImplTest {
     private Office office;
     private Employee employee;
     private EmployeeDto employeeDto;
+    private Role assistantRole;
 
     @BeforeEach
     void setUp() {
@@ -73,6 +81,8 @@ class EmployeeServiceImplTest {
         office = new Office();
         office.setId(10L);
         office.setName("Downtown Clinic");
+
+        assistantRole = new Role(2L, "ROLE_ASSISTANT");
 
         employee = new Employee();
         employee.setId(100L);
@@ -88,6 +98,11 @@ class EmployeeServiceImplTest {
         employeeDto = new EmployeeDto();
         employeeDto.setId(100L);
         employeeDto.setUserId(1L);
+        employeeDto.setFirstName("Alice");
+        employeeDto.setLastName("Smith");
+        employeeDto.setUsername("alice_test");
+        employeeDto.setEmail("alice@dentalwave.com");
+        employeeDto.setPhoneNumber("9195550100");
         employeeDto.setPosition("Dental Hygienist");
         employeeDto.setStatus(WorkStatus.ACTIVE);
         employeeDto.setHireDate(LocalDate.of(2020, 1, 15));
@@ -105,8 +120,8 @@ class EmployeeServiceImplTest {
     @Test
     @DisplayName("createEmployee — persists employee with resolved user and offices")
     void createEmployee_success() {
+        stubValidUserCreation();
         when(employeeMapper.mapToEmployee(employeeDto)).thenReturn(employee);
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(officeRepository.findById(10L)).thenReturn(Optional.of(office));
         when(employeeRepository.save(employee)).thenReturn(employee);
         when(employeeMapper.mapToEmployeeDto(employee)).thenReturn(employeeDto);
@@ -115,7 +130,7 @@ class EmployeeServiceImplTest {
 
         assertThat(result).isEqualTo(employeeDto);
         verify(employeeRepository).save(employee);
-        verify(userRepository).findById(1L);
+        verify(userRepository).save(any(User.class));
         verify(officeRepository).findById(10L);
     }
 
@@ -126,6 +141,7 @@ class EmployeeServiceImplTest {
     @Test
     @DisplayName("createEmployee — throws ResourceNotFoundException when office not found")
     void createEmployee_officeNotFound_throws() {
+        stubValidUserCreation();
         when(employeeMapper.mapToEmployee(employeeDto)).thenReturn(employee);
         when(officeRepository.findById(10L)).thenReturn(Optional.empty());
 
@@ -137,22 +153,21 @@ class EmployeeServiceImplTest {
     }
 
     /**
-     * Verifies that createEmployee succeeds when the employee DTO
-     * has an empty offices list.
+     * Verifies that createEmployee rejects an employee with no office.
      */
     @Test
-    @DisplayName("createEmployee — succeeds with empty offices list")
-    void createEmployee_emptyOffices_success() {
+    @DisplayName("createEmployee — rejects an empty offices list")
+    void createEmployee_emptyOffices_throws() {
         employeeDto.setOffices(List.of());
+        stubValidUserCreation();
         when(employeeMapper.mapToEmployee(employeeDto)).thenReturn(employee);
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-        when(employeeRepository.save(employee)).thenReturn(employee);
-        when(employeeMapper.mapToEmployeeDto(employee)).thenReturn(employeeDto);
 
-        EmployeeDto result = employeeService.createEmployee(buildCreateEmployeeDto(employeeDto));
+        assertThatThrownBy(() -> employeeService.createEmployee(buildCreateEmployeeDto(employeeDto)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("select at least one office");
 
-        assertThat(result).isNotNull();
         verify(officeRepository, never()).findById(any());
+        verify(employeeRepository, never()).save(any());
     }
 
     // -------------------------------------------------------------------------
@@ -292,15 +307,21 @@ class EmployeeServiceImplTest {
     @DisplayName("updateEmployee — updates fields and returns mapped DTO")
     void updateEmployee_success() {
         EmployeeDto updateDto = new EmployeeDto();
+        updateDto.setFirstName("Alice");
+        updateDto.setLastName("Smith");
+        updateDto.setUsername("alice_test");
+        updateDto.setEmail("alice@dentalwave.com");
+        updateDto.setPhoneNumber("9195550100");
         updateDto.setPosition("Senior Hygienist");
         updateDto.setHireDate(LocalDate.of(2020, 1, 15));
         updateDto.setStatus(WorkStatus.ACTIVE);
-        updateDto.setOffices(List.of());
+        updateDto.setOffices(employeeDto.getOffices());
 
         EmployeeDto updatedResult = new EmployeeDto();
         updatedResult.setPosition("Senior Hygienist");
 
         when(employeeRepository.findById(100L)).thenReturn(Optional.of(employee));
+        when(officeRepository.findById(10L)).thenReturn(Optional.of(office));
         when(employeeRepository.save(employee)).thenReturn(employee);
         when(employeeMapper.mapToEmployeeDto(employee)).thenReturn(updatedResult);
 
@@ -550,7 +571,7 @@ class EmployeeServiceImplTest {
         RegisterDto registerDto = new RegisterDto();
         registerDto.setFirstName(employeeDto.getFirstName());
         registerDto.setLastName(employeeDto.getLastName());
-        registerDto.setUsername(employeeDto.getEmail());
+        registerDto.setUsername(employeeDto.getUsername());
         registerDto.setEmail(employeeDto.getEmail());
         registerDto.setPhoneNumber("555-555-5555");
         registerDto.setPassword("Password123!");
@@ -558,7 +579,14 @@ class EmployeeServiceImplTest {
         CreateEmployeeDto createEmployeeDto = new CreateEmployeeDto();
         createEmployeeDto.setUser(registerDto);
         createEmployeeDto.setEmployee(employeeDto);
+        createEmployeeDto.setRole("ROLE_ASSISTANT");
 
         return createEmployeeDto;
+    }
+
+    private void stubValidUserCreation() {
+        when(passwordEncoder.encode("Password123!")).thenReturn("encoded-password");
+        when(roleRepository.findByName("ROLE_ASSISTANT")).thenReturn(Optional.of(assistantRole));
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
     }
 }

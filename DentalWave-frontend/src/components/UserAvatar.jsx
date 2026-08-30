@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link } from 'react-router'
 import { getLoggedInUser, getLoggedInUserFirstName, getLoggedInUserLastName } from '../services/AuthService'
 
 /** Profile icon showing the logged-in user's initials. */

@@ -12,6 +12,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -27,6 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(TimeOffRequestController.class)
 @AutoConfigureMockMvc(addFilters = false)
+@WithMockUser(username = "admin", roles = "ADMIN")
 class TimeOffRequestControllerTest {
 
     @Autowired
@@ -39,6 +44,12 @@ class TimeOffRequestControllerTest {
     private TimeOffRequestService timeOffRequestService;
 
     @MockitoBean
+    private com.summerproject2026.DentalWave.repository.EmployeeRepository employeeRepository;
+
+    @MockitoBean
+    private com.summerproject2026.DentalWave.repository.UserRepository userRepository;
+
+    @MockitoBean
     private com.summerproject2026.DentalWave.security.JwtTokenProvider jwtTokenProvider;
 
     @MockitoBean
@@ -46,9 +57,18 @@ class TimeOffRequestControllerTest {
 
     private TimeOffRequestDto pendingDto;
     private TimeOffRequestDto approvedDto;
+    private Authentication adminAuthentication;
 
     @BeforeEach
     void setUp() {
+        adminAuthentication = new UsernamePasswordAuthenticationToken(
+                "admin", "test-password", List.of(new SimpleGrantedAuthority("ROLE_ADMIN")));
+
+        com.summerproject2026.DentalWave.entity.User adminUser =
+                new com.summerproject2026.DentalWave.entity.User();
+        adminUser.setId(20L);
+        adminUser.setUsername("admin");
+        when(userRepository.findByUsername("admin")).thenReturn(java.util.Optional.of(adminUser));
         pendingDto = new TimeOffRequestDto();
         pendingDto.setId(1L);
         pendingDto.setEmployeeId(10L);
@@ -70,6 +90,7 @@ class TimeOffRequestControllerTest {
                 .thenReturn(pendingDto);
 
         mockMvc.perform(post("/api/time-off-requests")
+                        .principal(adminAuthentication)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(pendingDto)))
                 .andExpect(status().isCreated())
@@ -85,6 +106,7 @@ class TimeOffRequestControllerTest {
     @DisplayName("POST /api/time-off-requests → 400 Bad Request when body is missing")
     void createTimeOffRequest_returns400_whenBodyMissing() throws Exception {
         mockMvc.perform(post("/api/time-off-requests")
+                        .principal(adminAuthentication)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
 
@@ -96,7 +118,7 @@ class TimeOffRequestControllerTest {
     void getTimeOffRequestById_returns200_whenExists() throws Exception {
         when(timeOffRequestService.getTimeOffRequestById(1L)).thenReturn(pendingDto);
 
-        mockMvc.perform(get("/api/time-off-requests/{id}", 1L))
+        mockMvc.perform(get("/api/time-off-requests/{id}", 1L).principal(adminAuthentication))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(1)))
                 .andExpect(jsonPath("$.status", is("PENDING")));
@@ -108,7 +130,7 @@ class TimeOffRequestControllerTest {
         when(timeOffRequestService.getTimeOffRequestById(99L))
                 .thenThrow(new ResourceNotFoundException("TimeOffRequest not found with id: 99"));
 
-        mockMvc.perform(get("/api/time-off-requests/{id}", 99L))
+        mockMvc.perform(get("/api/time-off-requests/{id}", 99L).principal(adminAuthentication))
                 .andExpect(status().isNotFound());
     }
 
@@ -143,7 +165,7 @@ class TimeOffRequestControllerTest {
     void getRequestsByEmployee_returns200() throws Exception {
         when(timeOffRequestService.getRequestsByEmployee(10L)).thenReturn(List.of(pendingDto));
 
-        mockMvc.perform(get("/api/time-off-requests/employee/{employeeId}", 10L))
+        mockMvc.perform(get("/api/time-off-requests/employee/{employeeId}", 10L).principal(adminAuthentication))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].employeeId", is(10)));
@@ -155,7 +177,7 @@ class TimeOffRequestControllerTest {
         when(timeOffRequestService.getRequestsByEmployee(99L))
                 .thenThrow(new ResourceNotFoundException("Employee not found with id: 99"));
 
-        mockMvc.perform(get("/api/time-off-requests/employee/{employeeId}", 99L))
+        mockMvc.perform(get("/api/time-off-requests/employee/{employeeId}", 99L).principal(adminAuthentication))
                 .andExpect(status().isNotFound());
     }
 
@@ -189,6 +211,7 @@ class TimeOffRequestControllerTest {
                 .thenReturn(approvedDto);
 
         mockMvc.perform(patch("/api/time-off-requests/{id}/approve", 1L)
+                        .principal(adminAuthentication)
                         .param("reviewedById", "20")
                         .param("reviewComment", "Looks good"))
                 .andExpect(status().isOk())
@@ -202,6 +225,7 @@ class TimeOffRequestControllerTest {
         when(timeOffRequestService.approveRequest(1L, 20L, null)).thenReturn(approvedDto);
 
         mockMvc.perform(patch("/api/time-off-requests/{id}/approve", 1L)
+                        .principal(adminAuthentication)
                         .param("reviewedById", "20"))
                 .andExpect(status().isOk());
     }
@@ -213,6 +237,7 @@ class TimeOffRequestControllerTest {
                 .thenThrow(new ResourceNotFoundException("TimeOffRequest not found with id: 99"));
 
         mockMvc.perform(patch("/api/time-off-requests/{id}/approve", 99L)
+                        .principal(adminAuthentication)
                         .param("reviewedById", "20"))
                 .andExpect(status().isNotFound());
     }
@@ -224,6 +249,7 @@ class TimeOffRequestControllerTest {
                 .thenThrow(new IllegalStateException("Only PENDING requests can be reviewed."));
 
         mockMvc.perform(patch("/api/time-off-requests/{id}/approve", 1L)
+                        .principal(adminAuthentication)
                         .param("reviewedById", "20"))
                 .andExpect(status().isConflict());
     }
@@ -240,6 +266,7 @@ class TimeOffRequestControllerTest {
                 .thenReturn(deniedDto);
 
         mockMvc.perform(patch("/api/time-off-requests/{id}/deny", 1L)
+                        .principal(adminAuthentication)
                         .param("reviewedById", "20")
                         .param("reviewComment", "Insufficient coverage"))
                 .andExpect(status().isOk())
@@ -254,6 +281,7 @@ class TimeOffRequestControllerTest {
                 .thenThrow(new ResourceNotFoundException("TimeOffRequest not found with id: 99"));
 
         mockMvc.perform(patch("/api/time-off-requests/{id}/deny", 99L)
+                        .principal(adminAuthentication)
                         .param("reviewedById", "20"))
                 .andExpect(status().isNotFound());
     }
@@ -265,6 +293,7 @@ class TimeOffRequestControllerTest {
                 .thenThrow(new IllegalStateException("Only PENDING requests can be reviewed."));
 
         mockMvc.perform(patch("/api/time-off-requests/{id}/deny", 1L)
+                        .principal(adminAuthentication)
                         .param("reviewedById", "20"))
                 .andExpect(status().isConflict());
     }
@@ -272,9 +301,10 @@ class TimeOffRequestControllerTest {
     @Test
     @DisplayName("DELETE /api/time-off-requests/{id} → 200 OK with confirmation message")
     void deleteRequest_returns200WithMessage() throws Exception {
+        when(timeOffRequestService.getTimeOffRequestById(1L)).thenReturn(pendingDto);
         doNothing().when(timeOffRequestService).deleteRequest(1L);
 
-        mockMvc.perform(delete("/api/time-off-requests/{id}", 1L))
+        mockMvc.perform(delete("/api/time-off-requests/{id}", 1L).principal(adminAuthentication))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("1")))
                 .andExpect(content().string(containsString("deleted successfully")));
@@ -285,10 +315,10 @@ class TimeOffRequestControllerTest {
     @Test
     @DisplayName("DELETE /api/time-off-requests/{id} → 404 Not Found when request does not exist")
     void deleteRequest_returns404_whenNotFound() throws Exception {
-        doThrow(new ResourceNotFoundException("TimeOffRequest not found with id: 99"))
-                .when(timeOffRequestService).deleteRequest(99L);
+        when(timeOffRequestService.getTimeOffRequestById(99L))
+                .thenThrow(new ResourceNotFoundException("TimeOffRequest not found with id: 99"));
 
-        mockMvc.perform(delete("/api/time-off-requests/{id}", 99L))
+        mockMvc.perform(delete("/api/time-off-requests/{id}", 99L).principal(adminAuthentication))
                 .andExpect(status().isNotFound());
     }
 }

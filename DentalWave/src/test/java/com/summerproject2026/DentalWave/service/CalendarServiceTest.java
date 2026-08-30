@@ -4,6 +4,7 @@ import com.summerproject2026.DentalWave.dto.CalendarDto;
 import com.summerproject2026.DentalWave.dto.ScheduleDto;
 import com.summerproject2026.DentalWave.entity.Calendar;
 import com.summerproject2026.DentalWave.entity.Schedule;
+import com.summerproject2026.DentalWave.entity.ScheduleTeam;
 import com.summerproject2026.DentalWave.entity.User;
 import com.summerproject2026.DentalWave.exception.ResourceNotFoundException;
 import com.summerproject2026.DentalWave.mapper.CalendarMapper;
@@ -257,6 +258,7 @@ class CalendarServiceImplTest {
     @Test
     @DisplayName("updateCalendar — updates scalar fields and returns mapped DTO")
     void updateCalendar_success() {
+        makeCalendarPublishable();
         CalendarDto updateDto = new CalendarDto();
         updateDto.setMonth("July 2025");
         updateDto.setStartCalendarDate(LocalDate.of(2025, 7, 1));
@@ -349,6 +351,7 @@ class CalendarServiceImplTest {
     @Test
     @DisplayName("publishCalendar — sets published to true and saves")
     void publishCalendar_success() {
+        makeCalendarPublishable();
         CalendarDto publishedDto = new CalendarDto();
         publishedDto.setPublished(true);
 
@@ -361,6 +364,18 @@ class CalendarServiceImplTest {
         assertThat(calendar.getPublished()).isTrue();
         assertThat(result.getPublished()).isTrue();
         verify(calendarRepository).save(calendar);
+    }
+
+    private void makeCalendarPublishable() {
+        Schedule schedule = new Schedule();
+        schedule.setDate(LocalDate.of(2025, 6, 2));
+
+        ScheduleTeam placeholderTeam = new ScheduleTeam();
+        placeholderTeam.setName("NO DR");
+        placeholderTeam.setSchedule(schedule);
+        schedule.setTeams(List.of(placeholderTeam));
+
+        calendar.addSchedule(schedule);
     }
 
     /**

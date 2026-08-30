@@ -1,6 +1,5 @@
 package com.summerproject2026.DentalWave.controller;
 
-import com.summerproject2026.DentalWave.dto.ForgotCredentialsDto;
 import com.summerproject2026.DentalWave.dto.JwtAuthResponse;
 import com.summerproject2026.DentalWave.dto.LoginDto;
 import com.summerproject2026.DentalWave.dto.RegisterDto;
@@ -16,8 +15,7 @@ import java.util.Map;
 
 /**
  * REST controller for handling authentication requests.
- * Handles login, registration, role-based registration,
- * and forgot username/password recovery flows.
+ * Handles login, registration, and role-based registration.
  */
 @RestController
 @RequestMapping("/api/auth")
@@ -80,45 +78,4 @@ public class AuthController {
         return new ResponseEntity<>(savedUser, HttpStatus.CREATED);
     }
 
-    /**
-     * POST /api/auth/forgot-password
-     * Public endpoint for the forgot-password flow.
-     * The requester provides first name, last name, and email;
-     * if all three match a user record, the system generates a new
-     * temporary password, saves it, and emails it to the user.
-     *
-     * <p>Always returns 200 OK with a generic message, regardless of
-     * whether a match was found, so the endpoint cannot be used to
-     * probe which emails/names exist in the system.</p>
-     *
-     * @param forgotDto the first name, last name, and email to verify
-     * @return 200 OK with a generic confirmation message
-     */
-    @PostMapping("/forgot-password")
-    public ResponseEntity<String> forgotPassword(@RequestBody ForgotCredentialsDto forgotDto) {
-        authService.forgotPassword(forgotDto);
-        return ResponseEntity.ok(
-                "If the information matches our records, an email has been sent.");
-    }
-
-    /**
-     * POST /api/auth/forgot-username
-     * Public endpoint for the forgot-username flow.
-     * The requester provides first name, last name, and email;
-     * if all three match a user record, the system emails the
-     * user their username.
-     *
-     * <p>Always returns 200 OK with a generic message, regardless of
-     * whether a match was found, so the endpoint cannot be used to
-     * probe which emails/names exist in the system.</p>
-     *
-     * @param forgotDto the first name, last name, and email to verify
-     * @return 200 OK with a generic confirmation message
-     */
-    @PostMapping("/forgot-username")
-    public ResponseEntity<String> forgotUsername(@RequestBody ForgotCredentialsDto forgotDto) {
-        authService.forgotUsername(forgotDto);
-        return ResponseEntity.ok(
-                "If the information matches our records, an email has been sent.");
-    }
 }

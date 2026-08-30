@@ -1,6 +1,7 @@
 package com.summerproject2026.DentalWave.repository;
 
 import com.summerproject2026.DentalWave.entity.Calendar;
+import com.summerproject2026.DentalWave.entity.Office;
 import com.summerproject2026.DentalWave.entity.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -32,6 +33,7 @@ class CalendarRepositoryTest {
     private CalendarRepository calendarRepository;
 
     private User adminUser;
+    private Office office;
 
     // -------------------------------------------------------------------------
     // Test fixtures
@@ -45,6 +47,8 @@ class CalendarRepositoryTest {
         adminUser.setUsername("admin_test_cal_" + System.nanoTime());
         adminUser.setEmail("admin_" + System.nanoTime() + "@dentalwave.com");
         entityManager.persist(adminUser);
+        office = new Office(null, "Test Office", "1 Test Way", "555-0100");
+        entityManager.persist(office);
         entityManager.flush();
     }
 
@@ -57,6 +61,7 @@ class CalendarRepositoryTest {
         calendar.setEndCalendarDate(end);
         calendar.setPublished(published);
         calendar.setCreatedBy(adminUser);
+        calendar.setOffice(office);
         return calendar;
     }
 

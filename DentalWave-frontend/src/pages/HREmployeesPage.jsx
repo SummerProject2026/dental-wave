@@ -1,6 +1,6 @@
 import '../App.css'
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router'
 import HRHeader from '../components/HRHeader'
 import { getAllEmployees } from '../services/EmployeeService'
 import { IconEye, IconPencil } from '../components/Icons'
@@ -12,10 +12,6 @@ function HREmployeesPage() {
     const [searchTerm, setSearchTerm] = useState('')
     const [filterBy, setFilterBy] = useState('name')
 
-    useEffect(() => {
-        loadEmployees()
-    }, [])
-
     function loadEmployees() {
         getAllEmployees()
             .then((response) => {
@@ -25,6 +21,11 @@ function HREmployeesPage() {
                 console.error('Error loading employees:', error)
             })
     }
+
+
+    useEffect(() => {
+        loadEmployees()
+    }, [])
 
     function getEmployeeName(employee) {
         return `${employee.firstName || ''} ${employee.lastName || ''}`.trim()

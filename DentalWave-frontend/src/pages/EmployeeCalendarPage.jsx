@@ -1,7 +1,7 @@
 import '../App.css'
 import EmployeeHeader from '../components/EmployeeHeader'
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router'
 import { getPublishedCalendars } from '../services/CalendarService'
 import { getAllOffices } from '../services/OfficeService'
 

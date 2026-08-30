@@ -1,6 +1,7 @@
 package com.summerproject2026.DentalWave.controller;
 import com.summerproject2026.DentalWave.dto.AvailabilityDto;
 import com.summerproject2026.DentalWave.service.AvailabilityService;
+import com.summerproject2026.DentalWave.service.EmployeeService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -10,6 +11,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -25,6 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(AvailabilityController.class)
 @AutoConfigureMockMvc(addFilters = false)
 @DisplayName("AvailabilityController")
+@WithMockUser(username = "admin", roles = "ADMIN")
 class AvailabilityControllerTest {
 
     @Autowired
@@ -32,6 +38,9 @@ class AvailabilityControllerTest {
 
     @MockitoBean
     private AvailabilityService availabilityService;
+
+    @MockitoBean
+    private EmployeeService employeeService;
 
     @MockitoBean
     private com.summerproject2026.DentalWave.security.JwtTokenProvider jwtTokenProvider;
@@ -43,9 +52,12 @@ class AvailabilityControllerTest {
     private ObjectMapper objectMapper;
 
     private AvailabilityDto availabilityDto;
+    private Authentication adminAuthentication;
 
     @BeforeEach
     void setUp() {
+        adminAuthentication = new UsernamePasswordAuthenticationToken(
+                "admin", "test-password", List.of(new SimpleGrantedAuthority("ROLE_ADMIN")));
         availabilityDto = new AvailabilityDto();
         availabilityDto.setId(1L);
         availabilityDto.setEmployeeId(5L);
@@ -120,7 +132,7 @@ class AvailabilityControllerTest {
             when(availabilityService.getAvailabilityByEmployee(5L))
                     .thenReturn(List.of(availabilityDto, second));
 
-            mockMvc.perform(get("/api/availability/employee/5"))
+            mockMvc.perform(get("/api/availability/employee/5").principal(adminAuthentication))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.length()").value(2))
                     .andExpect(jsonPath("$[0].dayOfWeek").value("MONDAY"))
@@ -132,7 +144,7 @@ class AvailabilityControllerTest {
         void getAvailabilityByEmployee_emptyList() throws Exception {
             when(availabilityService.getAvailabilityByEmployee(99L)).thenReturn(List.of());
 
-            mockMvc.perform(get("/api/availability/employee/99"))
+            mockMvc.perform(get("/api/availability/employee/99").principal(adminAuthentication))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.length()").value(0));
         }
@@ -143,7 +155,7 @@ class AvailabilityControllerTest {
             when(availabilityService.getAvailabilityByEmployee(999L))
                     .thenThrow(new com.summerproject2026.DentalWave.exception.ResourceNotFoundException("Employee not found"));
 
-            mockMvc.perform(get("/api/availability/employee/999"))
+            mockMvc.perform(get("/api/availability/employee/999").principal(adminAuthentication))
                     .andExpect(status().isNotFound());
         }
     }

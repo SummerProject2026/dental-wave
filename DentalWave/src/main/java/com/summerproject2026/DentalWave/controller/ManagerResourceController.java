@@ -3,6 +3,7 @@ package com.summerproject2026.DentalWave.controller;
 import com.summerproject2026.DentalWave.entity.SchedulingResource;
 import com.summerproject2026.DentalWave.exception.ResourceNotFoundException;
 import com.summerproject2026.DentalWave.repository.OfficeRepository;
+import com.summerproject2026.DentalWave.repository.DoctorWorkRuleRepository;
 import com.summerproject2026.DentalWave.repository.ReusableTeamRepository;
 import com.summerproject2026.DentalWave.repository.SchedulingResourceRepository;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,7 @@ public class ManagerResourceController {
     private final SchedulingResourceRepository resources;
     private final OfficeRepository offices;
     private final ReusableTeamRepository teams;
+    private final DoctorWorkRuleRepository doctorWorkRules;
 
     @GetMapping
     public List<SchedulingResource> list(@RequestParam SchedulingResource.Type type) {
@@ -61,6 +63,9 @@ public class ManagerResourceController {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
                     "This doctor is used by a reusable team. Remove the doctor from that team first.");
+        }
+        if (value.getType() == SchedulingResource.Type.DOCTOR) {
+            doctorWorkRules.deleteByDoctorId(id);
         }
         resources.delete(value);
     }

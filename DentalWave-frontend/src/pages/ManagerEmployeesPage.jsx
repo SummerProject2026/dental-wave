@@ -1,6 +1,6 @@
 import '../App.css'
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router'
 import ManagerHeader from '../components/ManagerHeader'
 import { getAllEmployees } from '../services/EmployeeService'
 import {

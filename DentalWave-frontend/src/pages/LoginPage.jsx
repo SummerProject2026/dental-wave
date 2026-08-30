@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate, Link, useLocation } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router'
 
 import '../App.css'
 import logo from '../pictures/wake-logo.png'
@@ -70,7 +70,7 @@ function LoginPage() {
             if (role === 'ROLE_MANAGER' || role === 'ROLE_ADMIN') {
                 navigator('/manager/dashboard')
             } else {
-                setError('This scheduling tool is available only to managers and administrators.')
+                setError('This scheduling tool is available only to authorized scheduling users.')
             }
 
         } catch (error) {
@@ -94,14 +94,10 @@ function LoginPage() {
                     <input
                         className="login-input"
                         type="text"
-                        placeholder="username"
+                        placeholder="user"
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
                     />
-
-                    <Link className="forgot-link" to="/forgot-username">
-                        Forgot Username?
-                    </Link>
 
                     <label className="login-label">Password:</label>
 
@@ -122,10 +118,6 @@ function LoginPage() {
                             {showPassword ? <IconEyeOff /> : <IconEye />}
                         </button>
                     </div>
-
-                    <Link className="forgot-link" to="/forgot-password">
-                        Forgot Password?
-                    </Link>
 
                     {error && (
                         <p className="login-error">

@@ -277,11 +277,18 @@ export default function ManagerResourcesPage({ type }) {
             resetForm()
             await load()
         } catch (requestError) {
+            const fallbackMessage = form.id
+                ? `${isDoctor ? 'Doctor' : 'Assistant'} changes could not be saved. Please check the entered information and try again.`
+                : `${isDoctor ? 'Doctor' : 'Assistant'} could not be added. Please check the entered information and try again.`
+            const localValidationMessage = !requestError.response
+                && requestError.message !== 'Network Error'
+                ? requestError.message
+                : ''
             setError(
                 requestError.response?.data?.message
                 || requestError.response?.data?.detail
-                || requestError.message
-                || 'Please check the required fields.'
+                || localValidationMessage
+                || fallbackMessage
             )
         } finally {
             setSaving(false)

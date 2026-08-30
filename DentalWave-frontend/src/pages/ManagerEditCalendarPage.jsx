@@ -1,6 +1,6 @@
 import '../App.css'
 import { useState, useEffect } from 'react'
-import { useParams, useSearchParams } from 'react-router-dom'
+import { useParams, useSearchParams } from 'react-router'
 import ManagerHeader from '../components/ManagerHeader'
 import {
     getAllCalendars,
@@ -46,11 +46,6 @@ function ManagerEditCalendarPage() {
     const year = currentDate.getFullYear()
     const monthLabel = `${monthName} ${year}`
 
-    useEffect(() => {
-        loadOffices()
-        loadCalendars()
-    }, [])
-
     function loadOffices() {
         getAllOffices()
             .then((response) => {
@@ -86,6 +81,11 @@ function ManagerEditCalendarPage() {
             })
             .catch((err) => console.error('Failed to load calendars', err))
     }
+
+    useEffect(() => {
+        loadOffices()
+        loadCalendars()
+    }, [])
 
     function prevMonth() {
         setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))

@@ -1,6 +1,6 @@
 import '../App.css'
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router'
 import HRHeader from '../components/HRHeader'
 import { getAllTimeOffRequests } from '../services/TimeOffRequestService'
 

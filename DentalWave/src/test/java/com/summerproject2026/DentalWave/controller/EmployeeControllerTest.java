@@ -16,6 +16,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -36,6 +40,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
  * permissive test-security config so that MockMvc requests are not rejected.
  */
 @WebMvcTest(EmployeeController.class)
+@WithMockUser(username = "admin", roles = "ADMIN")
 @AutoConfigureMockMvc(addFilters = false)
 @DisplayName("EmployeeController")
 class EmployeeControllerTest {
@@ -67,9 +72,12 @@ class EmployeeControllerTest {
 
     private EmployeeDto employeeDto;
     private AvailabilityDto availabilityDto;
+    private Authentication adminAuthentication;
 
     @BeforeEach
     void setUp() {
+        adminAuthentication = new UsernamePasswordAuthenticationToken(
+                "admin", "test-password", List.of(new SimpleGrantedAuthority("ROLE_ADMIN")));
         employeeDto = new EmployeeDto();
         employeeDto.setId(1L);
         employeeDto.setFirstName("Jane");
@@ -135,7 +143,7 @@ class EmployeeControllerTest {
         void getEmployeeById_returns200() throws Exception {
             when(employeeService.getEmployeeById(1L)).thenReturn(employeeDto);
 
-            mockMvc.perform(get("/api/employees/1"))
+            mockMvc.perform(get("/api/employees/1").principal(adminAuthentication))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.id").value(1L))
                     .andExpect(jsonPath("$.email").value("jane.doe@clinic.com"));
@@ -147,7 +155,7 @@ class EmployeeControllerTest {
             when(employeeService.getEmployeeById(99L))
                     .thenThrow(new com.summerproject2026.DentalWave.exception.ResourceNotFoundException("Employee not found"));
 
-            mockMvc.perform(get("/api/employees/99"))
+            mockMvc.perform(get("/api/employees/99").principal(adminAuthentication))
                     .andExpect(status().isNotFound());
         }
     }
@@ -202,6 +210,7 @@ class EmployeeControllerTest {
             when(employeeService.updateEmployee(eq(1L), any(EmployeeDto.class))).thenReturn(employeeDto);
 
             mockMvc.perform(put("/api/employees/1")
+                            .principal(adminAuthentication)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(employeeDto)))
                     .andExpect(status().isOk())

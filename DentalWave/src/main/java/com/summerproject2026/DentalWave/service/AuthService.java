@@ -1,6 +1,5 @@
 package com.summerproject2026.DentalWave.service;
 
-import com.summerproject2026.DentalWave.dto.ForgotCredentialsDto;
 import com.summerproject2026.DentalWave.dto.JwtAuthResponse;
 import com.summerproject2026.DentalWave.dto.UserDto;
 import com.summerproject2026.DentalWave.dto.LoginDto;
@@ -68,32 +67,4 @@ public interface AuthService {
      */
     UserDto registerWithRole(RegisterDto registerDto, String role);
 
-    /**
-     * Forgot-password flow: verifies that the provided first name,
-     * last name, and email all match an existing user record
-     * (case-insensitive). If they match, generates a new temporary
-     * password, saves it (encoded), and emails the plain temporary
-     * password to the user's email address.
-     *
-     * <p>Does nothing if no match is found — the caller always
-     * responds with a generic message so the endpoint cannot be
-     * used to probe which accounts exist.</p>
-     *
-     * @param forgotDto the first name, last name, and email to verify
-     */
-    void forgotPassword(ForgotCredentialsDto forgotDto);
-
-    /**
-     * Forgot-username flow: verifies that the provided first name,
-     * last name, and email all match an existing user record
-     * (case-insensitive). If they match, emails the user their
-     * username.
-     *
-     * <p>Does nothing if no match is found — the caller always
-     * responds with a generic message so the endpoint cannot be
-     * used to probe which accounts exist.</p>
-     *
-     * @param forgotDto the first name, last name, and email to verify
-     */
-    void forgotUsername(ForgotCredentialsDto forgotDto);
 }

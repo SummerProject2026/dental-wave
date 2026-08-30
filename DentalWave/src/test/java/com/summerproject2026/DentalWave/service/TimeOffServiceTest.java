@@ -106,6 +106,14 @@ class TimeOffRequestServiceImplTest {
         employee = new Employee();
         employee.setId(10L);
 
+        User employeeUser = new User();
+        employeeUser.setId(10L);
+        employeeUser.setFirstName("Alice");
+        employeeUser.setLastName("Assistant");
+        employeeUser.setUsername("alice");
+        employeeUser.setEmail("alice@example.com");
+        employee.setUser(employeeUser);
+
         reviewer = new User();
         reviewer.setId(20L);
 

@@ -71,8 +71,14 @@ public class SpringSecurityConfig {
                     // so the controller can return a clear "disabled" response.
                     authorize.requestMatchers("/api/auth/login").permitAll();
                     authorize.requestMatchers("/api/auth/register").permitAll();
-                    authorize.requestMatchers("/api/auth/forgot-password").permitAll();
-                    authorize.requestMatchers("/api/auth/forgot-username").permitAll();
+                    // The packaged React shell and portable lifecycle endpoints are public.
+                    // React still protects manager routes for UX; backend APIs remain authoritative.
+                    authorize.requestMatchers(
+                            "/", "/index.html", "/assets/**", "/favicon.ico", "/favicon.svg",
+                            "/icons.svg", "/error",
+                            "/login", "/manager/**",
+                            "/api/portable/status", "/api/portable/shutdown"
+                    ).permitAll();
 
                     // Allow browser preflight OPTIONS requests
                     authorize.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll();

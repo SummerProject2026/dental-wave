@@ -1,13 +1,15 @@
 import '../App.css'
 import { useState, useEffect } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router'
 import ManagerHeader from '../components/ManagerHeader'
 import PrintableSchedule from '../components/PrintableSchedule'
 import {
     getAllCalendars,
     generateCalendar,
     updateCalendar,
-    deleteCalendar
+    deleteCalendar,
+    addScheduleToCalendar,
+    removeScheduleFromCalendar
 } from '../services/CalendarService'
 import {
     assignEmployeeToTeam,
@@ -73,10 +75,11 @@ function getEmployeeName(employee) {
     return `${employee.firstName || ''} ${employee.lastName || ''}`.trim()
 }
 
-function ManagerCalendarPage() {
+function ManagerCalendarPage({ previewMode = false }) {
 
     const today = new Date()
     const [searchParams] = useSearchParams()
+    const navigate = useNavigate()
     const requestedMonth = searchParams.get('month')
     const requestedMonthParts = requestedMonth?.split('-').map(Number)
     const initialDate = requestedMonthParts?.length === 2
@@ -110,6 +113,8 @@ function ManagerCalendarPage() {
     const [newTeamName, setNewTeamName] = useState('')
     const [editingScheduleNotes, setEditingScheduleNotes] = useState('')
     const [partialDayEditor, setPartialDayEditor] = useState(null)
+    const [locationToAdd, setLocationToAdd] = useState('')
+    const [assistantPrintSize, setAssistantPrintSize] = useState('medium')
 
     const monthName = currentDate.toLocaleString('default', { month: 'long' })
     const year = currentDate.getFullYear()
@@ -200,6 +205,10 @@ function ManagerCalendarPage() {
 
     function handlePrint() {
         window.print()
+    }
+
+    function openPrintPreview() {
+        navigate(`/manager/schedule/preview?month=${year}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`)
     }
 
     const activeCalendar = calendars.find(
@@ -660,13 +669,96 @@ function ManagerCalendarPage() {
         : null
 
     const employeesOnTimeOff = getEmployeeIdsOnTimeOff(selectedDateStr)
+    const monthCalendars = calendars.filter((cal) => cal.month === monthLabel)
+
+    function getCalendarForOffice(officeId) {
+        return monthCalendars.find((calendar) => Number(calendar.officeId) === Number(officeId))
+    }
+
+    function getScheduleForDay(calendar, day) {
+        if (!calendar || !day) return null
+        return (calendar.schedules || []).find((schedule) => {
+            const date = parseLocalDate(schedule.date)
+            return date?.getDate() === Number(day) && date.getMonth() === currentDate.getMonth()
+        })
+    }
+
+    const selectedDayLocations = selectedDay
+        ? offices.map((office) => {
+            const calendar = getCalendarForOffice(office.id)
+            return { office, calendar, schedule: getScheduleForDay(calendar, selectedDay) }
+        }).filter(({ schedule }) => Boolean(schedule))
+        : []
+
+    const availableLocationsForSelectedDay = selectedDay
+        ? offices.filter((office) => !selectedDayLocations.some(
+            ({ office: activeOffice }) => Number(activeOffice.id) === Number(office.id)
+        ))
+        : []
+
+    async function handleAddLocationToDay() {
+        if (!selectedDay || !locationToAdd) return
+        const calendar = getCalendarForOffice(Number(locationToAdd))
+        if (!calendar) {
+            setError('Generate the monthly draft before adding a location to a day.')
+            return
+        }
+        setLoading(true)
+        setError('')
+        try {
+            await addScheduleToCalendar(calendar.id, {
+                date: selectedDateStr,
+                startScheduleDate: selectedDateStr,
+                endScheduleDate: selectedDateStr,
+                published: false,
+                teams: {},
+                teamNames: {}
+            })
+            await loadCalendarsAndReturn()
+            setSelectedOfficeId(Number(locationToAdd))
+            setLocationToAdd('')
+            setSuccess('Location added to this date only. Add its doctor team and assistants next.')
+        } catch (err) {
+            console.error('Failed to add location to day', err)
+            setError(err.response?.data?.message || 'Failed to add the location to this date.')
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    async function handleRemoveLocationFromDay(calendar, schedule, office) {
+        const assignmentCount = Object.values(schedule.teams || {})
+            .reduce((total, team) => total + (team?.length || 0), 0)
+        if (assignmentCount > 0 || Object.keys(schedule.teams || {}).length > 0) {
+            setError(`Remove all doctor teams and assignments from ${office.name} before removing that location.`)
+            return
+        }
+        if (!window.confirm(`Remove ${office.name} from ${monthName} ${selectedDay}?`)) return
+        setLoading(true)
+        setError('')
+        try {
+            await removeScheduleFromCalendar(calendar.id, schedule.id)
+            await loadCalendarsAndReturn()
+            if (Number(selectedOfficeId) === Number(office.id)) {
+                const fallback = selectedDayLocations.find(
+                    ({ office: item }) => Number(item.id) !== Number(office.id)
+                )
+                if (fallback) setSelectedOfficeId(Number(fallback.office.id))
+            }
+            setSuccess(`${office.name} removed from this date only.`)
+        } catch (err) {
+            console.error('Failed to remove location from day', err)
+            setError('Failed to remove the location from this date.')
+        } finally {
+            setLoading(false)
+        }
+    }
 
     const isToday = (day) =>
         day === today.getDate() &&
         currentDate.getMonth() === today.getMonth() &&
         currentDate.getFullYear() === today.getFullYear()
 
-    const monthCalendars = calendars.filter((cal) => cal.month === monthLabel)
     const monthStatus = monthCalendars.length === 0
         ? 'No calendar created'
         : monthCalendars.every((calendar) => calendar.published)
@@ -751,29 +843,6 @@ function ManagerCalendarPage() {
 
     const printWeeks = buildPrintWeeks(year, currentDate.getMonth())
     const printMonthLabel = `${monthName} '${String(year).slice(-2)}`
-    const printDates = printWeeks.flat()
-    const leadingPrintEmptyDates = []
-    const trailingPrintEmptyDates = []
-
-    for (const date of printDates) {
-        if (date.getMonth() === currentDate.getMonth()) break
-        leadingPrintEmptyDates.push(date)
-    }
-
-    for (let index = printDates.length - 1; index >= 0; index -= 1) {
-        if (printDates[index].getMonth() === currentDate.getMonth()) break
-        trailingPrintEmptyDates.unshift(printDates[index])
-    }
-
-    const printEmptyDates = leadingPrintEmptyDates.length >= trailingPrintEmptyDates.length
-        ? leadingPrintEmptyDates
-        : trailingPrintEmptyDates
-    const printMonthLabelDateKey = printEmptyDates[0] ? getDateKey(printEmptyDates[0]) : null
-    const printNotesStartDateKey = printEmptyDates[1] ? getDateKey(printEmptyDates[1]) : null
-    const printNotesSpan = Math.max(printEmptyDates.length - 1, 1)
-    const printSkippedNotesDateKeys = new Set(
-        printEmptyDates.slice(2).map((date) => getDateKey(date))
-    )
 
     const printTeamColorByDoctor = {}
     monthCalendars.forEach((calendar) => {
@@ -829,6 +898,58 @@ function ManagerCalendarPage() {
         )
         .sort((left, right) => left.date - right.date)
 
+    const printableSchedule = (isPreview = false) => (
+        <PrintableSchedule
+            monthIndex={currentDate.getMonth()}
+            weeks={printWeeks}
+            monthLabel={printMonthLabel}
+            printableDayNotes={printableDayNotes}
+            approvedRequests={approvedRequestsForMonth}
+            getDateKey={getDateKey}
+            getOfficeSchedules={getOfficePrintSchedules}
+            getTeamName={getTeamName}
+            getDoctorIdentifier={getDoctorIdentifier}
+            getPrintableAssistants={getPrintableAssistants}
+            getPrintableFirstName={getPrintableFirstName}
+            getTeamColorClass={getPrintTeamColorClass}
+            assistantNameSize={assistantPrintSize}
+            preview={isPreview}
+        />
+    )
+
+    if (previewMode) {
+        return (
+            <div className="print-preview-page">
+                <div className="print-preview-toolbar">
+                    <button type="button" onClick={() => navigate(`/manager/schedule?month=${year}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`)}>
+                        &larr; Back to Schedule
+                    </button>
+                    <fieldset>
+                        <legend>Assistant Name Size</legend>
+                        {['small', 'medium', 'large'].map((size) => (
+                            <button
+                                type="button"
+                                key={size}
+                                className={assistantPrintSize === size ? 'active' : ''}
+                                aria-pressed={assistantPrintSize === size}
+                                onClick={() => setAssistantPrintSize(size)}
+                            >
+                                {size[0].toUpperCase() + size.slice(1)}
+                            </button>
+                        ))}
+                    </fieldset>
+                    <button type="button" className="print-preview-print-button" onClick={handlePrint} disabled={!monthCalendars.length}>
+                        Print
+                    </button>
+                    <small>Letter landscape · 100% scale · turn browser headers and footers off</small>
+                </div>
+                <div className="print-preview-sheet">
+                    {monthCalendars.length ? printableSchedule(true) : <p>No schedule exists for {monthLabel}.</p>}
+                </div>
+            </div>
+        )
+    }
+
     return (
         <div className="calendar-page">
 
@@ -838,7 +959,7 @@ function ManagerCalendarPage() {
 
                 <section className="manager-builder-toolbar">
                     <div className="manager-builder-title-block">
-                        <h1>Manager Monthly Schedule</h1>
+                        <h1>Monthly Schedule</h1>
                         <p>{monthStatus}</p>
                     </div>
 
@@ -878,8 +999,8 @@ function ManagerCalendarPage() {
                         <button className="publish-btn" onClick={handlePublish} disabled={loading || !monthCalendars.length}>
                             Publish
                         </button>
-                        <button className="print-schedule-btn" onClick={handlePrint} disabled={!monthCalendars.length}>
-                            Print
+                        <button className="print-schedule-btn" onClick={openPrintPreview} disabled={!monthCalendars.length}>
+                            Preview Schedule
                         </button>
                     </div>
                 </section>
@@ -909,7 +1030,7 @@ function ManagerCalendarPage() {
                             {cells.map((day, i) => {
                                 const schedule = day ? scheduleByDay[day] : null
                                 const teams = Object.entries(schedule?.teams || {})
-                                const isEditableDay = Boolean(day && activeCalendar && schedule && !isSunday(day))
+                                const isEditableDay = Boolean(day && monthCalendars.length && !isSunday(day))
 
                                 return (
                                     <button
@@ -965,6 +1086,46 @@ function ManagerCalendarPage() {
                     </div>
 
                     <aside className="manager-day-editor-panel">
+                        {selectedDay && (
+                            <section className="manager-day-locations" aria-labelledby="day-locations-heading">
+                                <h3 id="day-locations-heading">Locations for {monthName} {selectedDay}</h3>
+                                <div className="manager-active-location-list">
+                                    {selectedDayLocations.length ? selectedDayLocations.map(({ office, calendar, schedule }) => (
+                                        <div key={office.id}>
+                                            <button
+                                                type="button"
+                                                className={Number(selectedOfficeId) === Number(office.id) ? 'active' : ''}
+                                                onClick={() => setSelectedOfficeId(Number(office.id))}
+                                            >
+                                                {office.name}
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className="manager-remove-day-location"
+                                                onClick={() => handleRemoveLocationFromDay(calendar, schedule, office)}
+                                                disabled={loading}
+                                                aria-label={`Remove ${office.name} from this date`}
+                                            >
+                                                Remove
+                                            </button>
+                                        </div>
+                                    )) : <p>No locations are active for this date.</p>}
+                                </div>
+                                {availableLocationsForSelectedDay.length > 0 && (
+                                    <div className="manager-add-day-location">
+                                        <select value={locationToAdd} onChange={(event) => setLocationToAdd(event.target.value)}>
+                                            <option value="">Select location…</option>
+                                            {availableLocationsForSelectedDay.map((office) => (
+                                                <option key={office.id} value={office.id}>{office.name}</option>
+                                            ))}
+                                        </select>
+                                        <button type="button" onClick={handleAddLocationToDay} disabled={loading || !locationToAdd}>
+                                            + Add Location
+                                        </button>
+                                    </div>
+                                )}
+                            </section>
+                        )}
                         {selectedSchedule ? (
                             <>
                                 <div className="manager-day-editor-header">
@@ -1176,43 +1337,28 @@ function ManagerCalendarPage() {
                                 )}
 
                                 <label className="manager-notes-editor">
-                                    Notes
+                                    Notes &amp; Announcements
                                     <textarea
                                         value={editingScheduleNotes}
                                         onChange={(e) => setEditingScheduleNotes(e.target.value)}
-                                        placeholder="out, TC, Share, time ranges..."
+                                        placeholder="Office meeting Thursday at 4:30, closure, reminder..."
                                     />
                                 </label>
                                 <button className="save-draft-btn" onClick={handleSaveScheduleNotes} disabled={loading}>
-                                    Save Notes
+                                    Save Notes &amp; Announcements
                                 </button>
                             </>
                         ) : (
                             <div className="manager-empty-editor-note">
-                                Select a scheduled day to edit.
+                                {selectedDay
+                                    ? `${officeNameById[selectedOfficeId] || 'This location'} is not active on this date. Add it above or select another active location.`
+                                    : 'Select a day to edit its locations and assignments.'}
                             </div>
                         )}
                     </aside>
                 </section>
 
-                <PrintableSchedule
-                    monthIndex={currentDate.getMonth()}
-                    weeks={printWeeks}
-                    monthLabel={printMonthLabel}
-                    monthLabelDateKey={printMonthLabelDateKey}
-                    notesStartDateKey={printNotesStartDateKey}
-                    notesSpan={printNotesSpan}
-                    skippedNotesDateKeys={printSkippedNotesDateKeys}
-                    printableDayNotes={printableDayNotes}
-                    approvedRequests={approvedRequestsForMonth}
-                    getDateKey={getDateKey}
-                    getOfficeSchedules={getOfficePrintSchedules}
-                    getTeamName={getTeamName}
-                    getDoctorIdentifier={getDoctorIdentifier}
-                    getPrintableAssistants={getPrintableAssistants}
-                    getPrintableFirstName={getPrintableFirstName}
-                    getTeamColorClass={getPrintTeamColorClass}
-                />
+                {printableSchedule(false)}
 
             </main>
 

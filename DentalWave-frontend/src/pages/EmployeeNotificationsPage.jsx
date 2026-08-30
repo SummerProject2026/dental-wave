@@ -1,6 +1,6 @@
 import '../App.css'
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router'
 import EmployeeHeader from '../components/EmployeeHeader'
 import { getLoggedInUserId } from '../services/AuthService'
 import { getAllNotifications, markAsRead } from '../services/NotificationService'
@@ -20,11 +20,8 @@ function EmployeeNotificationsPage() {
 
     const userId = getLoggedInUserId()
 
-    useEffect(() => { loadNotifications() }, [])
-
     function loadNotifications() {
         if (!userId) {
-            setError('You must be logged in to view notifications.')
             return
         }
         getAllNotifications(userId)
@@ -40,6 +37,12 @@ function EmployeeNotificationsPage() {
                 setError('Unable to load notifications.')
             })
     }
+
+    useEffect(() => { loadNotifications() }, [])
+
+    const displayError = !userId
+        ? 'You must be logged in to view notifications.'
+        : error
 
     // Map the backend enum to a human-readable label.
     function typeLabel(type) {
@@ -84,7 +87,7 @@ function EmployeeNotificationsPage() {
                 <h1 className="page-title">Notifications</h1>
                 <hr className="page-title-underline" />
 
-                {error && <p className="error-message">{error}</p>}
+                {displayError && <p className="error-message">{displayError}</p>}
 
                 {notifications.length > 0 ? (
                     <div className="notifications-list">
@@ -139,7 +142,7 @@ function EmployeeNotificationsPage() {
                         ))}
                     </div>
                 ) : (
-                    !error && (
+                    !displayError && (
                         <p className="empty-requests-message">
                             You have no schedule notifications at this time.
                         </p>

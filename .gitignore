@@ -6,6 +6,12 @@ node_modules/
 
 # Build output
 dist/
+.portable-cache/
+
+# Local operating-system and Python cache files
+.DS_Store
+__pycache__/
+*.py[cod]
 
 # Environment variables
 .env

@@ -1,7 +1,8 @@
 import './PrintableSchedule.css'
 import {
     getAssistantPrintNameClass,
-    getOfficePrintTeamCountClass
+    getOfficePrintTeamCountClass,
+    getPrintWeekCount
 } from '../utils/printScheduleUtils'
 
 const WORKDAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday']
@@ -26,10 +27,6 @@ export default function PrintableSchedule({
     monthIndex,
     weeks,
     monthLabel,
-    monthLabelDateKey,
-    notesStartDateKey,
-    notesSpan,
-    skippedNotesDateKeys,
     printableDayNotes,
     approvedRequests,
     getDateKey,
@@ -38,103 +35,115 @@ export default function PrintableSchedule({
     getDoctorIdentifier,
     getPrintableAssistants,
     getPrintableFirstName,
-    getTeamColorClass
+    getTeamColorClass,
+    assistantNameSize = 'medium',
+    preview = false
 }) {
-    const weekCount = Math.min(Math.max(weeks.length, 4), 6)
+    const weekCount = getPrintWeekCount(weeks)
     const hasSupplementalNotes = printableDayNotes.length > 0 || approvedRequests.length > 0
-    const safeNotesSpan = Math.min(Math.max(notesSpan, 1), 4)
-    const useHeaderFallback = !monthLabelDateKey
+    const printDates = weeks.flat()
+    const leadingEmptyDates = []
+    const trailingEmptyDates = []
+
+    for (const date of printDates) {
+        if (date.getMonth() === monthIndex) break
+        leadingEmptyDates.push(date)
+    }
+
+    for (let index = printDates.length - 1; index >= 0; index -= 1) {
+        if (printDates[index].getMonth() === monthIndex) break
+        trailingEmptyDates.unshift(printDates[index])
+    }
+
+    const availableNoteDates = leadingEmptyDates.length >= trailingEmptyDates.length
+        ? leadingEmptyDates
+        : trailingEmptyDates
+    const notesStartDateKey = hasSupplementalNotes && availableNoteDates.length
+        ? getDateKey(availableNoteDates[0])
+        : null
+    const skippedNoteDateKeys = new Set(
+        notesStartDateKey ? availableNoteDates.slice(1).map(getDateKey) : []
+    )
+    const notesSpan = Math.min(Math.max(availableNoteDates.length, 1), 4)
+    const notesEndAtWeekBoundary = availableNoteDates.at(-1)?.getDay() === 4
+
+    const notesContent = (
+        <>
+            {printableDayNotes.length > 0 && (
+                <section>
+                    <strong>Notes &amp; Announcements</strong>
+                    <div className="print-day-notes-list">
+                        {printableDayNotes.map((entry) => (
+                            <span key={entry.id}>
+                                <b>{entry.date.getMonth() + 1}/{entry.date.getDate()} {entry.officeName}:</b>{' '}
+                                {entry.note}
+                            </span>
+                        ))}
+                    </div>
+                </section>
+            )}
+            {approvedRequests.length > 0 && (
+                <section className="print-time-off-section">
+                    <strong>Approved Time Off</strong>
+                    <div className="print-time-off-list">
+                        {approvedRequests.map((request) => (
+                            <span key={request.id}>
+                                {request.employeeName || request.employeeFullName || `Employee ${request.employeeId}`}{' '}
+                                {request.startDate} - {request.endDate}
+                            </span>
+                        ))}
+                    </div>
+                </section>
+            )}
+        </>
+    )
 
     return (
         <section
-            className={`manager-calendar-print print-week-count-${weekCount} ${useHeaderFallback && hasSupplementalNotes ? 'print-header-notes-fallback' : ''}`}
-            aria-hidden="true"
+            className={`manager-calendar-print print-assistant-size-${assistantNameSize} print-week-count-${weekCount} ${preview ? 'manager-calendar-print-preview' : ''}`}
+            aria-hidden={!preview}
         >
+            <header className="print-page-header">
+                <h1>{monthLabel}</h1>
+            </header>
             <div className="print-calendar-grid">
                 {WORKDAYS.map((dayName, index) => (
                     <div
                         key={dayName}
                         className={`print-day-header ${index === 0 ? 'print-day-header-with-month' : ''}`}
                     >
-                        {index === 0 && useHeaderFallback && (
-                            <span className="print-month-label">{monthLabel}</span>
-                        )}
                         <span>{dayName}</span>
-                        {index === 0 && useHeaderFallback && hasSupplementalNotes && (
-                            <span className="print-header-note-summary">
-                                {printableDayNotes.map((entry) => (
-                                    <span key={entry.id}>
-                                        {entry.date.getMonth() + 1}/{entry.date.getDate()} {entry.officeName}: {entry.note}
-                                    </span>
-                                ))}
-                                {approvedRequests.map((request) => (
-                                    <span key={`time-off-${request.id}`}>
-                                        Time off: {request.employeeName || request.employeeFullName || `Employee ${request.employeeId}`}{' '}
-                                        {request.startDate} - {request.endDate}
-                                    </span>
-                                ))}
-                            </span>
-                        )}
                     </div>
                 ))}
 
-                {weeks.flatMap((week) => week.map((date) => {
+                {weeks.flatMap((week) => week.map((date, dayIndex) => {
                     const inMonth = date.getMonth() === monthIndex
                     const dateKey = getDateKey(date)
-                    const showMonthLabel = !inMonth && dateKey === monthLabelDateKey
-                    const showNotes = hasSupplementalNotes && !inMonth && (
-                        dateKey === notesStartDateKey || (!notesStartDateKey && showMonthLabel)
-                    )
                     const officeSchedules = inMonth ? getOfficeSchedules(date) : []
 
-                    if (hasSupplementalNotes && skippedNotesDateKeys.has(dateKey)) return null
+                    if (skippedNoteDateKeys.has(dateKey)) return null
+                    if (dateKey === notesStartDateKey) {
+                        return (
+                            <aside
+                                key={dateKey}
+                                className={`print-day-cell print-day-empty print-page-notes print-notes-span-${notesSpan} ${notesEndAtWeekBoundary ? 'print-day-column-last' : ''}`}
+                                aria-label="Notes and announcements"
+                            >
+                                {notesContent}
+                            </aside>
+                        )
+                    }
 
                     const densityClass = getDensityClass(officeSchedules)
                     const cellClasses = [
                         'print-day-cell',
+                        dayIndex === WORKDAYS.length - 1 ? 'print-day-column-last' : '',
                         !inMonth ? 'print-day-empty' : '',
-                        showNotes ? `print-day-notes-cell print-notes-span-${safeNotesSpan}` : '',
                         densityClass
                     ].filter(Boolean).join(' ')
 
                     return (
                         <div key={dateKey} className={cellClasses}>
-                            {showMonthLabel && (
-                                <div className="print-unused-month-label">{monthLabel}</div>
-                            )}
-
-                            {showNotes && (
-                                <div className="print-empty-notes-box">
-                                    {printableDayNotes.length > 0 && (
-                                        <>
-                                            <strong className="print-day-notes-heading">Notes</strong>
-                                            <div className="print-day-notes-list">
-                                                {printableDayNotes.map((entry) => (
-                                                    <span key={entry.id}>
-                                                        <b>{entry.date.getMonth() + 1}/{entry.date.getDate()} {entry.officeName}:</b>{' '}
-                                                        {entry.note}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        </>
-                                    )}
-
-                                    {approvedRequests.length > 0 && (
-                                        <div className="print-time-off-section">
-                                            <strong className="print-time-off-heading">Approved Time Off</strong>
-                                            <div className="print-time-off-list">
-                                                {approvedRequests.map((request) => (
-                                                    <span key={request.id}>
-                                                        {request.employeeName || request.employeeFullName || `Employee ${request.employeeId}`}{' '}
-                                                        {request.startDate} - {request.endDate}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-
                             {inMonth && (
                                 <>
                                     <span className="print-day-number">{date.getDate()}</span>
@@ -170,10 +179,9 @@ export default function PrintableSchedule({
                                                                                     {printableName}
                                                                                 </span>
                                                                                 {employee.partialDayNote && (
-                                                                                    <>
-                                                                                        <wbr />
-                                                                                        <strong>{` (${employee.partialDayNote})`}</strong>
-                                                                                    </>
+                                                                                    <small className="print-assistant-note">
+                                                                                        {employee.partialDayNote}
+                                                                                    </small>
                                                                                 )}
                                                                             </div>
                                                                         )
@@ -192,6 +200,11 @@ export default function PrintableSchedule({
                     )
                 }))}
             </div>
+            {hasSupplementalNotes && !notesStartDateKey && (
+                <aside className="print-page-notes" aria-label="Notes and announcements">
+                    {notesContent}
+                </aside>
+            )}
         </section>
     )
 }

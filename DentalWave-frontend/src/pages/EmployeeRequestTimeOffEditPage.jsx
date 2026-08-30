@@ -1,6 +1,6 @@
 import '../App.css'
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router'
 import EmployeeHeader from '../components/EmployeeHeader'
 import {
     getTimeOffRequestById,

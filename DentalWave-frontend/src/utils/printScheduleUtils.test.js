@@ -6,6 +6,7 @@ import {
     getAssistantPrintNameClass,
     getDoctorPrintAbbreviation,
     getOfficePrintTeamCountClass,
+    getPrintWeekCount,
     sortOfficePrintSchedules
 } from './printScheduleUtils.js'
 
@@ -93,4 +94,10 @@ test('office print width class reflects its doctor team count', () => {
         getOfficePrintTeamCountClass({ teams: { 1: [], 2: [], 3: [], 4: [], 5: [] } }),
         'print-office-team-count-4'
     )
+})
+
+test('print height budget supports four, five, and six supplied week rows', () => {
+    assert.equal(getPrintWeekCount(Array(4)), 4)
+    assert.equal(getPrintWeekCount(Array(5)), 5)
+    assert.equal(getPrintWeekCount(Array(6)), 6)
 })

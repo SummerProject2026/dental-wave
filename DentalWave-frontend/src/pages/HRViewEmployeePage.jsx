@@ -1,6 +1,6 @@
 import '../App.css'
 import { useEffect, useState } from 'react'
-import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router'
 import HRHeader from '../components/HRHeader'
 import ManagerHeader from '../components/ManagerHeader'
 import { getEmployeeById } from '../services/EmployeeService'
@@ -19,9 +19,6 @@ function HRViewEmployeePage() {
     const [error, setError] = useState('')
 
     useEffect(() => {
-        setLoading(true)
-        setError('')
-
         getEmployeeById(id)
             .then((response) => {
                 setEmployee(response.data)

@@ -8,6 +8,10 @@ export function getAssistantPrintNameClass(name) {
     return 'print-assistant-name'
 }
 
+export function getPrintWeekCount(weeks) {
+    return Math.min(Math.max(weeks?.length || 0, 4), 6)
+}
+
 export function getOfficePrintTeamCountClass(schedule) {
     const teamCount = Math.min(Math.max(Object.keys(schedule?.teams || {}).length, 1), 4)
     return `print-office-team-count-${teamCount}`

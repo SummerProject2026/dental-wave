@@ -1,6 +1,6 @@
 import '../App.css'
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router'
 import EmployeeHeader from '../components/EmployeeHeader'
 import { getTimeOffRequestsByEmployee } from '../services/TimeOffRequestService'
 
@@ -13,8 +13,6 @@ function EmployeeMyRequestsPage() {
     // TODO: replace with real logged-in employee id (from auth context/storage)
     const employeeId = Number(sessionStorage.getItem('employeeId'))
 
-    useEffect(() => { loadRequests() }, [])
-
     function loadRequests() {
         getTimeOffRequestsByEmployee(employeeId)
             .then((response) => setRequests(response.data))
@@ -23,6 +21,8 @@ function EmployeeMyRequestsPage() {
                 setError('Unable to load time off requests.')
             })
     }
+
+    useEffect(() => { loadRequests() }, [])
 
     // Format LocalDateTime ("2026-06-15T10:23:00") -> "6/15/2026"
     function formatSubmitted(dateTimeStr) {

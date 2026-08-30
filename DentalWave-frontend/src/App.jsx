@@ -1,9 +1,8 @@
 import './App.css'
 import axios from 'axios'
 import { useEffect, useState } from 'react'
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router'
 import LoginPage from './pages/LoginPage'
-import ForgotCredentialsPage from './pages/ForgotCredentialsPage'
 import ManagerCalendarPage from './pages/ManagerCalendarPage'
 import ManagerCalendarOverviewPage from './pages/ManagerCalendarOverviewPage'
 import ManagerEditCalendarPage from './pages/ManagerEditCalendarPage'
@@ -28,7 +27,7 @@ function ProtectedRoute({ children }) {
     }).catch(()=>{logout();setRole(null)}).finally(()=>setLoading(false))
   }, [token, role])
   if(!token) return <Navigate to="/login" replace state={{from:location}}/>
-  if(loading) return <main className="lite-shell">Loading secure manager workspace…</main>
+  if(loading) return <main className="lite-shell">Loading secure scheduling workspace…</main>
   if(role!=='ROLE_MANAGER'&&role!=='ROLE_ADMIN') return <Navigate to="/login" replace state={{unsupportedRole:true}}/>
   return children
 }
@@ -36,9 +35,9 @@ function ProtectedRoute({ children }) {
 const Secure=({children})=><ProtectedRoute>{children}</ProtectedRoute>
 export default function App(){return <BrowserRouter><Routes>
   <Route path="/" element={<Navigate to="/manager/dashboard" replace/>}/><Route path="/login" element={<LoginPage/>}/>
-  <Route path="/forgot-password" element={<ForgotCredentialsPage/>}/><Route path="/forgot-username" element={<ForgotCredentialsPage/>}/>
   <Route path="/manager/dashboard" element={<Secure><ManagerDashboardPage/></Secure>}/>
   <Route path="/manager/schedule" element={<Secure><ManagerCalendarPage/></Secure>}/>
+  <Route path="/manager/schedule/preview" element={<Secure><ManagerCalendarPage previewMode/></Secure>}/>
   <Route path="/manager/calendar" element={<Secure><ManagerCalendarOverviewPage/></Secure>}/>
   <Route path="/manager/calendar/build" element={<Navigate to="/manager/schedule" replace/>}/>
   <Route path="/manager/calendar/new" element={<Secure><ManagerNewCalendarPage/></Secure>}/>

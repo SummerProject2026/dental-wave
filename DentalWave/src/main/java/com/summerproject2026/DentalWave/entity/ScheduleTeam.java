@@ -46,7 +46,7 @@ public class ScheduleTeam {
 
     /**
      * Lightweight local-only scheduling resources. These assistants do not
-     * require login accounts and are used by Manager Scheduler Lite.
+     * require login accounts and are used by the scheduling workspace.
      */
     @ManyToMany
     @JoinTable(

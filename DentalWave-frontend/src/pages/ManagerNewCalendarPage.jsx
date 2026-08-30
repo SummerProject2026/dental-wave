@@ -1,6 +1,6 @@
 import '../App.css'
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router'
 import ManagerHeader from '../components/ManagerHeader'
 import { generateCalendar, getAllCalendars } from '../services/CalendarService'
 import { getLoggedInUserId } from '../services/AuthService'

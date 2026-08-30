@@ -98,6 +98,13 @@
 			<scope>test</scope>
 		</dependency>
 
+		<!-- Database -->
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+
 	</dependencies>
 
 	<build>
@@ -108,6 +115,11 @@
 					<exclude>application-local.properties</exclude>
 					<exclude>application-*.local.properties</exclude>
 				</excludes>
+			</resource>
+			<!-- Package the already-built React app into the Spring Boot JAR. -->
+			<resource>
+				<directory>../DentalWave-frontend/dist</directory>
+				<targetPath>static</targetPath>
 			</resource>
 		</resources>
 		<plugins>

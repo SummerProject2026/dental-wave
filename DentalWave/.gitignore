@@ -40,3 +40,8 @@ build/
 DentalWave/src/main/resources/application.properties
 
 DentalWave/src/test/resources/applicationTest.properties
+
+DentalWave-Data/
+*.mv.db
+*.trace.db
+*.lock.db

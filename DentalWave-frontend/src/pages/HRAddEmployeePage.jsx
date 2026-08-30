@@ -1,6 +1,6 @@
 import '../App.css'
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router'
 import HRHeader from '../components/HRHeader'
 import { createEmployee } from '../services/EmployeeService'
 import { getLoggedInUserRole, getToken } from '../services/AuthService'
@@ -33,8 +33,6 @@ function HRAddEmployeePage() {
     })
 
     useEffect(() => {
-        setOfficesLoading(true)
-
         getAllOffices()
             .then((response) => {
                 setOffices(response.data || [])

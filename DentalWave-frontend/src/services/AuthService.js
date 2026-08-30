@@ -163,23 +163,3 @@ export const saveLoggedInUserEmail = (email) => {
 export const getLoggedInUserEmail = () => {
     return sessionStorage.getItem('email')
 }
-
-/**
- * Forgot-password flow: submits first name, last name, and email.
- * If they match an account, the system emails a temporary password.
- *
- * @param details { firstName, lastName, email }
- * @returns {Promise<axios.AxiosResponse<any>>}
- */
-export const forgotPassword = (details) =>
-    axios.post(AUTH_REST_API_BASE_URL + '/forgot-password', details)
-
-/**
- * Forgot-username flow: submits first name, last name, and email.
- * If they match an account, the system emails the username.
- *
- * @param details { firstName, lastName, email }
- * @returns {Promise<axios.AxiosResponse<any>>}
- */
-export const forgotUsername = (details) =>
-    axios.post(AUTH_REST_API_BASE_URL + '/forgot-username', details)

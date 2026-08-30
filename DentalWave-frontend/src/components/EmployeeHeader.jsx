@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router'
 import { logout, getLoggedInUserId } from '../services/AuthService'
 import { getUnreadNotifications, markAsRead } from '../services/NotificationService'
 import UserAvatar from './UserAvatar'

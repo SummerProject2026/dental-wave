@@ -10,6 +10,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
@@ -32,6 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @WebMvcTest(NotificationController.class)
 @AutoConfigureMockMvc(addFilters = false)
+@WithMockUser(username = "admin", roles = "ADMIN")
 class NotificationControllerTest {
 
     /**
@@ -73,6 +78,7 @@ class NotificationControllerTest {
 
     /** Second shared notification fixture for EMPLOYEES tab */
     private NotificationDto employeeNotification;
+    private Authentication adminAuthentication;
 
     /**
      * Sets up shared test data before each test.
@@ -80,6 +86,8 @@ class NotificationControllerTest {
      */
     @BeforeEach
     void setUp() {
+        adminAuthentication = new UsernamePasswordAuthenticationToken(
+                "admin", "test-password", List.of(new SimpleGrantedAuthority("ROLE_ADMIN")));
         // Set up time-off request notification for REQUESTS tab
         requestNotification = new NotificationDto();
         requestNotification.setId(1L);
@@ -119,7 +127,7 @@ class NotificationControllerTest {
                 .thenReturn(List.of(requestNotification, employeeNotification));
 
         // Perform GET request and verify response
-        mockMvc.perform(get("/api/notifications/user/{userId}", 10L))
+        mockMvc.perform(get("/api/notifications/user/{userId}", 10L).principal(adminAuthentication))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(2)))
                 .andExpect(jsonPath("$[0].message", is("Jane Smith submitted a time-off request.")))
@@ -142,7 +150,7 @@ class NotificationControllerTest {
         when(notificationService.getNotificationsForUser(99L)).thenReturn(List.of());
 
         // Perform GET request and verify empty list
-        mockMvc.perform(get("/api/notifications/user/{userId}", 99L))
+        mockMvc.perform(get("/api/notifications/user/{userId}", 99L).principal(adminAuthentication))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(0)));
     }
@@ -161,7 +169,7 @@ class NotificationControllerTest {
                 .thenReturn(List.of(requestNotification));
 
         // Perform GET request and verify unread notification returned
-        mockMvc.perform(get("/api/notifications/user/{userId}/unread", 10L))
+        mockMvc.perform(get("/api/notifications/user/{userId}/unread", 10L).principal(adminAuthentication))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].read", is(false)))
@@ -184,7 +192,7 @@ class NotificationControllerTest {
         when(notificationService.getUnreadCount(10L)).thenReturn(2L);
 
         // Perform GET request and verify count
-        mockMvc.perform(get("/api/notifications/user/{userId}/unread/count", 10L))
+        mockMvc.perform(get("/api/notifications/user/{userId}/unread/count", 10L).principal(adminAuthentication))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", is(2)));
 
@@ -205,7 +213,7 @@ class NotificationControllerTest {
         when(notificationService.getUnreadCount(10L)).thenReturn(0L);
 
         // Perform GET request and verify count is 0
-        mockMvc.perform(get("/api/notifications/user/{userId}/unread/count", 10L))
+        mockMvc.perform(get("/api/notifications/user/{userId}/unread/count", 10L).principal(adminAuthentication))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", is(0)));
     }
@@ -225,7 +233,7 @@ class NotificationControllerTest {
 
         // Perform GET request for REQUESTS tab
         mockMvc.perform(get("/api/notifications/user/{userId}/tab/{targetTab}",
-                        10L, "REQUESTS"))
+                        10L, "REQUESTS").principal(adminAuthentication))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].targetTab", is("REQUESTS")))
@@ -251,7 +259,7 @@ class NotificationControllerTest {
 
         // Perform GET request for EMPLOYEES tab
         mockMvc.perform(get("/api/notifications/user/{userId}/tab/{targetTab}",
-                        10L, "EMPLOYEES"))
+                        10L, "EMPLOYEES").principal(adminAuthentication))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].targetTab", is("EMPLOYEES")))
@@ -272,10 +280,15 @@ class NotificationControllerTest {
     @DisplayName("PATCH /api/notifications/{id}/read → 200 OK with confirmation message")
     void markAsRead_returns200() throws Exception {
         // Mock service to do nothing on mark as read
+        com.summerproject2026.DentalWave.entity.User recipient = new com.summerproject2026.DentalWave.entity.User();
+        recipient.setId(10L);
+        com.summerproject2026.DentalWave.entity.Notification notification = new com.summerproject2026.DentalWave.entity.Notification();
+        notification.setRecipient(recipient);
+        when(notificationRepository.findById(1L)).thenReturn(java.util.Optional.of(notification));
         doNothing().when(notificationService).markAsRead(1L);
 
         // Perform PATCH request and verify confirmation message
-        mockMvc.perform(patch("/api/notifications/{id}/read", 1L))
+        mockMvc.perform(patch("/api/notifications/{id}/read", 1L).principal(adminAuthentication))
                 .andExpect(status().isOk())
                 .andExpect(content().string("Notification 1 marked as read."));
 
@@ -296,7 +309,7 @@ class NotificationControllerTest {
         doNothing().when(notificationService).markAllAsRead(10L);
 
         // Perform PATCH request and verify confirmation message
-        mockMvc.perform(patch("/api/notifications/user/{userId}/read-all", 10L))
+        mockMvc.perform(patch("/api/notifications/user/{userId}/read-all", 10L).principal(adminAuthentication))
                 .andExpect(status().isOk())
                 .andExpect(content().string(
                         "All notifications marked as read for user 10."));

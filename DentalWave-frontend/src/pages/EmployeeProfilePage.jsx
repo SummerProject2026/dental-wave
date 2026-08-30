@@ -2,7 +2,7 @@ import '../App.css'
 import logo from '../pictures/wake-logo.png'
 import EmployeeHeader from '../components/EmployeeHeader'
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router'
 import { getEmployeeById } from '../services/EmployeeService'
 import { formatPhoneNumber } from '../utils/phoneUtils'
 import { IconPencil } from '../components/Icons'
@@ -37,13 +37,6 @@ function EmployeeProfilePage() {
     const employeeId = Number(sessionStorage.getItem('employeeId'))
 
     /**
-     * Load employee information when page first renders.
-     */
-    useEffect(() => {
-        loadEmployeeProfile()
-    }, [])
-
-    /**
      * Retrieves employee information from the backend.
      */
     function loadEmployeeProfile() {
@@ -56,6 +49,13 @@ function EmployeeProfilePage() {
                 setError('Unable to load employee profile.')
             })
     }
+
+    /**
+     * Load employee information when page first renders.
+     */
+    useEffect(() => {
+        loadEmployeeProfile()
+    }, [])
 
     /**
      * Builds employee full name from first and last name.

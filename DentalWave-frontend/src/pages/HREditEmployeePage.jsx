@@ -1,6 +1,6 @@
 import '../App.css'
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router'
 import HRHeader from '../components/HRHeader'
 import { getEmployeeById, resetEmployeePassword, updateEmployee } from '../services/EmployeeService'
 import { getAllOffices } from '../services/OfficeService'
@@ -34,9 +34,6 @@ function HREditEmployeePage() {
     })
 
     useEffect(() => {
-        setLoading(true)
-        setError('')
-
         Promise.all([getEmployeeById(id), getAllOffices()])
             .then((response) => {
                 const employeeResponse = response[0]
